@@ -1,0 +1,3097 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StFYC Weather Information</title>
+    <style>
+      * {
+	  box-sizing: border-box;
+      }
+      /*
+      :root {
+	  --rust: #844D36;
+	  --plum: #474853;
+	  --steel-blue: #86B3D1;
+	  --light-coffee: #AAADA0;
+	  --earth: #8E8268;
+	  --black: black;
+	  --white: white;
+	  --main-background-color: #844D36;
+	  --main-foreground-color: white;
+	  --hover-background: white;
+	  --hover-foreground: black;
+      }
+     */
+      :root {
+	  --rust: #14365D; /* Night Moon */
+	  --background2: #2F5C8F; /* Deep Blue */
+	  --foreground1: #A96762; /* Mauve */
+	  --foreground2: #D85C27; /* Mandarin */
+	  --foreground3: #B999BE; /* Lavender */
+	  --black: black;
+	  --white: white;
+	  --medium-grey: #80808080;
+	  --main-background-color: #14365D; /* Night Moon */
+	  --main-foreground-color: white;
+	  --hover-background: white;
+	  --hover-foreground: black;
+      }
+      body {
+	  background: var(--main-background-color);
+	  font-family: Arial;
+	  font-size: 16px;
+	  color: var(--main-foreground-color);
+	  height: 98vh;
+	  width: 98vw;
+	  /*max-height: 98vh;*/
+	  /*max-width: 98vw;*/
+	  display: flex;
+      }
+      .bg-active {
+	  color: var(--main-foreground-color);
+	  background: var(--background2);
+      }
+      .h1 {
+	  color: var(--main-foreground-color);
+	  font-size: 2.5vw;
+	  padding: 2px;
+	  margin-bottom: 2px;
+      }
+      .h2 {
+	  color: var(--main-foreground-color);
+	  font-size: 2vw;
+	  padding: 2px;
+	  margin-bottom: 2px;
+      }
+      .h3 {
+	  color: var(--main-foreground-color);
+	  font-size: 1.5vw;
+	  padding: 2px;
+	  margin-bottom: 2px;
+      }
+      .vertical-spacer-outer {
+	  display: flex;
+	  flex-direction: column;
+	  flex-basis: max-content;
+	  flex-grow: 1;
+      }
+      .vertical-spacer-inner {
+	  flex-basis: max-content;
+	  flex-grow: 10;
+      }
+      .wx-box {
+	  display: flex;
+	  flex-direction: row;
+	  flex-wrap: nowrap;
+	  flex-grow: 1;
+	  flex-basis: max-content;
+	  max-height: 100%;
+	  max-width: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-page {
+	  display: flex;
+	  flex-direction: column;
+	  flex-wrap: nowrap;
+	  flex-grow: 1;
+	  flex-basis: max-content;
+	  max-height: 100%;
+	  max-width: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-header {
+	  display: grid;
+	  grid-template-columns: fit-content(100%) auto fit-content(100%);
+	  flex-grow: 0;
+	  width: 100%;
+	  align-items: center;
+	  justify-items: center;
+      }
+      .wx-header-none {
+	  display: none;
+	  grid-template-columns: fit-content(100%) auto fit-content(100%);
+	  flex-grow: 0;
+	  width: 100%;
+	  align-items: center;
+	  justify-items: center;
+      }
+      .wx-row {
+	  display: flex;
+	  grid-template-columns: fit-content(100%) auto;
+	  grid-template-rows: fit-content(100%);
+	  flex-grow: 1;
+	  flex-basis: max-content;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-sidebar {
+	  display: flex;
+	  flex-direction: column;
+	  flex-shrink: 0;
+	  flex-grow: 1;
+	  flex-basis: max-content;
+	  margin-top: 4px;
+	  margin-right: 4px;
+	  max-height: 100%;
+      }
+      .wx-content {
+	  display: flex;
+	  flex-grow: 100;
+	  flex-shrink: 1;
+	  flex-basis: auto;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-scene {
+	  /* width: auto; */
+	  /* height: auto; */
+	  /* max-width: 100%; */
+	  /* max-height: 100%; */
+	  margin: 2px 2px 2px 2px;
+	  flex-direction: column;
+	  flex-grow: 1;
+	  flex-shrink: 1;
+	  flex-basis: auto;
+	  display: none;
+	  max-width: 100%;
+	  max-height: 100%;
+      }
+      .wx-program {
+	  color: var(--main-foreground-color);
+	  background: var(--foreground2);
+      }
+      .wx-time {
+	  font-family: "Courier New";
+	  color: var(--main-foreground-color);
+      }
+      .wx-scene-list {
+	  color: var(--main-foreground-color);
+	  list-style-type: none;
+      }
+      .wx-col {
+	  display: flex;
+	  flex-direction: column;
+	  flex-grow: 1;
+	  flex-shrink: 1;
+	  flex-basis: auto;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-cell-title {
+	  display: flex;
+	  margin-top: 4px;
+	  margin-bottom: 2px;
+	  font-size: 1.1vw;
+      }
+      .wx-cell {
+	  display: inline-flex;
+	  flex-grow: 1;
+	  flex-shrink: 1;
+	  flex-basis: auto;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-image {
+	  object-fit: contain;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-button {
+	  display: none;
+	  padding: .25em;
+	  border-width: 2px;
+	  border-radius: 5px;
+	  border-color: var(--main-foreground-color);
+	  border-style: solid;
+	  text-align: center;
+	  width: 100%;
+	  margin: 4px;
+      }
+      .wx-button:hover {
+	  background: var(--hover-background);
+	  color: var(--hover-foreground);
+      }
+      .scene-button {
+	  border-radius: 5px;
+	  padding: 5px;
+      }
+      .active-scene {
+      }
+      .active-scene:hover {
+	  background: var(--hover-background);
+	  color: var(--hover-foreground);
+      }
+      .show {
+	  display: inline-flex;
+      }
+      .update5 {
+      }
+      .grid-container {
+	  display: grid;
+	  grid-template-columns: auto;
+      }
+      .grid-container2x {
+	  display: grid;
+	  grid-template-columns: 50% 50%;
+      }
+      .grid-item {
+	  display: table-cell;
+      }
+      .vertical-container {
+      }
+      .horizontal-container {
+      }
+      .wx-content-grid {
+	  display: grid;
+	  grid-template-columns: 120px auto;
+      }
+      .nws-column {
+	  vertical-align: top;
+	  height: 100vh;
+	  overflow: auto;
+	  
+	  color: var(--main-foreground-color);
+	  text-align: left;
+	  margin-left: 1em;
+	  margin-right: 1em;
+      }
+      .nws-zone-title {
+	  color: var(--main-foreground-color);
+	  background: var(--main-background-color);
+	  font-size: 1.3vw;
+      }
+      .nws-zone-paragraph {
+	  font-size: 1.2vw;
+	  color: var(--main-foreground-color);
+	  background: var(--background2);
+      }
+      .obs-shrink {
+	  max-height: 30%;
+	  min-height: 40%;
+      }
+      .obs-grid {
+	  display: grid;
+	  grid-template-rows: 100%;
+	  grid-template-columns: 100%;
+	  border-collapse: collapse;
+      }
+      .obs-grid-row {
+      }
+      .obs-cell {
+	  display: flex;
+	  flex-direction: column;
+	  text-align: left;
+	  /*align-self: center;*/
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+      }
+      .obs-table-even {
+	  color: black;
+	  background: lightgrey;
+      }
+      .obs-table-odd {
+	  color: var(--main-foreground-color);
+	  background: #aaada0;
+      }
+      .obs-table {
+	  display: table;
+	  font-size: 1.1vw;
+	  /*border-spacing: 2px;*/
+	  border-collapse: collapse;
+	  flex: 0 0 auto;
+      }
+      .obs-header {
+	  display: table-header-group;
+	  color: var(--main-foreground-color);
+	  background: var(--background2);
+      }
+      .obs-body {
+	  display: table-row-group;
+      }
+      .obs-row {
+	  display: table-row;
+      }
+      .obs-meta {
+	  text-align: left;
+      }
+      .obs-table-cell {
+	  display: table-cell;
+	  text-align: left;
+	  align-self: center;
+	  padding-left: .5em;
+	  padding-right: .5em;
+      }
+      .obs-data {
+	  font-family: "Courier New";
+      }
+      @media (min-aspect-ratio: 4/3) {
+	  .wind-grid {
+	      display: grid;
+	      grid-template-rows: 60% 40%;
+	      grid-template-columns: 50% 50%;
+	      border-collapse: collapse;
+	      width: 100%;
+	      height: 100%;
+	  }
+	  .tides-grid {
+	      display: grid;
+	      grid-template-rows: 40% 60%;
+	      grid-template-columns: 1fr 1fr;
+	      border-collapse: collapse;
+	      width: 100%;
+	      height: 100%;
+	  }
+      }
+      @media (max-aspect-ratio: 4/3) {
+	  .wind-grid {
+	      display: grid;
+	      grid-template-columns: 100%;
+	      border-collapse: collapse;
+	      width: 100%;
+	      height: auto;
+	  }
+	  .tides-grid {
+	      display: grid;
+	      grid-template-rows: 100%;
+	      grid-template-columns: auto;
+	      border-collapse: collapse;
+	      width: 100%;
+	      height: auto;
+	  }
+      }
+      .wind-cell {
+	  display: flex;
+	  flex-direction: column;
+	  text-align: left;
+	  /*align-self: center;*/
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+      }
+      .wind-plot {
+	  font-size: 1.25vw;
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+	  background: var(--background2);
+      }
+      .wind-plot-y-axis {
+	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  }
+	   .wind-plot-x-axis {
+	       font-size: 1vw; /* Override d3's 10pt default */
+      }
+      .wind-plot-wind-lull {
+      }
+      .wind-plot-wind-avg {
+	  fill: var(--main-background-color);
+	  stroke: var(--main-foreground-color);
+	  stroke-width: 4.0;
+      }
+      .wind-plot-wind-gust {
+	  fill: none;
+	  stroke: var(--foreground2);
+	  stroke-width: 4.0;
+      }
+      .tides-cell {
+	  display: flex;
+	  flex-direction: column;
+	  text-align: left;
+	  /*align-self: center;*/
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+      }
+      .tide-plot {
+	  display: flex;
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+      }
+      .tide-svg {
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+	  background: var(--background2);
+      }
+      .tide-plot-now {
+	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  stroke: var(--foreground1);
+	  stroke-width: 4.0;
+	   }
+	   .tide-plot-y-axis {
+	       font-size: 1.25vw; /* Override d3's 10pt default */
+	       stroke-width: 1.0;
+      }
+      .tide-plot-x-axis {
+	  font-size: 1vw; /* Override d3's 10pt default */
+	  stroke-width: 0.0;
+	   }
+	   .tide-plot-grid {
+	       fill: none;
+	       stroke: var(--main-foreground-color);
+	       stroke-width: 1.0;
+	   }
+	   .tide-plot-tide {
+	       fill: var(--background2);
+	       fill: var(--main-background-color);
+	       stroke: var(--main-foreground-color);
+	       stroke-width: 4.0;
+	   }
+	   .tide-plot-label {
+	       font-size: 1.25vw; /* Override d3's 10pt default */
+	       stroke: var(--main-foreground-color);
+	       color: var(--main-foreground-color);
+	       fill: var(--main-foreground-color);
+      }
+      .tide-plot-label-item {
+	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  stroke: var(--black);
+	  fill: var(--black);
+	  /*color: var(--main-foreground-color);*/
+	   }
+	   .tide-plot-label-background {
+	       font-size: 1.25vw; /* Override d3's 10pt default */
+	       stroke: none;
+	       fill: #c0c0c0a0;
+      }
+      .current-plot-label-item {
+	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  stroke: var(--black);
+	  fill: var(--black);
+	  /*color: var(--main-foreground-color);*/
+	   }
+	   .current-plot-label-background {
+	       font-size: 1.25vw; /* Override d3's 10pt default */
+	       stroke: none;
+	       fill: #c0c0c0a0;
+      }
+      .current-events-content {
+	  display: flex;
+	  margin-left: 1vw;
+      }
+      .current-events-table {
+	  display: table;
+	  padding-left: 1vw;
+	  border-collapse: collapse;
+	  background: var(--background2);
+	  color: var(--main-foreground-color);
+	  font-size: 1.1vw;
+      }
+      .current-events-table-header {
+	  display: table-header-group;
+	  color: var(--foreground2);
+	  background: var(--background2);
+      }
+      .current-events-table-body {
+	  display: table-row-group;
+      }
+      .current-events-table-row {
+	  display: table-row;
+	  padding-top: 0.1vh;
+	  padding-bottom: 0.1vh;
+      }
+      .current-events-table-cell {
+	  display: table-cell;
+	  padding-right: 1.0vw;
+	  padding-left: 0.5vw;
+      }
+      .current-events-table-astral {
+	  color: var(--foreground3);
+      }
+      .current-events-table-water {
+      }
+      .timelapse {
+	  margin: 2px 2px 2px 2px;
+	  display: flex;
+	  justify-content: center;
+      }
+      .local-number {
+	  display: inline-flex;
+	  font-size: 2.5vw;
+	  color: var(--main-foreground-color);
+	  /*background: var(--plum);*/
+	  border-bottom: 2px solid var(--main-foreground-color);
+	  /*margin-bottom: 4px;*/
+      }
+      .burgee-small {
+	  width: 100px;
+	  height: 60.77px
+      }
+      .zpop {
+	  z-index: 5;
+      }
+      @media (min-width: 1024px) {
+	  .wx-header-2 {
+	      display: none;
+	  }
+	  .burgee-left {
+	      display: inline-flex;
+	      transform: scale(-1,1);
+	  }
+	  .burgee-right {
+	      display: inline-flex;
+	  }
+	  .menu-icon-div {
+	      display: none;
+	  }
+	  .scene-pull-down-enable {
+	      display: none;
+	  }
+      }
+      @media (max-width: 1024px) {
+	  .wx-header-1 {
+	      display: none;
+	  }
+	  .wx-header-2 {
+	      display: inline-flex;
+	  }
+	  .local-number {
+	      font-size: 4.0vw;
+	  }
+	  .wx-header {
+	      grid-template-columns: fit-content(100%) auto fit-content(100%);
+	  }
+	  .burgee-left {
+	      display: none;
+	  }
+	  .scene-pull-down-enable {
+	      width: 100px;
+	      height: 60.77px;
+	      display: inline-flex;
+	  }
+	  .scene-pull-down-enable:hover {
+	      background: var(--hover-background);
+	      color: var(--hover-foreground);
+	  }
+	  .burgee-right {
+	      display: inline-flex;
+	  }
+	  .wx-sidebar {
+	      display: none;
+	  }
+      }
+      .wx-video {
+	  width: 100%;
+	  height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+	  object-fit: contain;
+      }
+
+      .horizontal-center {
+	  margin-left: auto;
+	  margin-right: auto;
+	  text-align: center;
+      }
+      .anemometer-cell {
+	  background: var(--background2);
+      }
+      .stfyc-anemometer-gauge {
+	  display: inline-block;
+	  width: 100%;
+	  margin: auto;
+	  /* background: var(--background2); */
+      }
+      .stfyc-anemometer-arc {
+	  fill: var(--background2);
+      }
+      .stfyc-anemometer-pointer-0 { /* gust */
+	  fill: var(--foreground2);
+	  stroke: var(--black);
+      }
+      .stfyc-anemometer-pointer-1 { /* avg */
+	  fill: var(--white);
+	  stroke: var(--black);
+      }
+      .stfyc-anemometer-label {
+	  text-anchor: middle;
+	  font-size: 1.25vw;
+	  font-weight: bold;
+	  background: var(--background2);
+	  fill: var(--main-foreground-color);
+      }
+      .stfyc-anemometer-plot-label {
+	  text-anchor: middle;
+	  font-size: 2.50vw;
+	  background: var(--background2);
+	  fill: var(--main-foreground-color);
+      }
+      .ol-label {
+	  position: absolute;
+	  background: var(--medium-grey);
+	  z-index: 10;
+	  font-family: monospace;
+	  font-size: 1.4em;
+	  font-weight: bold;
+	  transform: translate(3em, .5em);
+	  padding: 2px;
+      }
+      .ol-flex-fit {
+	  display: flex;
+	  flex: 1 1 max-content;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .ol-semi-transparent {
+	  filter: opacity(50%);
+      }
+    </style>
+    
+    <script src="local_config.js"></script>
+    <script src="dateformat.js"></script>
+      
+    <script src="https://d3js.org/d3.v7.js"></script>
+    <script src="data/lib/jquery-3.6.0.min.js"></script>
+
+    <!-- Open Layers -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.css">
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.js"></script>
+
+    <!--
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.14.1/css/ol.css" type="text/css">
+	<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.14.1/build/ol.js"></script>
+    -->
+
+    <script src="wind.js"></script>
+    <script src="NowCOAST.js"></script>
+    <script src="currentMap.js"></script>
+    <script src="gis.js"></script>
+
+    <script>
+
+      const magnetic_declination = +13; // Actually 13.2 or so
+      
+      const recent_history_hours = 6;
+      
+      let curScene = 0;
+      let curSceneTime;
+      let curProgram = 0;
+
+      let mode = "Carousel";
+
+      const colorSchemes = [
+	  [ "#844D36", // rust
+	    "#474853", // plum
+	    "#86B3D1", // steel blue
+	    "#AAADA0", // light coffee
+	    "#8E8268", // earth?
+	  ],
+      ];
+
+      const testSchedule = [
+	  { "start": 00, "program": "Test" },
+	  { "start": 30, "program": "Test" },
+      ];
+
+      const productionSchedule = [
+	  { "start": 00, "program": "Local" },
+	  { "start": 05, "program": "Images" },
+	  { "start": 10, "program": "Time Lapse" },
+	  { "start": 15, "program": "Local" },
+	  { "start": 20, "program": "Images" },
+	  { "start": 25, "program": "Time Lapse" },
+	  { "start": 30, "program": "Local" },
+	  { "start": 35, "program": "Images" },
+	  { "start": 40, "program": "Time Lapse" },
+	  { "start": 45, "program": "Local" },
+	  { "start": 50, "program": "Images" },
+	  { "start": 55, "program": "Time Lapse" },
+      ];
+
+      const interactiveSchedule = [
+	  { "start": 00, "program": "All" },
+	  { "start": 30, "program": "All" },
+      ];
+
+      let schedule = productionSchedule;
+
+      const programs = {
+	  "Local": [ // 5:00
+	      { "div": "localWind", "label": "Wind", "duration": 20 },
+	      { "div": "sfLocalObservations", "label": "Observations", "duration": 20 },
+	      { "div": "sfTides", "label": "Tide & Current", "duration": 30 },
+	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 60 },
+	      { "div": "pacificSurfaceAnalysis", "label": "Surface Analysis", "duration": 10 },
+	      { "div": "overlay-WestCoast", "label": "West Coast", "duration": 10 },
+	      { "div": "video-WestCoast", "label": "- 12h Time Lapse", "duration": 60},
+	      { "div": "sfLocalObservations", "label": "Observations", "duration": 30 },
+	      { "div": "overlay-BayDelta", "label": "Bay/Delta", "duration": 10 },
+	      { "div": "video-BayDelta", "label": "- 6h Time Lapse", "duration": 50 },
+	  ],
+	  "Images": [ // 5:00
+	      { "div": "sfLocalObservations", "label": "Observations", "duration": 20 },
+	      { "div": "localWind", "label": "Wind", "duration": 20 },
+	      { "div": "sfTides", "label": "Tide & Current", "duration": 30 },
+	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 60 },
+	      { "div": "pacificSurfaceAnalysis", "label": "Surface Chart", "duration": 15 },
+	      { "div": "cloudTopsScene", "label": "IR Cloud Tops", "duration": 15 },
+	      { "div": "nationalRadarScene", "label": "National Radar", "duration": 30 },
+	      { "div": "goes-PACUS", "label": "GOES PACUS", "duration": 30 },
+	      { "div": "overlay-NorthPacific", "label": "North Pacific", "duration": 20 },
+	      { "div": "overlay-WestCoast", "label": "West Coast", "duration": 20 },
+	      { "div": "overlay-BayDelta", "label": "Bay/Delta", "duration": 20 },
+	      // { "div": "vesselFinderScene", "label": "Local AIS", "duration": 25 },
+	      { "div": "aboutScene", "label": "About", "duration": 10 },
+	  ],
+	  "Time Lapse": [ // 4:30
+	      { "div": "sfLocalObservations", "label": "Observations", "duration": 20 },
+	      { "div": "localWind", "label": "Wind", "duration": 20 },
+	      { "div": "video-Pacific", "label": "7d North Pacific", "duration": 60},
+	      { "div": "sfTides", "label": "Tide & Current", "duration": 30 },
+	      { "div": "video-WestCoast", "label": "12h West Coast", "duration": 60},
+	      { "div": "sfLocalObservations", "label": "Observations", "duration": 30 },
+	      { "div": "video-BayDelta", "label": "6h Bay/Delta", "duration": 50 },
+	  ],
+	  "All": [
+	      { "div": "", "label": "Local", "duration": 0 },
+	      { "div": "localWind", "label": "Wind", "duration": 30 },
+	      { "div": "sfLocalObservations", "label": "Observations", "duration": 15 },
+	      { "div": "sfTides", "label": "Tide & Current", "duration": 15 },
+	      { "div": "currentMapScene", "label": "SFBay Currents", "duration": 30 },
+	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 40 },
+	      { "div": "", "label": "Images", "duration": 0 },
+	      { "div": "pacificSurfaceAnalysis", "label": "Surface Analysis", "duration": 10 },
+	      { "div": "goes-PACUS", "label": "GOES-17 PACUS", "duration": 10 },
+	      { "div": "overlay-NorthPacific", "label": "North Pacific", "duration": 10 },
+	      { "div": "overlay-WestCoast", "label": "West Coast", "duration": 5 },
+	      { "div": "overlay-BayDelta", "label": "Bay/Delta", "duration": 5 },
+	      { "div": "", "label": "Time Lapse", "duration": 0 },
+	      { "div": "video-Pacific", "label": "7d North Pacific", "duration": 30},
+	      { "div": "video-WestCoast", "label": "12h West Coast", "duration": 30},
+	      { "div": "video-BayDelta", "label": "6h Bay/Delta", "duration": 30 },
+	      // { "div": "purpleAir", "label": "StFYC Air Quality", "duration": 30 },
+	      { "div": "", "label": "National", "duration": 0 },
+	      { "div": "nationalRadarScene", "label": "National Radar", "duration": 30 },
+	      { "div": "cloudTopsScene", "label": "IR Cloud Tops", "duration": 30 },
+	      { "div": "vesselFinderScene", "label": "Local AIS", "duration": 30 },
+	      { "div": "aboutScene", "label": "About", "duration": 30 },
+	  ],
+	  "Test": [
+	      { "div": "sfTides", "label": "Tide & Current", "duration": 300 },
+	      { "div": "sfLocalObservations", "label": "Local Obs", "duration": 30 },
+	  ],
+      }
+
+      let scenes = [];
+
+      const allScenes = [
+	  { "div": "sfRadar", "label": "Radar", "duration": 60 },
+	  { "div": "sfLocalObservations", "label": "Local Obs", "duration": 15 },
+	  { "div": "sfTides", "label": "Tide & Current", "duration": 15 },
+	  { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 40 },
+	  { "div": "goes-PACUS", "label": "GOES-17 PACUS", "duration": 10 },
+	  { "div": "pacificSurfaceAnalysis", "label": "Surface Chart", "duration": 10 },
+	  { "div": "overlay-NorthPacific", "label": "North Pacific", "duration": 10 },
+	  { "div": "overlay-WestCoast", "label": "West Coast", "duration": 5 },
+	  { "div": "overlay-BayDelta", "label": "Bay/Delta", "duration": 5 },
+	  { "div": "video-Pacific", "label": "North Pacific", "duration": 30},
+	  { "div": "video-WestCoast", "label": "West Coast", "duration": 30},
+	  { "div": "video-BayDelta", "label": "Bay/Delta", "duration": 30 },
+      ];
+
+      const zoneForecasts = {
+	  url: "https://tgftp.nws.noaa.gov/data/raw/fz/fzus56.kmtr.cwf.mtr.txt",
+	  zones: {},
+      }
+
+      // Scrolling uses jQuery because d3 doesn't have the right primatives.
+      function nwsScroll(parent) {
+	  const id = "#" + $(parent).attr("id");
+	  const child = $(parent).children().first();
+	  const cHeight = $(child).height();
+	  const pHeight = $(parent).height();
+	  const cId = "#" + $(child).attr("id");
+
+	  if ((cHeight == 0) || (cHeight <= pHeight)) {
+	      // Either not displayed or doesn't need scrolling
+	      console.log(`nwsScroll: stop scroll parent ${id} ${pHeight}, child ${cId} ${cHeight}`);
+	      $(parent).stop();
+	      return;
+	  }
+	  
+	  // Set up animation, longer transition for more text
+	  let hiddenPixels = cHeight - pHeight;
+	  let topOfClone = (cHeight / 2);
+	  let duration = hiddenPixels * 40; // Have to dial this in somehow
+	  oldScrollTop = $(id).scrollTop();
+	  $(id).scrollTop(0); // Reset scroll
+	  scrollTop = $(id).scrollTop();
+	  console.log(`nwsScroll: reset parent ${id} ${pHeight} child ${cId} height ${cHeight} ${oldScrollTop} -> ${scrollTop}`);
+	  setTimeout(function() {
+	      $(id).animate(
+		  {scrollTop: topOfClone},
+		  duration,
+		  "linear",
+		  function() {
+		      console.log("nwsScroll: start #" + $(this).attr("id"));
+		      nwsScroll(this);
+		  });
+	  }, 10000); // 10 second delay before scrolling
+      }
+
+      let nwsRO = new ResizeObserver(elements => {
+	  for (let e of elements) {
+	      const cr = e.contentRect;
+	      const id = "#" + e.target.id;
+	      const eHeight = $(id).height();
+	      const parent = $(id).parent();
+	      const parentId = "#" + $(parent).attr("id");
+	      const pHeight = $(parent).height();
+	      console.log(`nwsRO: ${parentId} ${pHeight} ${id} ${eHeight}`);
+
+	      if (eHeight == 0) {
+		  // Turn off animation
+		  console.log("nwsRO: stop " + parentId);
+		  $(parentId).stop();
+	      } else {
+		  console.log("nwsRO: start " + parentId);
+		  nwsScroll(parent);
+	      }
+	  }
+      });
+
+      let sfRadar = null;
+      let sfRadarRO = new ResizeObserver(elements => {
+	  for (let e of elements) {
+	      const cr = e.contentRect;
+	      const id = "#" + e.target.id;
+	      const eHeight = $(id).height();
+	      const parent = $(id).parent();
+	      const parentId = "#" + $(parent).attr("id");
+	      const pHeight = $(parent).height();
+	      console.log(`sfRadarRO: ${parentId} ${pHeight} ${id} ${eHeight}`);
+	  }
+	  sfRadar.invalidateSize();
+      });
+
+      const nwsZones = [ "PZZ530", "PZZ545", "PZZ531" ];
+      const nwsZoneText = {
+	  "PZZ530": "",
+	  "PZZ545": "",
+	  "PZZ531": ""
+      };
+
+      const nwsAFDs = [ "KMTR"];
+      const nwsAFDText = {
+	  "KMTR": "",
+      };
+
+      function fetchNWS() {
+	  for (let z of nwsZones) {
+	      let url = "data/nwsZones/" + z + ".html"
+	      //console.log("fetchNWS Zone " + z + " url: " + url);
+
+	      // Load the text (should be html) into this node - clone it to make scrolling look continuous
+	      d3.text(url).then(data => {
+		  nwsZoneText[z] = data;
+		  let html = "";
+		  for (let t of nwsZones) {
+		      if (html != "") {
+			  html += "<p></p>"
+		      }
+		      html += nwsZoneText[t];
+		  }
+		  html += "<p></p>" // space for clone
+		  d3.select("#nws-zone-container").html(html + html)
+	      })
+	  }
+	  
+	  for (let z of nwsAFDs) {
+	      let url = "data/nwsZones/" + z + ".html"
+	      //console.log("fetch NWS AFD " + z + " url: " + url);
+
+	      // Load the text (should be html) into this node - clone it to make scrolling look continuous
+	      d3.text(url).then(data => {
+		  nwsAFDText[z] = data;
+		  let html = "";
+		  for (let t of nwsAFDs) {
+		      if (html != "") {
+			  html += "<p></p>"
+		      }
+		      html += nwsAFDText[t];
+		  }
+		  html += "<p></p>" // space for clone
+		  d3.select("#nws-afd-container").html(html + html)
+	      })
+	  }
+      }
+
+      // Conversion routines for Tempest defaults - only the forecast API converts units, the others return defaults
+      function c2f(d) { return ((parseFloat(d) * (9.0/5.0)) + 32.0); }
+      function mb2mb(d) { return(parseFloat(d)); }
+      function m2kts(d) { return(parseFloat(d) * 1.94384); }
+      function t2m(d) { return(parseFloat(d) + magnetic_declination); }
+
+      // Convenience functions for scaling elements to the window size
+      function vh(v) {
+	  const h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	  return (v * h) / 100;
+      }
+
+      function vw(v) {
+	  const w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	  return (v * w) / 100;
+      }
+
+      function vmin(v) { return Math.min(vh(v), vw(v)); }
+      function vmax(v) { return Math.max(vh(v), vw(v)); }
+
+      //const localStation = "St. Francis Yacht Club";
+
+      const localFields = ["temp", "pressure", "wind", "gust", "direction"];
+
+      const tempestFieldMap = {
+	  "temp": { "field": "air_temperature", "convert": c2f, "precision": 1 },
+	  "pressure": {"field": "sea_level_pressure", "convert": mb2mb, "precision": 0 },
+	  //"wind": { "field": "wind_avg", "convert": m2kts, "precision": 1 },
+	  //"gust": { "field": "wind_gust", "convert": m2kts, "precision": 0 },
+	  "direction": {"field": "wind_direction", "convert": t2m, "precision": 0 },
+      };
+
+      const tempestStations = {
+	  "St. Francis Yacht Club": {
+	      "nickname": "stfyc",
+	      "station_id": "74155",
+	      "device_id": "198898",
+	      "lat": "37.80737",
+	      "lon": "-122.44625",
+	      "observations" : {},
+	      "json": "",
+	      "forecast": "",
+	  },
+	  "Tinsley Island": {
+	      "nickname": "tinsley",
+	      "station_id": "42921",
+	      "device_id": "131674",
+	      "lat": "38.03598",
+	      "lon": "-121.49423",
+	      "observations" : {},
+	      "json": "",
+	  },
+      }
+
+      const tempestDeviceMap = {
+	  "198898": "St. Francis Yacht Club",
+	  "131674": "Tinsley Island",
+      }
+
+      const tempestStationMap = {
+	  "74155": "St. Francis Yacht Club",
+	  "42921": "Tinsley Island",
+      }
+
+      const tempestHistoryURL=`https://swd.weatherflow.com/swd/rest/observations?api_key=&device_id=&bucket=b&time_start=&time_end=&_=`;
+      function fetchTempestHistory(station) {
+  	  const ts_now = Math.floor(Date.now()/1000)
+	  let url = tempestHistoryURL.replace("&device_id=", "&device_id=" + tempestStations[station].device_id);
+	  url = url.replace("api_key=", "api_key=" + weatherFlow_apikey);
+	  url = url.replace("&time_start=", "&time_start=" + (ts_now - 6*60*60));
+	  url = url.replace("&time_end=", "&time_end=" + ts_now);
+	  url = url.replace("&_=", "&_=" + ts_now);
+	  console.log("Fetching history URL: " + url);
+	  d3.json(url)
+	      .then(
+		  function(json) {
+		      tempestStations[station].history_json = json;
+		      tempestStations[station].observations = json.obs;
+		      //plotTempestWindHistory(station);
+		  },
+		  function(error) {
+		      console.log("Couldn't fetch Tempest data from url: " + url);
+		  }
+	      );
+      }
+
+      const tempestForecastURL="https://swd.weatherflow.com/swd/rest/better_forecast?api_key=&build=44&station_id=&lat=38.03598&lon=-121.49423&units_temp=f&units_wind=kts&units_pressure=mb&units_distance=mi&units_precip=in&units_other=imperial&units_direction=mph&_=";
+      function fetchTempestForecast(station) {
+  	  const nonce = Date.now()
+	  let url = tempestForecastURL.replace("station_id=", "station_id=" + tempestStations[station].station_id)
+	  url = url.replace("api_key=", "api_key=" + weatherFlow_apikey);
+	  url = url.replace("&_=", "&_=" + nonce)
+	  d3.json(url)
+	      .then(
+		  function(json) {
+		      tempestStations[station].forecast_json = json;
+		      tempestStations[station].forecast = json.current_conditions;
+		      if ("forecast" in tempestStations[json.location_name]) {
+			  plotTempestWindForecast(json.location_name);
+		      }
+		  },
+		  function(error) {
+		      console.log("Couldn't fetch Tempest data from url: " + url);
+		  }
+	      );
+      }
+
+      const tempestCurrentURL="https://swd.weatherflow.com/swd/rest/observations/location?api_key=&build=44&location_id=&_=";
+      function fetchTempestCurrent(station) {
+  	  const nonce = Date.now()
+	  let url = tempestCurrentURL.replace("location_id=", "location_id=" + tempestStations[station].station_id)
+	  url = url.replace("api_key=", "api_key=" + weatherFlow_apikey);
+	  url = url.replace("&_=", "&_=" + nonce)
+	  console.log("fetchTempestCurrent " + station);
+	  d3.json(url)
+	      .then(
+		  function(json) {
+		      console.log("fetchTempestCurrent " + station + " response");
+		      if (json.obs.length > 0) {
+			  const obs = json.obs[0];
+			  tempestStations[station].current = obs;
+			  for (const [field, f] of Object.entries(tempestFieldMap)) {
+			      // f = tempestFieldMap[field]
+			      if (f.field in obs) {
+				  let val = f.convert(obs[f.field]).toFixed(f.precision);
+				  d3.selectAll("." + field + "-span-" + tempestStations[station].nickname).html(val);
+				  // Kludge - update the anemometer gust value
+				  /*
+				  if (tempestStations[station].nickname == "stfyc" && field == "gust") {
+				      console.log("fetchTempestCurrent " + station + " update gust " + val);
+				      anemometer.update(0, val);
+				  }
+				  */
+			      }
+			  }
+		      }
+		  })
+	      .catch(error => {
+		  console.log("Couldn't fetch Tempest data from url: " + url);
+	      });
+      }
+
+      function plotTempestWindHistory(station) {
+	  let svg, x, y, start, end;
+	  let data;
+
+	  if ((!("history_json" in tempestStations[station])) || (!("obs" in tempestStations[station].history_json))) {
+	      return;
+	  }
+	  const obs = tempestStations[station].history_json["obs"];
+	  if (obs == null) {
+	      console.log("plotTempestWindHistory(): no observations for " + station);
+	      return;
+	  }
+
+	  data = [];
+	  start = obs[0][0];
+	  end = obs[obs.length-1][0];
+	  extent = end - start;
+	  max_extent = (recent_history_hours * 60 * 60)
+	  if (extent > max_extent) {
+	      start = end - max_extent;
+	  }
+
+	  obs.forEach(function(e, i) {
+	      if ((e[0] >= start) && (e[0] <= end)) {
+		  data.push([new Date(e[0] * 1000), e[2], e[3]]);
+	      }
+	  });
+
+	  start = new Date(start * 1000);
+	  end = new Date(end * 1000);
+
+	  d3.select(".wind-history-recent").selectAll("*").remove();
+	  d3.select(".wind-history-recent").remove();
+
+	  // The closer width & height are to the actual size, the better off we are
+	  cr = d3.select("#wind-history-recent").node().getBoundingClientRect();
+	  let width = 640;
+	  let height = 360;
+	  if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
+	      width = cr.width;
+	      height = cr.height - 20; // Kludge - space for title
+	  }
+	  let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
+
+	  svg = d3.select("#wind-history-recent")
+	      .append("svg")
+	      .classed("wind-plot", true)
+	      .classed("wind-history-recent", true)
+	      .attr("viewBox",
+		    -margin.left + " " +
+		    -margin.top + " " +
+		    (width + margin.left + margin.right) + " " +
+		    (height + margin.top + margin.bottom))
+	      .attr("preserveAspectRatio", "none")
+	      //.attr("width", width).attr("height", height)
+	      .append("g")
+	      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	  
+	  x = d3.scaleTime()
+	      .domain([start, end])
+	      .range([0, width]);
+
+	  y = d3.scaleLinear()
+	      .domain([0, 30])
+	      .range([height, 0]);
+
+	  // x-axis
+	  svg.append("g")
+	      .attr("transform", "translate(0," + height + ")")
+	      .classed("wind-plot-x-axis", true)
+	      .call(d3.axisBottom(x));
+
+	  // y-axis
+	  svg.append("g")
+	      .classed("wind-plot-y-axis", true)
+	      .call(d3.axisLeft(y)
+		    .tickArguments([5]));
+
+	  // y-axis gridlines
+	  svg.append("g")			
+	      .attr("class", "grid")
+	      .call(d3.axisLeft(y)
+		    .ticks([5])
+		    .tickSize(-width)
+		    .tickFormat("")
+		   );
+	  
+	  // wind_avg
+	  svg.append("path")
+	      .datum(data)
+	      .classed("wind-plot-wind-avg", true)
+	      .attr("d", d3.area()
+		    .x(function(d) { return x(d[0]) })
+		    .y1(function(d) { return y(d[1]) })
+		    .y0(function(d) { return y(0) })
+		    .curve(d3.curveBasis)
+		   );
+
+	  // wind_gust
+	  svg.append("path")
+	      .datum(data)
+	      .classed("wind-plot-wind-gust", true)
+	      .attr("d", d3.line()
+		    .x(function(d) { return x(d[0]) })
+		    .y(function(d) { return y(d[2]) })
+		    .curve(d3.curveBasis)
+		   );
+      }
+
+      let windsNeedRender = false;
+      function plotTempestWindForecast(station) {
+	  let svg, x, y, start, end;
+	  let X, Y1, Y2;
+	  const now = Date.now()
+
+	  if (!("forecast_json" in tempestStations[station])) {
+	      windsNeedRender = false;
+	      return;
+	  }
+	  
+	  d3.select(".wind-forecast24").selectAll("*").remove();
+	  d3.select(".wind-forecast24").remove();
+
+	  // The closer width & height are to the actual size, the better off we are
+	  cr = d3.select("#wind-forecast24").node().getBoundingClientRect();
+	  //let width = 640;
+	  //let height = 275;
+	  let width = 1280;
+	  let height = 550;
+	  windsNeedRender = true;
+	  if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
+	      width = cr.width;
+	      height = cr.height - 20; // Kludge - space for title
+	      windsNeedRender = false;
+	  }
+	  let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
+
+	  start = new Date(now);
+	  end = new Date(now + (24 * 60 * 60 * 1000));
+
+	  let data = [];
+	  const forecast = tempestStations[station].forecast_json["forecast"]["hourly"];
+	  forecast.map((d, i) => {
+	      ts = d.time * 1000;
+	      if (ts >= now) {
+		  data.push([new Date(ts), d.wind_avg, d.wind_gust]);
+	      }
+	  });
+	  
+	  svg = d3.select("#wind-forecast24")
+	      .append("svg")
+	      .classed("wind-plot", true)
+	      .classed("wind-forecast24", true)
+	      .attr("viewBox", -margin.left + " " + -margin.top + " " + (width + margin.left + margin.right) +" " + (height + margin.top + margin.bottom))
+	      .attr("preserveAspectRatio", "none")
+	      //.attr("width", width).attr("height", height)
+	      .append("g")
+	      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	  
+	  x = d3.scaleTime()
+	      .domain([start, end])
+	      .range([0, width]);
+	  
+	  y = d3.scaleLinear()
+	      .domain([0, 30])
+	      .range([height, 0]);
+
+	  // x-axis
+	  svg.append("g")
+	      .attr("transform", "translate(0," + height + ")")
+	      .classed("wind-plot-x-axis", true)
+	      .call(d3.axisBottom(x));
+
+	  // y-axis
+	  svg.append("g")
+	      .classed("wind-plot-y-axis", true)
+	      .call(d3.axisLeft(y)
+		    .tickArguments([5]));
+
+	  // y-axis gridlines
+	  svg.append("g")			
+	      .attr("class", "grid")
+	      .call(d3.axisLeft(y)
+		    .ticks([5])
+		    .tickSize(-width)
+		    .tickFormat("")
+		   );
+	  
+	  // wind_avg
+	  svg.append("path")
+	      .datum(data)
+	      .classed("wind-plot-wind-avg", true)
+	      .attr("d", d3.area()
+		    .x(function(d) { return x(d[0]) })
+		    .y1(function(d) { return y(d[1]) })
+		    .y0(function(d) { return y(0) })
+		    .curve(d3.curveBasis)
+		   );
+	  
+	  // wind_gust
+	  svg.append("path")
+	      .datum(data)
+	      .classed("wind-plot-wind-gust", true)
+	      .attr("d", d3.line()
+		    .x(function(d) { return x(d[0]) })
+		    .y(function(d) { return y(d[2]) })
+		    .curve(d3.curveBasis)
+		   );
+
+      	  d3.select(".wind-forecast120").selectAll("*").remove();
+      	  d3.select(".wind-forecast120").remove();
+
+	  // The closer width & height are to the actual size, the better off we are
+	  cr = d3.select("#wind-forecast24").node().getBoundingClientRect();
+	  if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
+	      width = cr.width;
+	      height = cr.height;
+	  }
+	  margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
+
+	  // Take these from above
+	  //margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(2.75) };
+	  //width = 640;
+	  //height = 360;
+      	  svg = d3.select("#wind-forecast120")
+	      .append("svg")
+	      .classed("wind-plot", true)
+	      .classed("wind-forecast120", true)
+	      .attr("viewBox", -margin.left + " " + -margin.top + " " + (width + margin.left + margin.right) +" " + (height + margin.top + margin.bottom))
+	      .attr("preserveAspectRatio", "none")
+	      .attr("width", width).attr("height", height)
+	      .append("g")
+	      .attr("transform",
+		    "translate(" + margin.left + "," + margin.top + ")");
+	  
+	  end = new Date(now + (120 * 60 * 60 * 1000));
+	  
+	  x = d3.scaleTime()
+	      .domain([start, end])
+	      .range([0, width]);
+	  
+	  y = d3.scaleLinear()
+	      .domain([0, 30])
+	      .range([height, 0]);
+
+	  // x-axis
+	  svg.append("g")
+	      .attr("transform", "translate(0," + height + ")")
+	      .classed("wind-plot-x-axis", true)
+	      .call(d3.axisBottom(x));
+
+	  // y-axis
+	  svg.append("g")
+	      .classed("wind-plot-y-axis", true)
+	      .call(d3.axisLeft(y)
+		    .tickArguments([5]));
+
+	  // y-axis gridlines
+	  svg.append("g")			
+	      .attr("class", "grid")
+	      .call(d3.axisLeft(y)
+		    .ticks([5])
+		    .tickSize(-width)
+		    .tickFormat("")
+		   );
+
+	  // wind_avg
+	  svg.append("path")
+	      .datum(data)
+	      .classed("wind-plot-wind-avg", true)
+	      .attr("d", d3.area()
+		    .x(function(d) { return x(d[0]) })
+		    .y1(function(d) { return y(d[1]) })
+		    .y0(function(d) { return y(0) })
+		    .curve(d3.curveBasis)
+		   );
+
+	  // wind_gust
+	  svg.append("path")
+	      .datum(data)
+	      .classed("wind-plot-wind-gust", true)
+	      .attr("d", d3.area()
+		    .x(function(d) { return x(d[0]) })
+		    .y1(function(d) { return y(d[2]) })
+		    .y0(function(d) { return y(0) })
+		    .curve(d3.curveBasis)
+		   );
+      };
+
+      let windRO = new ResizeObserver(elements => {
+	  windPlotHistory(windHistory);
+	  windStartStopHistory(elements[0]);
+	  plotTempestWindForecast("St. Francis Yacht Club");
+      });
+
+      var anemometer = null;
+
+      let anemometerRO = new ResizeObserver(elements => {
+	  for (let e of elements) {
+	      const cr = e.contentRect;
+	      console.log("anemometerRO new size: " + cr.width + "x" + cr.height);
+	  }
+      });
+
+      // Gauge for anemometer
+      var gauge = function(container, configuration) {
+	  var that = {};
+	  var config = {
+	      classRoot: "gauge",
+	      size: 200,
+	      clipWidth: 200,
+	      clipHeight: 110,
+
+	      arcInset: 20,
+	      arcWidth: 20,
+	      arcSegments: 0, // # of color segments in dial - defaults to # of ticks
+	      arcColorFn: d3.interpolateHsl(d3.rgb('#e8e2ca'), d3.rgb('#3e6c0a')),
+
+	      // If using multiple pointers all values must be specified
+	      pointers: [
+		  {
+		      pointerWidth: 10,
+		      pointerTailLength: 5,
+		      pointerHeadLengthPercent: 0.9,
+		      transitionMs: 750,
+		      val: 0,
+		  }
+	      ],
+	      
+	      minValue: 0,
+	      maxValue: 10,
+	      
+	      minAngle: -90,
+	      maxAngle: 90,
+	      
+	      arcMajorTicks: 5,
+	      arcLabelFormat: d3.format(',g'),
+	      arcLabelInset: 10,
+	  };
+	  
+	  var range = undefined;
+	  var r = undefined;
+	  var pointerHeadLength = undefined;
+	  var value = 0;
+	  
+	  var svg = undefined;
+	  var arc = undefined;
+	  var scale = undefined;
+	  var ticks = undefined;
+	  var tickData = undefined;
+	  var pointer = undefined;
+	  var donut = d3.pie();
+	  
+	  function deg2rad(deg) {
+	      return deg * Math.PI / 180;
+	  }
+	  
+	  function newAngle(d) {
+	      var ratio = scale(d);
+	      var newAngle = config.minAngle + (ratio * range);
+	      return newAngle;
+	  }
+	  
+	  function configure(configuration) {
+	      var prop = undefined;
+	      for ( prop in configuration ) {
+		  config[prop] = configuration[prop];
+	      }
+	      
+	      range = config.maxAngle - config.minAngle;
+	      r = config.size / 2;
+
+	      // a linear scale that maps domain values to a percent from 0..1
+	      scale = d3.scaleLinear()
+		  .range([0,1])
+		  .domain([config.minValue, config.maxValue]);
+	      
+	      ticks = scale.ticks(config.arcMajorTicks);
+	      tickData = d3.range(config.arcMajorTicks).map(function() {return 1/config.arcMajorTicks;});
+	      
+	      arc = d3.arc()
+		  .innerRadius(r - config.arcWidth - config.arcInset)
+		  .outerRadius(r - config.arcInset)
+		  .startAngle(function(d, i) {
+		      var ratio = d * i;
+		      return deg2rad(config.minAngle + (ratio * range));
+		  })
+		  .endAngle(function(d, i) {
+		      var ratio = d * (i+1);
+		      return deg2rad(config.minAngle + (ratio * range));
+		  });
+	  }
+	  that.configure = configure;
+	  
+	  function centerTranslation() {
+	      return 'translate('+r +','+ r +')';
+	  }
+	  
+	  function isRendered() {
+	      return (svg !== undefined);
+	  }
+	  that.isRendered = isRendered;
+	  
+	  function changeHandler(e) {
+	      eid = e.id;
+	      fields = eid.split("-");
+	      id = eid.slice(0, eid.indexOf("-value"));
+	      if (e != undefined) {
+		  console.log("Anememometer change " + e.target.id + ": " + e.target.value);
+	      }
+	  }
+	  
+	  function render(newValue) {
+	      const svg = d3.select(container)
+	      //.append('svg:svg')
+		  .append('svg')
+		  .classed(config.classRoot + "-gauge", true)
+	      // .attr('width', config.clipWidth)
+	      // .attr('height', config.clipHeight)
+		  .attr("viewBox", "0 0 " + config.clipWidth + " " + config.clipHeight);
+	      
+	      let centerTx = centerTranslation();
+
+	      // The circular gauge dial
+	      const arcs = svg.append('g')
+		  .classed(config.classRoot + "-arc", true)
+		  .attr('transform', centerTx);
+
+	      // Dial arc is a gradient with N segments.
+	      let gradient = tickData; // Default to # of ticks
+	      if (config.arcSegments != 0) {
+		  gradient = Array(config.arcSegments);
+		  for (let i = 0; i < config.arcSegments; i++) {
+		      gradient[i] = 1.0 / config.arcSegments;
+		  }
+	      }
+	      arcs.selectAll('path')
+		  .data(gradient)
+		  .enter().append('path')
+		  .attr('fill', function(d, i) {
+		      return config.arcColorFn(d * i);
+		  })
+		  .attr('d', arc);
+
+	      // Arc labels
+	      var lg = svg.append('g')
+		  .classed(config.classRoot + "-label", true)
+		  .attr('transform', centerTx);
+	      lg.selectAll('text')
+		  .data(ticks)
+		  .enter().append('text')
+		  .attr('transform', function(d) {
+		      var ratio = scale(d);
+		      var newAngle = config.minAngle + (ratio * range);
+		      return 'rotate(' +newAngle +') translate(0,' +(config.arcLabelInset - r) +')';
+		  })
+		  .text(config.arcLabelFormat);
+
+	      // Pointer(s)
+	      for (let i = 0; i < config.pointers.length; i++) {
+		  p = config.pointers[i];
+		  pointerHeadLength = Math.round(r * p.pointerHeadLengthPercent);
+		  const lineData = [ [p.pointerWidth / 2, 0], 
+				     [0, -pointerHeadLength],
+				     [-(p.pointerWidth / 2), 0],
+				     [0, p.pointerTailLength],
+				     [p.pointerWidth / 2, 0] ];
+		  const pointerLine = d3.line().curve(d3.curveMonotoneX);
+		  const pg = svg.append('g').data([lineData])
+			.classed(config.classRoot + "-pointer-" + i, true)
+			.attr('transform', centerTx);
+		  
+		  config.pointers[i].pointer = pg.append('path')
+		      .attr('d', pointerLine/*function(d) { return pointerLine(d) +'Z';}*/ ) // Don't need to close path w/ Z
+		      .attr('transform', 'rotate(' +config.minAngle +')'); // Start at min angle
+		  
+		  update(i, newValue === undefined ? 0 : newValue);
+	      }
+	      
+	      // Hidden input
+	      for (i in config.pointers) {
+		  let classId = `${config.classRoot}-value-${i}`;
+		  let inputId = `${config.id}-value-${i}`;
+		  form = d3.select(container).append("form")
+		      .append("input")
+		      .attr("type", "hidden")
+		      .attr("value", 0.0)
+		      .attr("id", inputId)
+		      .classed(classId, true)
+		      .on('change', changeHandler);
+	      }
+	  }
+	  that.render = render;
+
+	  function update(pointer, newValue, newConfiguration) {
+	      if (pointer === undefined) { // Called when gauge becomes visible
+		  for (let i in config.pointers) {
+		      p = config.pointers[i];
+		      // console.log("reset pointer " + i + " to " + p.val);
+		      const ratio = scale(p.val);
+		      const newAngle = config.minAngle + (ratio * range);
+		      p.pointer.transition()
+			  .duration(p.transitionMs)
+			  .ease(d3.easeElastic)
+			  .attr('transform', 'rotate(' + newAngle +')');
+		  }
+		  return;
+	      }
+	      
+	      if ( newConfiguration  !== undefined) {
+		  configure(newConfiguration);
+	      }
+
+	      config.pointers[pointer].val = newValue;
+	      if (document.hidden) {
+		  //console.log("anemometer " + pointer + ": " + newValue + " update: document is hidden");
+		  return;
+	      }
+	      
+	      const ratio = scale(newValue);
+	      const newAngle = config.minAngle + (ratio * range);
+	      config.pointers[pointer].pointer.transition()
+		  .duration(config.pointers[pointer].transitionMs)
+		  .ease(d3.easeElastic)
+		  .attr('transform', 'rotate(' + newAngle +')');
+	      //console.log("anemometer rotated to " + newAngle);
+	  }
+	  that.update = update;
+
+	  configure(configuration);
+	  
+	  return that;
+      };
+
+      tempestSocket = null;
+      tempestSocketInitializing = false;
+
+      function tempestError(e) {
+	  console.log("tempestMessage error ");
+      }
+
+      function tempestClose(e) {
+	  console.log("tempestClose() websocket closed - sleeping");
+	  setTimeout(function() {
+	      console.log("tempestClose() trying to reopen websocket");
+	      initializeTempestStreams();
+	  }, 60 * 1000); // try again in a minute
+      }
+
+      function tempestCheck() {
+	  if (tempestSocket.readyState != 1) {
+	      console.log("tempestCheck() ready state: " + tempestSocket.readyState);
+	  }
+
+	  if (tempestSocket.readyState == 3) {
+	      initializeTempestStreams();
+	  }
+      }
+
+      // https://weatherflow.github.io/Tempest/api/ws.html
+      obs_stMap = {
+	  //"wind": 2,
+	  //"gust": 3,
+	  "direction": 4,
+	  "temp": 7,
+      }
+      
+      function tempestMessage(json) {
+	  const message = JSON.parse(json.data);
+	  // console.log("tempestMessage type " + message.type + " msg " + json.data);
+	  if (message.type == "obs_st") {
+	      //console.log("tempestMessage type " + message.type + " msg " + json.data);
+	      let device_id = message.device_id;
+	      let station = tempestStations[tempestDeviceMap[device_id]];
+	      let nickname = station.nickname;
+	      // console.log("tempestMessage (" + nickname + ") type " + message.type + " msg " + json.data);
+	      for (const [f, i] of Object.entries(obs_stMap)) {
+		  const fm = tempestFieldMap[f];
+		  const val = fm.convert(message.obs[0][i]).toFixed(fm.precision);
+		  d3.selectAll("." + f + "-span-" + nickname).html(val);
+		  /*
+		  if (nickname == "stfyc" && f == "gust") { // Kludge
+		      anemometer.update(0, val);
+		  }
+		  */
+	      }
+	  } else if (message.type == "rapid_wind") {
+	      let device_id = message.device_id;
+	      let station = tempestStations[tempestDeviceMap[device_id]];
+	      let nickname = station.nickname;
+	      /*
+	      let fm = tempestFieldMap["wind"];
+	      let wind = fm.convert(message.ob[1]).toFixed(fm.precision);
+
+	      if (nickname == "stfyc") { // Kludge
+		  //d3.selectAll(".stfyc-anemometer-value-1").each(function(e, i) { this.value = wind; d3.select(this).on('change')(this); } );
+		  anemometer.update(1, wind);
+	      }
+	      */
+	      fm = tempestFieldMap["direction"];
+	      let direction = fm.convert(message.ob[2]).toFixed(fm.precision);
+	      //d3.selectAll(".wind-span-" + nickname).html(wind);
+	      d3.selectAll(".direction-span-" + nickname).html(direction);
+	  } else if (message.type == "connection_opened") {
+	  } else {
+	      console.log("tempestMessage unknown message type: " + message.type);
+	  }
+      }
+      
+      function initializeTempestStreams() {
+	  if (tempestSocketInitializing == null) {
+	      tempestSocketInitializing = new Date().now;
+	  } else {
+	      let now = Date.now();
+	      if (now - tempestSocketInitializing < (60 * 1000)) {
+		  console.log("initializeTempestStreams() in process");
+		  return;
+	      }
+	      tempestSocketInitializing = new Date().now;
+	  }
+	  
+	  console.log("initializeTempestStreams()");
+	  url = "wss://swd.weatherflow.com/swd/data?api_key=&app=web".replace("api_key=", "api_key=" + weatherFlow_apikey);
+	  tempestSocket = new WebSocket(url);
+	  tempestSocket.addEventListener('onerror', tempestError);
+	  tempestSocket.addEventListener('onclose', tempestClose);
+	  tempestSocket.addEventListener('message', tempestMessage);
+	  tempestSocket.addEventListener('open', function(e) {
+	      // Request StFYC events + rapid_wind
+	      let device_id = tempestStations["St. Francis Yacht Club"].device_id;
+	      let station_id = tempestStations["St. Francis Yacht Club"].station_id;
+	      tempestSocket.send(JSON.stringify({"type": "listen_start", "device_id": device_id}));
+	      tempestSocket.send(JSON.stringify({"type": "listen_rapid_start", "device_id": device_id}));
+	      tempestSocket.send(JSON.stringify({"type": "listen_start_events", "station_id": station_id}));
+	      // Request Tinsley events for tempurature
+	      station_id = tempestStations["Tinsley Island"].station_id;
+	      device_id = tempestStations["Tinsley Island"].device_id;
+	      tempestSocket.send(JSON.stringify({"type": "listen_start", "device_id": device_id}));
+	      tempestSocket.send(JSON.stringify({"type": "listen_rapid_start", "device_id": device_id}));
+	      tempestSocket.send(JSON.stringify({"type": "listen_start_events", "station_id": station_id}));
+	  });
+      }
+
+      var windHistory = null;
+      
+      function stfycWindCallback(json) {
+	  const wind = JSON.parse(json);
+	  if (wind.event == "update") {
+	      const aws_avg = wind.aws_avg.toFixed(1);
+	      const gust = wind.gust.toFixed(1);
+	      const awa = wind.awa;
+	      const awa_avg = wind.awa_avg.toFixed(0);
+	      anemometer.update(1, aws_avg);
+	      anemometer.update(0, gust);
+	      d3.selectAll(".wind-span-stfyc").html(aws_avg);
+	      d3.selectAll(".gust-span-stfyc").html(gust);
+	      d3.selectAll(".awa-span-stfyc").html(awa);
+	      d3.selectAll(".awa-avg-span-stfyc").html(awa_avg);
+	  }
+	  if (wind.event == "history") {
+	      windHistory = wind.history;
+	      windPlotHistory(windHistory);
+	  }
+      }
+
+      let localObs = {
+	  "tableId": "sfLocalObservationsTable",
+	  "url": "https://api.synopticdata.com/v2/stations/latest?stid=&units=english,speed|kts,pres|mb&showemptystations=1&token=".replace("token=", "token=" + synopticData_apitoken),
+	  "stations": ["FTPC1", "PXOC1", "46026", "46012", "46013", "CF131", "KSFO", "KOAK", "KSJC", "KHAF"],
+	  "nickNames": {
+	      "FTPC1": "Ft Point",
+	      "PXOC1": "SF Pier 1",
+	      "CF131": "I5 near Tinsley Is",
+	      "KSFO": "SFO",
+	      "KOAK": "Oakland Airport",
+	      "KSJC": "San Jose Airport",
+	      "KHAF": "Half Moon Bay",
+	      "46026": "46026 SF Buoy",
+	      "46012": "46012 HMB Buoy",
+	      "46013": "46013 Bodega",
+	  },
+	  "fieldMap": {
+	      "temp": "air_temp_value_1",
+	      "pressure": "pressure_value_1",
+	      "seaLevelPressure": "sea_level_pressure_value_1",
+	      "wind": "wind_speed_value_1",
+	      "gust": "wind_gust_value_1",
+	      "direction": "wind_direction_value_1",
+	      "waterTemp": "T_water_temp_value_1",
+	      "waveHeight": "wave_height_value_1",
+	      "wavePeriod": "wave_period_value_1",
+	      "primarySwellHeight": "primary_swell_wave_height_value_1",
+	      "primarySwellDirection": "primary_swell_true_direction_value_1",
+	      "primarySwellPeriod": "primary_swell__wave_period_value_1",
+	  },
+	  "displayFields": [
+	      { "field": "id", "label": "Station", "style": "obs-meta" },
+	      { "field": "name", "label": "Name", "style": "obs-meta" },
+	      { "field": "time", "label": "Time", "style": "obs-data" },
+	      { "field": "temp", "label": "Temp<br>(&#176;F)", "style": "obs-data" },
+	      { "field": "pressure", "label": "Press<br>(mb)", "style": "obs-data" },
+	      { "field": "seaLevelPressure", "label": "MSLP<br>(mb)", "style": "obs-data" },
+	      { "field": "wind", "label": "Wind<br>(Kts)", "style": "obs-data" },
+	      { "field": "gust", "label": "Gust<br>(Kts)", "style": "obs-data" },
+	      { "field": "direction", "label": "Dir<br>(&#176;T)", "style": "obs-data" },
+	      { "field": "waterTemp", "label": "WTemp<br>(&#176;F)", "style": "obs-data" },
+	      { "field": "waveHeight", "label": "Wave<br>Height", "style": "obs-data" },
+	      { "field": "wavePeriod", "label": "Wave<br>Period", "style": "obs-data" },
+	  ],
+	  "observations": {}
+      }
+
+      function handleObs(json) {
+	  let intervalStart = 0;
+	  let lastObservation;
+	  let STID;
+	  
+	  function checkObs(station, f) {
+	      let val = ""
+	      if (f in json["STATION"][station]["OBSERVATIONS"]) {
+		  const t = json["STATION"][station]["OBSERVATIONS"][f]["date_time"]
+		  const ms = Date.parse(t)
+		  if (ms > intervalStart) {
+		      if (ms > lastObservation) {
+			  lastObservation = ms;
+		      }
+		      val = json["STATION"][station]["OBSERVATIONS"][f]["value"]
+		  } else {
+		      // console.log(STID + " Field " + f + " " + t + " too old")
+		  }
+	      } else {
+		  // console.log("Key " + f + " not found in observations")
+	      }
+	      return(val);
+	  }
+
+	  //console.log("Received SynopticData observations");
+
+	  // Buoys are not reporting updated times but have updated values. This is weird or broken.
+	  intervalStart = Date.now() - (24 * 60 * 60 * 1000) // If observation was in the last 24 hours
+	  const tt = new Date()
+	  tt.setTime(intervalStart)
+
+	  //console.log("Interval starts at " + tt.toUTCString())
+	  
+	  for (let station =  0; station < json["STATION"].length; station++) {
+	      lastObservation = 0
+	      STID = json["STATION"][station]["STID"];
+
+	      localObs["observations"][STID] = {}
+	      let name = (STID in localObs["nickNames"]) ? localObs["nickNames"][STID] : json["STATION"][station]["NAME"];
+	      localObs["observations"][STID]["name"] = name;
+	      for (let k in localObs["fieldMap"]) {
+		  localObs["observations"][STID][k] = checkObs(station, localObs["fieldMap"][k])
+	      }
+
+	      // We could disable displaying non-reporting stations here
+	      // Look for the newest reported datum - a bit kludgey
+	      let tstring = ""
+	      if (lastObservation != 0) {
+		  tt.setTime(lastObservation);
+		  tstring = tt.toTimeString().substr(0, 5);
+	      }
+	      localObs["observations"][STID]["time"] = tstring;
+
+	      let stid;
+	      firstCharacter = STID.charAt(0);
+	      if (((firstCharacter >= 'A') && (firstCharacter <= 'Z')) || ((firstCharacter >= 'a') && (firstCharacter <= 'z'))) {
+		  stid = STID;
+	      } else {
+		  stid = 'B' + STID;
+	      }
+
+	      for (let f = 0; f < localObs["displayFields"].length; f++ ) {
+		  const field = localObs["displayFields"][f]["field"];
+		  if (field != "id") {
+		      const id = stid + '_' + field;
+		      d3.select("#" + id).html(localObs["observations"][STID][field])
+		  }
+	      }
+	  }
+      }
+      
+      function fetchObs(c) {
+	  const nonce = Date.now()
+	  if (c["stations"].length == 0) {
+	      return;
+	  }
+	  
+	  let stns = c["stations"][0]
+	  for (i = 1; i < c["stations"].length; i++) {
+	      stns += "," + c["stations"][i]
+	  }
+	  const url = c["url"].replace("stid=", "stid=" + stns);
+	  d3.json(url)
+	      .then(handleObs,
+		    function(error) { console.log("Couldn't fetch weather from url: " + url) }
+		   );
+      }
+
+      const noaaTideStation = "9414290";
+      const minTide = -1.5;
+      const maxTide = 6.5;
+      let tideData = null;
+
+      let tidesNeedRerender = false;
+
+      function plotTides() {
+	  if (tideData == null) {
+	      return;
+	  }
+	  const tides = tideData.tides;
+	  const hilo = tideData.hilo;
+
+	  const element = "tide-forecast-" + noaaTideStation;
+	  // The closer width & height are to the actual size, the better off we are
+	  let cr = d3.select("#" + element).node().getBoundingClientRect();
+	  let width = 640;
+	  let height = 275;
+	  width = 877; height = 411; // As rendered on FullHD display
+	  tidesNeedRerender = true;
+	  if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
+	      width = cr.width;
+	      height = cr.height;
+	      tidesNeedRerender = false;
+	  }
+	  let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
+
+	  let X = tides.map(function(d) { return(Date.parse(d.t)) });
+	  let Y = tides.map(function(d) { return(d.v) });
+	  let data = X.map(function(e, i) {
+	      return [e, Y[i]];
+	  });
+	  start = X[0];
+	  end = X[X.length-1];
+
+	  d3.select("." + element).selectAll("*").remove();
+	  d3.select("." + element).remove();
+	  let svg = d3.select("#" + element)
+	      .append("svg")
+	      .classed("tide-svg", true)
+	      .classed(element, true)
+	      .attr("viewBox",
+		    -margin.left + " " +
+		    -margin.top + " " +
+		    (width + margin.left + margin.right) + " " +
+		    (height + margin.top + margin.bottom))
+	      .attr("preserveAspectRatio", "none")
+	      //.attr("width", width).attr("height", height)
+	      .append("g")
+	      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	  
+	  x = d3.scaleTime()
+	      .domain([new Date(start), new Date(end)])
+	      .range([0, width]);
+
+	  y = d3.scaleLinear()
+	      .domain([minTide, maxTide])
+	      .range([height, 0]);
+
+	  // x-axis
+	  svg.append("g")
+	      .attr("transform", "translate(0," + height + ")")
+	      .classed("tide-plot-x-axis", true)
+	      .call(d3.axisBottom(x));
+
+	  // y-axis
+	  svg.append("g")
+	      .classed("tide-plot-y-axis", true)
+	      .call(d3.axisLeft(y)
+		    .tickArguments([parseInt((maxTide - minTide) - 1)]));
+
+	  // y-axis gridlines
+	  svg.append("g")			
+	      .classed("tide-plot-grid", true)
+	      .call(d3.axisLeft(y)
+		    .tickSize(-width)
+		    .tickFormat("")
+		    .ticks([parseInt((maxTide - minTide) - 1)])
+		   );
+	  
+	  // Tide height
+	  svg.append("path")
+	      .datum(data)
+	      .classed("tide-plot-tide", true)
+	      .attr("d", d3.area()
+		    .x(function(d) { return x(d[0]) })
+		    .y1(function(d) { return y(d[1]) })
+		    .y0(function(d) { return y(minTide) })
+		    .curve(d3.curveBasis)
+		   );
+
+	  // Highs & Lows
+	  const hl = [];
+	  for (i in hilo) {
+	      const item = hilo[i];
+	      t = (new Date(item.t)).getTime();
+	      if ((t > start) && (t < end)) {
+		  hl.push(t);
+	      }
+	  }
+	  svg.append("g")			
+	      .classed("tide-plot-grid", true)
+	      .call(d3.axisBottom(x)
+		    .tickSize(height)
+		    .tickFormat("")
+		    .tickValues(hl)
+		   );
+
+	  // Now
+	  now = Date.now();
+	  svg.append("path")
+	      .datum([[now, minTide], [now, maxTide]])
+	      .classed("tide-plot-now", true)
+	      .attr("d", d3.line()
+		    .x(function(d) { return x(d[0]) })
+		    .y(function(d) { return y(d[1]) })
+		   );
+
+	  X = hilo.map(function(d) { return(Date.parse(d.t)); });
+	  Y = hilo.map(function(d) { return(d.v); });
+	  data = [];
+	  for (i in X) {
+	      if ((X[i] > start) && (X[i] < end)) {
+		  let label = (parseFloat(hilo[i].v).toFixed(1) + "ft @" + hilo[i].t.slice(11));
+		  data.push([X[i], parseFloat(Y[i]), label, hilo[i].type]);
+	      }
+	  }
+
+	  // Keep the labels on the chart during extreme tide events
+	  function labelClamp(y) {
+	      const labelMax = maxTide - 0.5;
+	      const labelMin = minTide + 0.8;
+	      if (y > labelMax) {
+		  return(labelMax);
+	      }
+	      if (y < labelMin) {
+		  return(labelMin);
+	      }
+	      return(y);
+	  }
+	  
+	  // High/Low Labels
+	  svg.append("g")
+	      .classed("tide-plot-label-group", true)
+	      .selectAll('text')
+	      .data(data)
+	      .enter()
+	      .append("g")
+	      .attr("opacity", 1)
+	      .classed("tide-plot-label", true)
+	      .attr("transform", function(d, i) {
+		  return("translate(" + x(d[0]) + ", " + y(labelClamp(d[1])) + ")")
+	      })
+	      .append('text')
+	      .classed("tide-plot-label-item", true)
+	      .attr("text-anchor", "middle")
+	      .attr("dx", 0)
+	      .attr("dy", function(d, i) { return(d[3] == "H" ? "-0.45em" : "1.3em") } )
+	      .text(function(d, i) { return(d[2]); });
+
+	  d3.selectAll(".tide-plot-label-item").each(function(e, i) {
+	      let label = d3.select(this);
+	      let parent = this.parentNode;
+	      let bbox = label.node().getBBox();
+	      d3.select(parent).insert("rect", ":first-child")
+	          .attr("x", function(d, i){return bbox.x})
+		  .attr("y", function(d, i){return bbox.y})
+		  .attr("dx", 0)
+		  .attr("dy", function(d,i) { return(data[i][3] == "H" ? "-0.4em" : "1.3em") } )
+		  .attr("width", function(d){return bbox.width})
+		  .attr("height", function(d){return bbox.height})
+		  .classed("tide-plot-label-background", true);
+	  });
+      }
+
+      const days = [
+	  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+      ];
+
+      const noaaCurrentStation = "SFB1203_18";
+      const minCurrent = -4.5;
+      const maxCurrent = 4.5;
+      
+      function plotCurrents() {
+	  if (tideData == null) {
+	      return;
+	  }
+	  
+	  const current_data = tideData.current_points;
+	  const current_events = tideData.current_info.events; // See what I did there?
+
+	  t = new Date();
+	  let year = t.getFullYear().toString();
+	  let month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
+	  let date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
+	  start_string = `${year}-${month}-${date} 00:00`;
+	  start = new Date(start_string);
+
+	  t.setTime(t.getTime() + (2 * 24 * 60 * 60 * 1000));
+	  year = t.getFullYear().toString();
+	  month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
+	  date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
+	  end_string = `${year}-${month}-${date} 00:00`;
+	  end = new Date(end_string);
+
+	  const plot_events = [];
+	  current_events.forEach(function(e, i) {
+	      if ((e.e == "Max Flood") || (e.e == "Max Ebb")) {
+		  plot_events.push(e);
+	      }
+	  });
+
+	  let element = ".current-events-table-" + noaaCurrentStation;
+	  d3.selectAll(element).remove();
+
+	  let today = current_events[0].t.slice(0,10);
+
+	  let current_tables = [{},{}];
+	  for (i in [0, 1]) {
+	      let t0 = new Date(today + " 00:00");
+	      let t = new Date();
+	      const oneDay = (i * 24 * 60 * 60 * 1000);
+	      t.setTime(t0.getTime() + oneDay);
+	      year = t.getFullYear().toString();
+	      month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
+	      date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
+	      head_string = days[t.getDay()] + `, ${year}-${month}-${date}`;
+
+	      let table = d3.select("#current-events-content-" + noaaCurrentStation).append("div")
+		  .classed("current-events-table", true)
+		  .classed("current-events-table-" + noaaCurrentStation, true);
+
+	      let header = table.append("div")
+		  .classed("current-events-table-header", true)
+	      header.append("div")
+		  .classed("current-events-table-cell", true)
+		  .html(head_string);
+	      
+	      let body = table.append("dev")
+		  .classed("current-events-table-body", true)
+	      current_tables[i].body = body;
+	  }
+	  
+	  current_events.forEach(function(e) {
+	      const d = e.t.slice(0,10);
+	      const i = (d == today) ? 0 : 1;
+
+	      const v = (e.e.search("Slack") == -1) ? e.e : "Slack";
+	      const water = (e.e.search("Slack") != -1) || (e.e.search("Max") != -1);
+	      let row = current_tables[i].body.append("div")
+		  .classed("current-events-table-row", true)
+	      row.append("div")
+		  .classed("current-events-table-cell", true)
+		  .classed("current-events-table-water", water)
+		  .classed("current-events-table-astral", !water)
+		  .html(e.t.slice(10));
+	      row.append("div")
+		  .classed("current-events-table-cell", true)
+		  .classed("current-events-table-water", water)
+		  .classed("current-events-table-astral", !water)
+		  .html(v);
+	  });
+
+	  element = "current-forecast-" + noaaCurrentStation;
+	  // The closer width & height are to the actual size, the better off we are
+	  let cr = d3.select("#" + element).node().getBoundingClientRect();
+	  let width = 640;
+	  let height = 275;
+	  if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
+	      width = cr.width;
+	      height = cr.height;
+	  }
+	  let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
+	  let X = current_data.map(function(d) { return(Date.parse(d[0])) });
+	  let Y = current_data.map(function(d) { return(d[1]) });
+	  let data = X.map(function(e, i) {
+	      return [e, Y[i]];
+	  });
+
+	  d3.select("." + element).selectAll("*").remove();
+	  d3.select("." + element).remove();
+	  svg = d3.select("#" + element)
+	      .append("svg")
+	      .classed("tide-svg", true)
+	      .classed(element, true)
+	      .attr("viewBox",
+		    -margin.left + " " +
+		    -margin.top + " " +
+		    (width + margin.left + margin.right) + " " +
+		    (height + margin.top + margin.bottom))
+	      .attr("preserveAspectRatio", "none")
+	      //.attr("width", width).attr("height", height)
+	      .append("g")
+	      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	  
+	  x = d3.scaleTime()
+	      .domain([start, end])
+	      .range([0, width]);
+
+	  y = d3.scaleLinear()
+	      .domain([minCurrent, maxCurrent])
+	      .range([height, 0]);
+
+	  // x-axis
+	  svg.append("g")
+	      .attr("transform", "translate(0," + height + ")")
+	      .classed("tide-plot-x-axis", true)
+	      .call(d3.axisBottom(x));
+
+	  // y-axis
+	  svg.append("g")
+	      .classed("tide-plot-y-axis", true)
+	      .call(d3.axisLeft(y)
+		    .tickArguments([parseInt((maxCurrent - minCurrent) - 1)]));
+
+	  // y-axis gridlines
+	  svg.append("g")			
+	      .classed("tide-plot-grid", true)
+	      .call(d3.axisLeft(y)
+		    .tickSize(-width)
+		    .tickFormat("")
+		    .ticks([parseInt((maxCurrent - minCurrent) - 1)])
+		   );
+	  
+	  // Current speed
+	  svg.append("path")
+	      .datum(data)
+	      .classed("tide-plot-tide", true)
+	      .attr("d", d3.area()
+		    .x(function(d) { return x(d[0]) })
+		    .y1(function(d) { return y(d[1]) })
+		    .y0(function(d) { return y(0) })
+		    .curve(d3.curveBasis)
+		   );
+
+	  // Max flow & slack grid lines
+	  const event_times = [];
+	  for (i in plot_events) {
+	      const item = plot_events[i];
+	      t = new Date(item.t);
+	      if ((t > start) && (t < end)) {
+		  event_times.push(t);
+	      }
+	  }
+	  svg.append("g")			
+	      .classed("tide-plot-grid", true)
+	      .call(d3.axisBottom(x)
+		    .tickSize(height)
+		    .tickFormat("")
+		    .tickValues(event_times)
+		   );
+
+	  // Max flow & slack labels
+	  X = plot_events.map(function(d) { return(Date.parse(d.t)); });
+	  Y = plot_events.map(function(d) { return(d.v); });
+	  data = [];
+	  for (i in X) {
+	      if ((X[i] > start) && (X[i] < end)) {
+		  let label = (parseFloat(plot_events[i].v).toFixed(1) + "kt @" + plot_events[i].t.slice(11));
+		  data.push([X[i], parseFloat(Y[i]), label, plot_events[i].e]);
+	      }
+	  }
+	  
+	  // Now
+	  now = Date.now();
+	  svg.append("path")
+	      .datum([[now, minCurrent], [now, maxCurrent]])
+	      .classed("tide-plot-now", true)
+	      .attr("d", d3.line()
+		    .x(function(d) { return x(d[0]) })
+		    .y(function(d) { return y(d[1]) })
+		   );
+
+	  // Labels are drawn over Now line
+	  svg.append("g")
+	      .classed("current-plot-label-group", true)
+	      .selectAll('text')
+	      .data(data)
+	      .enter()
+	      .append("g")
+	      .attr("opacity", 1)
+	      .classed("current-plot-label", true)
+	      .attr("transform", function(d, i) {
+		  return("translate(" + x(d[0]) + ", " + y(d[1]) + ")")
+	      })
+	      .append('text')
+	      .classed("current-plot-label-item", true)
+	      .attr("text-anchor", "middle")
+	      .attr("dx", 0)
+	      .attr("dy", function(d, i) { return(d[3] == "Max Flood" ? "-0.45em" : "1.3em") } )
+	      .text(function(d, i) { return(d[2]); });
+
+	  d3.selectAll(".current-plot-label-item").each(function(e, i) {
+	      let label = d3.select(this);
+	      let parent = this.parentNode;
+	      let bbox = label.node().getBBox();
+	      d3.select(parent).insert("rect", ":first-child")
+	          .attr("x", function(d, i){return bbox.x})
+		  .attr("y", function(d, i){return bbox.y})
+		  .attr("dx", 0)
+		  .attr("dy", function(d,i) { return(data[i][3] == "Max Flood" ? "-0.4em" : "1.3em") } )
+		  .attr("width", function(d){return bbox.width})
+		  .attr("height", function(d){return bbox.height})
+		  .classed("current-plot-label-background", true);
+	  });
+      }
+
+      function fetchTidesAndCurrents() {
+	  const url = "data/NOAA/tides.json";
+	  d3.json(url)
+	      .then(
+		  function(json) {  tideData = json; plotTides(); plotCurrents(); },
+		  function(error) { console.log("Couldn't fetch tides from url: " + url) }
+	      );
+      }
+
+      /* The NOAA web server's CORS setting prevents using the data directly in a web page.
+	 const noaaTideURL = 'https://tidesandcurrents.noaa.gov/api/datagetter?station=&begin_date=&end_date=&applications=StFYC&product=predictions&datum=MLLW&units=english&time_zone=lst_ldt&format=json';
+
+	 function fetchTidesAndCurrents() {
+	 t = new Date();
+	 let year = t.getFullYear().toString();
+	 let month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
+	 let date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
+	 const hour = t.getHours();
+	 const minute = t.getMinutes();
+	 const begin_date = year + month + date;
+	 t.setTime(t.getTime() + (24 * 60 * 60 * 1000));
+	 year = t.getFullYear().toString();
+	 month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
+	 date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
+	 const end_date =  year + month + date;
+	 
+	 let url = noaaTideURL.replace("station=", "station=" + noaaTideStation)
+	 url = url.replace("begin_date=", "begin_date=" + begin_date)
+	 url = url.replace("end_date=", "end_date=" + end_date);
+	 let tides = "";
+	 let currents = "";
+	 
+	 d3.json(url)
+	 .then(
+	 function(json) { tides = json },
+	 function(error) { console.log("Couldn't fetch tides from url: " + url) }
+	 );
+	 url = url + "&interval=hilo";
+	 d3.json(url)
+	 .then(
+	 function(json) { currents = json },
+	 function(error) { console.log("Couldn't fetch currents from url: " + url) }
+	 );
+	 graphTidesAndCurrents(tides, currents);
+	 }
+      */
+
+      function setCurrentChartURL() {
+	  // Advance one hour from now and construct forecast URL
+	  t = new Date()
+	  t.setTime(Date.now() + (60 * 60 * 1000))
+	  // https://cdn.tidesandcurrents.noaa.gov/ofs/sfbofs/wwwgraphics/SFBOFS_entrance_cu_fore_202206080100.png
+	  const year = t.getFullYear();
+	  const month = t.getMonth();
+	  const date = t.getDate();
+	  const hour = t.getHours();
+	  const minute = t.getMinutes();
+
+	  ts = year;
+	  ts += (month < 10) ? "0" + (month+1) : (month+1);
+	  ts += (date < 10) ? "0" + date : date;
+	  ts += (hour < 10) ? "0" + hour : hour;
+	  ts += "00"
+	  
+	  url = "https://cdn.tidesandcurrents.noaa.gov/ofs/sfbofs/wwwgraphics/SFBOFS_entrance_cu_fore_" + ts + ".png";
+	  d3.select("#sfCurrentChart").attr("src", url).attr("sfCurrentChart-data-hour", hour).attr("sfCurrentChart-data-minute", minute);;
+      }
+
+      function updateImg(e) {
+	  let url = d3.select(e).attr("src");
+	  let q = url.lastIndexOf("?");
+	  const now = Date.now();
+	  if (q == -1) {
+	      url += "?" + now;
+	  } else {
+	      url = url.substr(0, q+1) + now;
+	  }
+	  //console.log("updateImage new url: " + url);
+	  d3.select(e).attr("src", url);
+      }
+      
+      // https://web.dev/lazy-loading-video/
+      const lazyVideoObserver = new IntersectionObserver(function(entries, observer) {
+	  entries.forEach(function(video) {
+	      if (video.isIntersecting) {
+		  for (let source in video.target.children) {
+		      const videoSource = video.target.children[source];
+		      if (typeof videoSource.tagName === "string" && videoSource.tagName === "SOURCE") {
+			  videoSource.setAttribute("src", videoSource.dataset.src);
+			  videoSource.removeAttribute("data-src");
+		      }
+		  }
+
+		  console.log("lazyVideoObserver start " + video.target.id);
+		  video.target.classList.remove("lazy");
+		  lazyVideoObserver.unobserve(video.target);
+		  video.target.load();
+		  video.target.play();
+	      }
+	  });
+      });
+	      
+      function initializeVideoLazyLoad() {
+	  const lazyVideos = [].slice.call(document.querySelectorAll(".wx-video.lazy"));
+	  lazyVideos.forEach(function(lazyVideo) {
+	      lazyVideoObserver.observe(lazyVideo);
+	  });
+      }
+
+      function updateVideo(e) {
+	  if (e == null) {
+	      return;
+	  }
+
+	  for (let source in e.children) {
+	      const videoSource = e.children[source];
+	      if (typeof videoSource.tagName === "string" && videoSource.tagName === "SOURCE") {
+		  let src = videoSource.src;
+
+		  if (src == null || src == "") {
+		      //console.log("updateVideo video not loaded");
+		      return;
+		  }
+
+		  let url = src.substring(0, src.lastIndexOf("/")) + "/latest.json";
+		  //console.log("updateVideo fetch src '" + src + "' url " + url);
+		  d3.json(url)
+		      .then(
+			  function(json) {
+			      if (videoSource.src.substr(src.lastIndexOf("/")+1) != json.fn.substr(json.fn.lastIndexOf("/")+1)) {
+				  e.pause();
+				  console.log("updateVideo " + videoSource.src + " -> " + json.fn);
+				  videoSource.setAttribute("data-src", json.fn);
+				  videoSource.removeAttribute("src");
+				  e.classList.add("lazy");
+				  lazyVideoObserver.observe(e);
+				  return;
+			      }
+			      // console.log("updateVideo no change " + src);
+			      return;
+			  },
+			  function(error) {
+			      console.log("updateVideo couldn't fetch video filename latest " + url);
+			      return;
+			  }
+		  
+		      );
+		  return;
+	      }
+	  }
+	  console.log("updateVideo no src found");
+      }
+
+      let sceneMenuIsPopped = false;
+      function handleScenePullDownClick(e) {
+	  if (sceneMenuIsPopped) {
+	      d3.select(".wx-sidebar")
+		  .classed(".zpop", true)
+		  .attr("style", "display: block");
+	      sceneMenuIsPopped = false;
+	  } else {
+	      d3.select(".wx-sidebar")
+		  .classed(".zpop", false)
+		  .attr("style", "");
+	      sceneMenuIsPopped = true;
+	  }
+      }
+
+      let lastSec = -1;
+      let lastMinute = -1;
+      function dispatch() {
+	  const now = new Date();
+	  const time = Math.floor(now.getTime() / 1000);
+	  if (time == lastSec) {
+	      return;
+	  }
+	  lastSec = time;
+
+	  if (mode == "Carousel") {
+	      rotateScene(); // Called once per second
+	  }
+
+	  if (tidesNeedRerender) {
+	      plotTides();
+	      plotCurrents();
+	  }
+
+	  if (windsNeedRender) {
+	      plotTempestWindForecast("St. Francis Yacht Club");
+	  }
+
+	  minutes = Math.floor(time/60);
+	  if (minutes == lastMinute) {
+	      return;
+	  }
+
+	  // Everything here and below executes once per minute
+
+	  const hour = now.getHours();
+	  const minute = now.getMinutes();
+	  console.log(`Dispatch: h ${hour} m ${minute} t ${time/60} l ${lastMinute}`);
+
+	  lastMinute = minutes;
+
+	  // It's a new minute so update the local and GMT clock fields
+	  u = now.toUTCString();
+	  d3.select("#time-UTC").html( u.slice(17,22) + "UTC");
+	  l = now.toTimeString();
+	  ts = l.slice(0, 5);
+	  tz = l.slice(l.indexOf("(") + 1, l.indexOf(")") - 2);
+	  d3.select("#time-local").html( ts + (l.includes("Daylight") ? "PDT" : "PST")); // Kludgey
+
+	  if (mode == "Carousel") {
+	      rotateProgram();
+	  }
+
+	  tempestCheck(); // Have WebSockets closed?
+
+	  // Check the video .json files each minute to see if there is a new render
+	  d3.selectAll(".wx-video").each(function() { updateVideo(this) });
+
+	  // Using WebSocket now?
+	  //fetchTempestCurrent("St. Francis Yacht Club");
+	  //fetchTempestCurrent("Tinsley Island");
+
+	  // Every 5 minutes - Skew it so it's not right on the hour
+	  if (!((minute+1) % 5)) {
+	      console.log("dispatch 5: " + now);
+	      d3.selectAll(".wx-image.update5").each(function() { updateImg(this) });
+	      fetchObs(localObs);
+	      fetchTempestHistory("St. Francis Yacht Club");
+	      fetchTidesAndCurrents();
+	  }
+
+	  // Every 10 minutes - Skew it so it's not right on the hour
+	  if (!((minute+4) % 10)) {
+	      // Doesn't happen very often
+	      fetchNWS();
+	  }
+	  
+	  if (minute > 30) {
+	      // Change current chart once per hour after half-past.
+	      /*
+		if (hour != d3.select("#sfCurrentChart").attr("sfCurrentChart-data-hour")) {
+		//setCurrentChartURL();
+		}
+	      */
+	  }
+
+	  if (!((minute + 3) % 60)) {
+	      fetchTempestForecast("St. Francis Yacht Club");
+	  }
+      }
+
+      let wastedSize = 0;
+      
+      function initializeScene(newScene) {
+	  const now = new Date();
+	  const time = Math.floor(now.getTime() / 1000);
+
+	  curScene = newScene;
+	  
+	  d3.selectAll(".wx-scene").classed("show", false);
+	  while (scenes[curScene].duration == 0) { // Skip scenes with 0 duration
+	      curScene = (curScene + 1) % scenes.length;
+	  }
+
+	  let list = d3.select("#scene-list").property("children");
+	  for (i = 0; i < list.length; i++) {
+	      d3.select(list[i]).classed("bg-active", (i==curScene) ? true : false);
+	  }
+	  
+	  d3.select("#" + scenes[curScene].div).classed("show", true);
+
+	  if (scenes[curScene].div == "vesselFinderScene") {
+	      let el = document.getElementById(scenes[curScene].div);
+	      if ( el === undefined ) {
+		  el = document.documentElement;
+	      }
+	      wastedSize = el.offsetHeight;
+	      $(window).trigger('resize');
+	  }
+	  curSceneTime = time;
+	  console.log(`initializeScene program: ${schedule[curProgram].program} scene: ${scenes[curScene].div} time left: ${(curSceneTime + scenes[curScene].duration) - time}`);
+      }
+
+      function rotateScene() {
+	  if (scenes.length == 0) {
+	      console.log("rotateScene called before scenes initialized");
+	      return;
+	  }
+	  
+	  const now = new Date();
+	  const time = Math.floor(now.getTime() / 1000);
+
+	  if (time < (curSceneTime + scenes[curScene].duration)) {
+	      return;
+	  }
+	  
+	  curScene = (curScene + 1) % scenes.length;
+	  initializeScene(curScene);
+      }
+
+      function initializeProgram(p) {
+	  curProgram = p;
+	  program = schedule[curProgram].program
+	  console.log("Rotate Program to " + program);
+	  scenes = programs[program];
+	  curSceneTime = 0;
+	  curScene = scenes.length - 1;
+
+	  // Create scene list
+	  d3.select("#program").html(program);
+	  const list = d3.select("#scene-list");
+	  list.selectAll("*").remove();
+	  scenes.forEach(function(sc,i) {
+	      let b = list.append("div")
+		  .attr('id', "scene-index-" + i)
+		  .html(sc.label);
+	      if (sc.div != "")
+	      	  b.classed('scene-button', true)
+	  });
+      }
+
+      function rotateProgram() {
+	  const now = new Date();
+	  const m = now.getMinutes();
+
+	  let curStart = schedule[curProgram]["start"];
+	  let nextProgram = (curProgram+1) % schedule.length;
+	  let nextStart = schedule[nextProgram]["start"];
+	  let newProgram = curProgram;
+	  console.log(`rotateProgram: -${m} curProgram ${curProgram} curStart ${curStart} nextProgram ${nextProgram} nextStart ${nextStart}`);
+	  while (((m < curStart) && (m >= nextStart)) ||          // Time wrapped to next hour
+		 ((nextStart >= curStart) && (m >= nextStart))) { // Not wrapping
+	      console.log(`rotateProgram: +${m} curProgram ${curProgram} curStart ${curStart} nextProgram ${nextProgram} nextStart ${nextStart}`);
+	      newProgram = nextProgram;
+	      curStart = nextStart;
+	      nextProgram = (newProgram+1) % schedule.length;
+	      nextStart = schedule[nextProgram]["start"];
+	  }
+
+	  if (newProgram != curProgram) {
+	      initializeProgram(newProgram);
+	  }
+      }
+
+      function initializeLocalObs() {
+	  // Table header row
+	  const r = d3.select("#" + localObs["tableId"]).append("div").attr("id", localObs["tableId"] + "-header").classed("obs-header", true)
+	  for (let i = 0; i < localObs["displayFields"].length; i++) {
+	      const f = localObs["displayFields"][i];
+	      r.append("div")
+		  .classed("obs-table-cell", true)
+		  .classed(f["style"], true)
+		  .html(f["label"]);
+	  }
+
+	  bodyId = localObs["tableId"] + "-body";
+	  const b = d3.select("#" + localObs["tableId"]).append("div").attr("id", bodyId).classed("obs-body", true)
+	  for (let s = 0; s < localObs["stations"].length; s++) {
+	      var stid;
+	      const STID = localObs["stations"][s];
+	      const firstCharacter = STID.charAt(0);
+	      if (((firstCharacter >= 'A') && (firstCharacter <= 'Z')) || ((firstCharacter >= 'a') && (firstCharacter <= 'z'))) {
+		  stid = STID;
+	      } else {
+		  // Prepend a 'B' for buoys
+		  stid = 'B' + STID;
+	      }
+
+	      const r = b.append("div").attr("id", stid).attr("class", "obs-row");
+	      // Add an element for each field
+	      for (let i = 0; i < localObs["displayFields"].length; i++) {
+		  const f = localObs["displayFields"][i];
+		  const id = stid + '_' + f["field"];
+		  r.append("div")
+		      .attr("id", id)
+		      .classed("obs-table-cell", true)
+		      .classed(f["style"], true)
+	      }
+	      // Insert station ID field
+	      d3.select("#" + stid + "_id").html(STID);
+	  }
+
+	  d3.selectAll(".obs-row:nth-child(2n+1)").classed("obs-table-even", true);
+	  d3.selectAll(".obs-row:nth-child(2n+2)").classed("obs-table-odd", true);
+      }
+
+      function setCarouselMode(m) {
+	  console.log("setCarouselMode to " + m);
+	  if (m == "Carousel") {
+	      mode = "Carousel";
+      	      d3.select("#mode-button")
+		  .html("Auto");
+	      d3.selectAll("#scene-list>div")
+		  .classed("active-scene", false)
+		  .on('click', null);
+	  } else {
+	      mode = "Interactive";
+      	      d3.select("#mode-button")
+		  .html("Interactive");
+	      d3.selectAll("#scene-list>div")
+		  .classed("active-scene", true)
+		  .on('click', handleSceneClick);
+	  }
+      }
+
+      function handleSceneClick(e) {
+	  const id = e.target.id;
+	  const indexStart = id.lastIndexOf('-')+1;
+	  const index = parseInt(id.slice(indexStart));
+	  initializeScene(index);
+      }
+
+      function handleModeButton() {
+	  if (mode == "Carousel") {
+	      setCarouselMode("Interactive");
+	  } else {
+	      setCarouselMode("Carousel");
+	  }
+      }
+
+      function visibilityChange() {
+	  if (!document.hidden) {
+	      anemometer.update();
+	      windPlotHistory(windHistory);
+	      plotTempestWindForecast("St. Francis Yacht Club");
+	      plotTides(); plotCurrents();
+	  }
+      }
+
+      function initialize() {
+	  console.log("Initializing wx page");
+	  initializeLocalObs();
+
+	  let href = window.location.href;
+
+	  if (href.indexOf("?kiosk") == -1) {
+	      console.log("interactive mode");
+	      schedule = interactiveSchedule;
+	      initializeProgram(0);
+	      d3.select("#mode-button")
+		  .attr("style", "display: inline-grid")
+		  .on('click', handleModeButton);
+	      setCarouselMode("Interactive");
+	      curScene = scenes.length - 1;
+	      rotateScene();
+	  } else {
+	      console.log("Kiosk mode");
+	      schedule = productionSchedule;
+	      initializeProgram(0);
+	      setCarouselMode("Carousel");
+	      curScene = scenes.length - 1;
+	      rotateScene();
+	  }
+
+	  fetchObs(localObs);
+	  fetchNWS();
+	  //setCurrentChartURL();
+
+	  // Catch resize event for scrollable containers
+	  for (let e of document.querySelectorAll(".vertical-container")) {
+	      nwsRO.observe(e);
+	  }
+	  
+	  leafletRadar = false;
+	  if (leafletRadar) {
+	      initializeRadar();
+	      sfRadarRO.observe(document.querySelector("#sfRadar"));
+	  }
+
+	  // Catch resize events for anemometer graphs because I'm too lame to get the svgs to scale
+	  windRO.observe(document.querySelector("#localWind"));
+
+	  anemometer = gauge('#anemometer-stfyc', {
+	      id: "stfyc-wind-anemometer",
+	      classRoot: "stfyc-anemometer",
+	      maxValue: 30, // in knots
+	      size: vw(30), // Sized in terms of window size
+	      clipWidth: vw(32),
+	      clipHeight: vw(17),
+	      arcInset: vw(2),
+	      arcWidth: vw(4),
+	      arcColorFn: d3.interpolateHslLong("#613CFF", "#FB4B39"), // nice blue & red hues, gradient centers on green
+	      arcSegments: 256, // make dial a smooth rainbow
+	      arcMajorTicks: 5,
+	      arcLabelFormat: d3.format('d'),
+	      arcLabelInset: vw(1.1),
+	      pointers: [
+		  { pointerWidth: vw(3), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
+		  { pointerWidth: vw(2), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
+	      ],
+	  });
+	  anemometer.render();
+	  anemometerRO.observe(document.querySelector("#anemometer-stfyc"));
+	  
+	  // Use WebSocket for current? Tempest web service is flakey, so use all ways to get data
+	  fetchTempestCurrent("St. Francis Yacht Club");
+	  fetchTempestCurrent("Tinsley Island");
+	  fetchTempestHistory("St. Francis Yacht Club");
+	  fetchTempestForecast("St. Francis Yacht Club");
+
+	  initializeTempestStreams();
+
+	  windInitialize(stfycWindCallback);
+
+	  fetchTidesAndCurrents();
+
+	  // OpenLayers frames
+	  initializeCurrentMap(currentMapConfig);
+	  initializeNowCOAST(nationalRadarConfig);
+	  initializeNowCOAST(localRadarConfig);
+
+	  d3.interval(dispatch, 1 * 1000);
+	  document.addEventListener("visibilitychange", visibilityChange);
+
+	  const cloudTops = new GIS(cloudTopsConfig);
+
+	  initializeVideoLazyLoad();
+
+	  d3.selectAll("#scene-pull-down-enable")
+		  .on('click', handleScenePullDownClick);
+
+      }
+    </script>
+
+  </head>
+
+  <body id="body" class="wx" onload="initialize();" lang="en">
+    <div class="wx-page">
+      <div id="header" class="wx-header">
+	<div>
+	  <div id="scene-pull-down-enable" class="scene-pull-down-enable">
+	    <image src="data/lib/menu-icon.svg">
+	  </div>
+          <div class="burgee-small burgee-left">
+	    <image src="data/lib/stfyc-burgee.svg"></image>
+	  </div>
+	</div>
+	<div class="local-number wx-header-1">
+	  &nbsp;&nbsp;StFYC:&nbsp;
+	  &nbsp;<span id="stfyc-temp" class="temp-span-stfyc"></span>&#8457;&nbsp;
+	  Wind&nbsp;<span id="stfyc-direction" class="direction-span-stfyc"></span>&#176M&nbsp;
+	  @&nbsp;<span id="stfyc-wind" class="wind-span-stfyc"></span>&nbsp;
+	  G&nbsp;<span id="stfyc-gust" class="gust-span-stfyc"></span>&nbsp;
+	  Tinsley:&nbsp;<span id="tinsley-temp" class="temp-span-tinsley"></span>&#8457;&nbsp;&nbsp;
+	</div>
+	<div class="local-number wx-header-2">
+	  StFYC:&nbsp;<span id="stfyc-temp" class="temp-span-stfyc"></span>&#8457;&nbsp;
+	  Tinsley:&nbsp;<span id="tinsley-temp" class="temp-span-tinsley"></span>&#8457;<br>
+	  Wind:&nbsp;<span id="stfyc-direction" class="direction-span-stfyc"></span>&#176M&nbsp;
+	  @<span id="stfyc-wind" class="wind-span-stfyc"></span>&nbsp;
+	  G&nbsp;<span id="stfyc-gust" class="gust-span-stfyc"></span>
+	</div>
+        <div class="burgee-small burgee-right">
+	  <image src="data/lib/stfyc-burgee.svg"></image>
+	</div>
+      </div>
+      
+      <div class="wx-row">
+	<div id="sidebar" class="wx-sidebar">
+	  <div style="display: block;">
+	    <div id="program" class="wx-program"></div>
+	    <div id="scene-list" class="wx-scene-list"></div>
+	  </div>
+	  <div class="vertical-spacer-outer">
+	    <div class="vertical-spacer-inner"> </div>
+	  </div>
+	  <div style="display: block">
+	    <div id="mode-button" class="wx-button">Auto</div>
+	    <div id="time-UTC" class="wx-time"></div>
+	    <div id="time-local" class="wx-time"></div>
+	  </div>
+	</div>
+	
+	<div id="content" class="wx-content">
+
+	  <div id="sfLocal" class="wx-scene">
+	    <div class="obs-grid">
+	      <div class="obs-cell">
+		<div id="sfLocalNOAA" style="flex: 1 1 auto; width: 1800px; height: 1000px; max-width: 100%; max-height: 100%"></div>
+	      </div>
+	    </div>
+	  </div>
+
+	  <div id="sfbofs" class="wx-scene">
+	    <div class="obs-grid">
+	      <div class="obs-cell">
+		<div id="sfRadar" style="width: 100%; height: 1000px; flex: 1 1 max-content;"></div>
+	      </div>
+	    </div>
+	  </div>
+
+	  <div id="sfLocalObservations" class="wx-scene">
+	    <div class="ol-flex-fit" style="flex-direction: column;">
+	      <div class="obs-grid">
+		<div class="obs-cell">
+		  <div>
+		    <span class="h3">Local Observations</span><br>
+		    <div id="sfLocalObservationsTable" class="obs-table"></div>
+		  </div>
+		</div>
+	      </div>
+	      <div class="ol-flex-fit" style="flex-direction: column;">
+		<div><span class="h3">Local Radar & Warnings</span></div>
+		<div class="ol-flex-fit">
+		  <div id="localRadar" class="ol-flex-fit">
+		    <div id="localRadarLabel" class="ol-label">Local NEXRAD Radar</div>
+		  </div>
+		</div>
+	      </div>
+	    </div>
+	  </div>
+
+	  <div id="ZoneForecasts" class="wx-scene">
+	    <div class="wx-cell" style="overflow: hidden">
+	      <div class="grid-container2x" style="vertical-align: top">
+		<div id="nws-zoneForecasts" class="nws-column">
+		  <div id="nws-zone-container" class="vertical-container"></div>
+		</div>
+		<div id="nws-afd" class="nws-column">
+		  <div id="nws-afd-container" class="vertical-container"></div>
+		</div>
+	      </div>
+	    </div>
+	  </div>
+
+	  <div id="localWind" class="wx-scene localWind">
+	    <div class="wind-grid">
+	      <div>
+		<div>
+		  <span class="h3">Current StFYC Race Office Wind</span><br>
+		</div>
+		<div class="wind-cell anemometer-cell">
+		  <div id="anemometer-stfyc"></div>
+		  <div class="h2 stfyc-anemometer-plot-label horizontal-center">
+		    Wind <span class="awa-avg-span-stfyc"></span>&#176 (<span class="awa-span-stfyc">---</span>) @<span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span>&nbsp;kts
+		  </div>
+		</div>
+	      </div>
+	      <div class="wind-cell">
+		<div>
+		  <span class="h3">Recent Wind History</span><br>
+		</div>
+		<div id="wind-history-recent" class="wind-plot">
+		</div>
+	      </div>
+	      <div class="wind-cell">
+		<div>
+		  <span class="h3">24-Hour Wind Forecast</span><br>
+		</div>
+		<div id="wind-forecast24" class="wind-plot"></div>
+	      </div>
+	      <div class="wind-cell">
+		<div>
+		  <span class="h3">WeatherFlow 5-Day Area Wind Forecast</span><br>
+		</div>
+		<div id="wind-forecast120" class="wind-plot"></div>
+	      </div>
+	    </div>
+	  </div>
+	  
+	  <div id="sfTides" class="wx-scene">
+	    <div class="tides-grid">
+	      <div id="tide-forecast-9414290" class="tides-cell">
+		<div><span class="h3">Tide Height @ Ft Point</span><br></div>
+	      </div>
+	      <div id="current-forecast-SFB1203_18" class="tides-cell">
+		<div><span class="h3">Tidal Current 0.46nm E of Golden Gate Bridge (depth 30ft)</span><br></div>
+	      </div>
+	      <div class="tides-cell">
+		<div><span class="h3">NOAA SFBOFS Currents</span><br></div>
+		<div><img id="sfCurrentChart" class="wx-image update5" alt="current chart SFB1202" src="data/SFBOFS/latest.png"></div>
+	      </div>
+	      <div id="current-events-SFB1203_18" class="tides-cell">
+		<div><span class="h3">Today @ 0.46nm E of Golden Gate Bridge (depth 30ft)</span><br></div>
+		<div id="current-events-content-SFB1203_18" class="current-events-content"></div>
+		<!--
+		    <span class="h3">Current Prediction @ GG Bridge</span><br>
+		    <img class="wx-image update5" alt="current plot SFB1202" src="https://cdn.tidesandcurrents.noaa.gov/ports/plots/SFB1202_cu_24.png">
+		    -->
+	      </div>
+	    </div>
+	  </div>
+	  
+	  <div id="pacificSurfaceAnalysis" class="wx-scene wx-image">
+	    <div class="wx-cell">
+	      <img class="wx-image update5" alt="Pacific Surface Analysis" src="https://ocean.weather.gov/P_sfc_full_ocean_color.png">
+	    </div>
+	  </div>
+	  <div id="overlay-WestCoast" class="wx-scene">
+	    <img class="wx-image update5" alt="West Coast + Offshore Satellite image" src="data/overlay/WestCoast/latest.jpg">
+	  </div>
+	  <div id="goes-PACUS" class="wx-scene">
+	    <img class="wx-image update5" alt="PACUS image" src="data/GOES/NESDIS_CONUS-West/latest.jpg">
+	  </div>
+	  <div id="overlay-BayDelta" class="wx-scene">
+	    <img class="wx-image update5" alt="Bay/Delta Satellite image" src="data/overlay/BayDelta/latest.jpg">
+	  </div>
+	  <div id="overlay-NorthPacific" class="wx-scene">
+	    <img class="wx-image update5" alt="North Pacific w/ Surface Analysis" src="data/overlay/Pacific/latest.jpg">
+	  </div>
+	  
+	  <div id="video-Pacific" class="wx-scene">
+	    <div class="timelapse">
+	      <video id="v-Pacifc" class="lazy wx-video" poster="data/overlay/Pacific/latest.jpg" controls="false" autoplay muted playsinline loop>
+		<source data-src="data/overlay/Pacific/latest.mp4">
+	      </video>
+	    </div>
+	  </div>
+	  
+	  <div id="video-WestCoast" class="wx-scene">
+	    <div class="timelapse">
+	      <video id="v-WestCoast" class="lazy wx-video" poster="data/overlay/WestCoast/latest.jpg" controls="false" autoplay muted playsinline loop>
+		<source data-src="data/overlay/WestCoast/latest.mp4">
+	      </video>
+	    </div>
+	  </div>
+	  
+	  <div id="video-BayDelta" class="wx-scene">
+	    <div class="timelapse">
+	      <video id="v-BayDelta"  class="lazy wx-video" poster="data/overlay/BayDelta/latest.jpg" controls="false" autoplay muted playsinline loop>
+		<source data-src="data/overlay/BayDelta/latest.mp4">
+	      </video>
+	    </div>
+	  </div>
+	  
+	  <div id="purpleAir" class="wx-scene">
+	    <!--
+		<div id='PurpleAirWidget_81675_module_AQI_conversion_C0_average_10_layer_standard'>Loading PurpleAir Widget...</div>
+		<script src='https://www.purpleair.com/pa.widget.js?key=BIHHOFMKJ30NI4DB&module=AQI&conversion=C0&average=10&layer=standard&container=PurpleAirWidget_81675_module_AQI_conversion_C0_average_10_layer_standard'></script>
+		-->
+	  </div>
+
+	  <div id="currentMapScene" class="wx-scene">
+	    <div id="currentMap" class="ol-flex-fit" width="1280" height="720">
+	      <div id="currentLabel" class="ol-label">
+	      </div>
+	    </div>
+	  </div>
+
+	  <div id="nationalRadarScene" class="wx-scene">
+	    <div class="ol-flex-fit">
+	      <div id="nationalRadar" class="ol-flex-fit">
+		<div id="nationalRadarLabel" class="ol-label">National RADAR</div>
+	      </div>
+	    </div>
+	  </div>
+
+	  <div id="cloudTopsScene" class="wx-scene">
+	    <div id="cloudTops" class="ol-flex-fit" width="1280" height="720">
+	      <div id="cloudTopsLabel" class="ol-label">
+	      </div>
+	    </div>
+	  </div>
+
+	  <div id="vesselFinderScene" class="wx-scene">
+	    <div class="obs-grid">
+	      <div class="obs-cell">
+		<div id="vesselFinder" class="obs-cell">
+		  <script type="text/javascript">
+		    {
+			var width="100%";         // width in pixels or percentage
+			var height="1000";         // height in pixels
+			var latitude="37.8400";     // center latitude (decimal degrees)
+			var longitude="-122.4150";    // center longitude (decimal degrees)
+			var zoom="13";             // initial zoom (between 3 and 18)
+			var names=true;
+		    }
+		  </script>
+		  <script type="text/javascript" src="https://www.vesselfinder.com/aismap.js"></script>
+		</div>
+	      </div>
+	    </div>
+	  </div>
+	  
+	  <div id="aboutScene" class="wx-scene">
+	    <div id="about" class="grid-container2x">
+	      <div>
+		<h2>About</h2>
+		NOAA PORTS - Weather Observations, Tides & Currents<br>
+		NOAA SF Bay Operational Forecast System (SFBOFS) - Tides & Currents<br>
+		NOAA Ocean Prediction Center - Surface Analysis<br>
+		NOAA GOES-16 (GOES-EAST) & GOES-17 & 18 (GOES-WEST) - Satellite Imagery<br>
+		NOAA NESDIS & STAR - Satellite Imagery<br>
+		NOAA NEXRAD - Radar<br>
+		<p></p>
+		NWS Monterey - Text Forecasts & Discussions<br>
+		<p></p>
+		Synoptic Data - Weather Observations<br>
+		Weather Flow - Weather Observations, Wind Forecasts<br>
+		Vessel Finder - AIS Mapping<br>
+		ArcGIS - Mapping Support & Data<br>
+		<p></p>
+		Lance Berc - Web Site<br>
+	      </div>
+	      <div>
+	      </div>
+	    </div>
+	  </div>
+
+	</div>
+      </div> <!-- content -->
+    </div> <!-- page -->
+  </body>
+</html>

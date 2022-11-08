@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StFYC Weather Information</title>
+    <style>
+      * {
+	  box-sizing: border-box;
+      }
+      /*
+      :root {
+	  --rust: #844D36;
+	  --plum: #474853;
+	  --steel-blue: #86B3D1;
+	  --light-coffee: #AAADA0;
+	  --earth: #8E8268;
+	  --black: black;
+	  --white: white;
+	  --main-background-color: #844D36;
+	  --main-foreground-color: white;
+	  --hover-background: white;
+	  --hover-foreground: black;
+      }
+     */
+      :root {
+	  --rust: #14365D; /* Night Moon */
+	  --background2: #2F5C8F; /* Deep Blue */
+	  --foreground1: #A96762; /* Mauve */
+	  --foreground2: #D85C27; /* Mandarin */
+	  --foreground3: #B999BE; /* Lavender */
+	  --black: black;
+	  --white: white;
+	  --medium-grey: #80808080;
+	  --main-background-color: #14365D; /* Night Moon */
+	  --main-foreground-color: white;
+	  --hover-background: white;
+	  --hover-foreground: black;
+      }
+      body {
+	  background: var(--main-background-color);
+	  font-family: Arial;
+	  font-size: 16px;
+	  color: var(--main-foreground-color);
+	  height: 98vh;
+	  width: 98vw;
+	  /*max-height: 98vh;*/
+	  /*max-width: 98vw;*/
+	  display: flex;
+      }
+      .bg-active {
+	  color: var(--main-foreground-color);
+	  background: var(--background2);
+      }
+      .h1 {
+	  color: var(--main-foreground-color);
+	  font-size: 2.5vw;
+	  padding: 2px;
+	  margin-bottom: 2px;
+      }
+      .h2 {
+	  color: var(--main-foreground-color);
+	  font-size: 2vw;
+	  padding: 2px;
+	  margin-bottom: 2px;
+      }
+      .h3 {
+	  color: var(--main-foreground-color);
+	  font-size: 1.5vw;
+	  padding: 2px;
+	  margin-bottom: 2px;
+      }
+      .vertical-spacer-outer {
+	  display: flex;
+	  flex-direction: column;
+	  flex-basis: max-content;
+	  flex-grow: 1;
+      }
+      .vertical-spacer-inner {
+	  flex-basis: max-content;
+	  flex-grow: 10;
+      }
+      .wx-box {
+	  display: flex;
+	  flex-direction: row;
+	  flex-wrap: nowrap;
+	  flex-grow: 1;
+	  flex-basis: max-content;
+	  max-height: 100%;
+	  max-width: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-page {
+	  display: flex;
+	  flex-direction: column;
+	  flex-wrap: nowrap;
+	  flex-grow: 1;
+	  flex-basis: max-content;
+	  max-height: 100%;
+	  max-width: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-header {
+	  display: grid;
+	  grid-template-columns: fit-content(100%) auto fit-content(100%);
+	  flex-grow: 0;
+	  width: 100%;
+	  align-items: center;
+	  justify-items: center;
+      }
+      .wx-row {
+	  display: flex;
+	  grid-template-columns: fit-content(100%) auto;
+	  grid-template-rows: fit-content(100%);
+	  flex-grow: 1;
+	  flex-basis: max-content;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-sidebar {
+	  display: flex;
+	  flex-direction: column;
+	  flex-shrink: 0;
+	  flex-grow: 1;
+	  flex-basis: max-content;
+	  margin-top: 4px;
+	  margin-right: 4px;
+	  max-height: 100%;
+      }
+      .wx-content {
+	  display: flex;
+	  flex-grow: 100;
+	  flex-shrink: 1;
+	  flex-basis: auto;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-scene {
+	  /* width: auto; */
+	  /* height: auto; */
+	  /* max-width: 100%; */
+	  /* max-height: 100%; */
+	  margin: 2px 2px 2px 2px;
+	  flex-direction: column;
+	  flex-grow: 1;
+	  flex-shrink: 1;
+	  flex-basis: auto;
+	  display: none;
+	  max-width: 100%;
+	  max-height: 100%;
+      }
+      .wx-program {
+	  color: var(--main-foreground-color);
+	  background: var(--foreground2);
+      }
+      .wx-time {
+	  font-family: "Courier New";
+	  color: var(--main-foreground-color);
+      }
+      .wx-scene-list {
+	  color: var(--main-foreground-color);
+	  list-style-type: none;
+      }
+      .wx-col {
+	  display: flex;
+	  flex-direction: column;
+	  flex-grow: 1;
+	  flex-shrink: 1;
+	  flex-basis: auto;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-cell-title {
+	  display: flex;
+	  margin-top: 4px;
+	  margin-bottom: 2px;
+	  font-size: 1.1vw;
+      }
+      .wx-cell {
+	  display: inline-flex;
+	  flex-grow: 1;
+	  flex-shrink: 1;
+	  flex-basis: auto;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-image {
+	  object-fit: contain;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .wx-button {
+	  display: none;
+	  padding: .25em;
+	  border-width: 2px;
+	  border-radius: 5px;
+	  border-color: var(--main-foreground-color);
+	  border-style: solid;
+	  text-align: center;
+	  width: 100%;
+	  margin: 4px;
+      }
+      .wx-button:hover {
+	  background: var(--hover-background);
+	  color: var(--hover-foreground);
+      }
+      .scene-button {
+	  border-radius: 5px;
+	  padding: 5px;
+      }
+      .active-scene {
+      }
+      .active-scene:hover {
+	  background: var(--hover-background);
+	  color: var(--hover-foreground);
+      }
+      .show {
+	  display: inline-flex;
+      }
+      .update5 {
+      }
+      .grid-container {
+	  display: grid;
+	  grid-template-columns: auto;
+      }
+      .grid-container2x {
+	  display: grid;
+	  grid-template-columns: 50% 50%;
+      }
+      .grid-item {
+	  display: table-cell;
+      }
+      .vertical-container {
+      }
+      .horizontal-container {
+      }
+      .wx-content-grid {
+	  display: grid;
+	  grid-template-columns: 120px auto;
+      }
+      .nws-column {
+	  vertical-align: top;
+	  height: 100vh;
+	  overflow: auto;
+	  
+	  color: var(--main-foreground-color);
+	  text-align: left;
+	  margin-left: 1em;
+	  margin-right: 1em;
+      }
+      .nws-zone-title {
+	  color: var(--main-foreground-color);
+	  background: var(--main-background-color);
+	  font-size: 1.3vw;
+      }
+      .nws-zone-paragraph {
+	  font-size: 1.2vw;
+	  color: var(--main-foreground-color);
+	  background: var(--background2);
+      }
+      .obs-shrink {
+	  max-height: 30%;
+	  min-height: 40%;
+      }
+      .obs-grid {
+	  display: grid;
+	  grid-template-rows: 100%;
+	  grid-template-columns: 100%;
+	  border-collapse: collapse;
+      }
+      .obs-grid-row {
+      }
+      .obs-cell {
+	  display: flex;
+	  flex-direction: column;
+	  text-align: left;
+	  /*align-self: center;*/
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+      }
+      .obs-table-even {
+	  color: black;
+	  background: lightgrey;
+      }
+      .obs-table-odd {
+	  color: var(--main-foreground-color);
+	  background: #aaada0;
+      }
+      .obs-table {
+	  display: table;
+	  font-size: 1.1vw;
+	  /*border-spacing: 2px;*/
+	  border-collapse: collapse;
+	  flex: 0 0 auto;
+      }
+      .obs-header {
+	  display: table-header-group;
+	  color: var(--main-foreground-color);
+	  background: var(--background2);
+      }
+      .obs-body {
+	  display: table-row-group;
+      }
+      .obs-row {
+	  display: table-row;
+      }
+      .obs-meta {
+	  text-align: left;
+      }
+      .obs-table-cell {
+	  display: table-cell;
+	  text-align: left;
+	  align-self: center;
+	  padding-left: .5em;
+	  padding-right: .5em;
+      }
+      .obs-data {
+	  font-family: "Courier New";
+      }
+      .wind-grid {
+	  display: grid;
+	  grid-template-rows: 60% 40%;
+	  grid-template-columns: 50% 50%;
+	  border-collapse: collapse;
+	  width: 100%;
+	  height: 100%;
+      }
+      .wind-cell {
+	  display: flex;
+	  flex-direction: column;
+	  text-align: left;
+	  /*align-self: center;*/
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+      }
+      .wind-plot {
+	  font-size: 1.25vw;
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+	  background: var(--background2);
+      }
+      .wind-plot-y-axis {
+	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  }
+	   .wind-plot-x-axis {
+	       font-size: 1vw; /* Override d3's 10pt default */
+      }
+      .wind-plot-wind-lull {
+      }
+      .wind-plot-wind-avg {
+	  fill: var(--background2);
+	  stroke: var(--main-foreground-color);
+	  stroke-width: 4.0;
+      }
+      .wind-plot-wind-gust {
+	  fill: none;
+	  stroke: var(--foreground2);
+	  stroke-width: 4.0;
+      }
+      .tides-grid {
+	  display: grid;
+	  grid-template-rows: 40% 60%;
+	  grid-template-columns: 1fr 1fr;
+	  border-collapse: collapse;
+	  width: 100%;
+	  height: 100%;
+      }
+      .tides-cell {
+	  display: flex;
+	  flex-direction: column;
+	  text-align: left;
+	  /*align-self: center;*/
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+      }
+      .tide-plot {
+	  display: flex;
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+      }
+      .tide-svg {
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-width: 0px;
+	  background: var(--background2);
+      }
+      .tide-plot-now {
+	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  stroke: var(--foreground1);
+	  stroke-width: 4.0;
+	   }
+	   .tide-plot-y-axis {
+	       font-size: 1.25vw; /* Override d3's 10pt default */
+	       stroke-width: 1.0;
+      }
+      .tide-plot-x-axis {
+	  font-size: 1vw; /* Override d3's 10pt default */
+	  stroke-width: 0.0;
+	   }
+	   .tide-plot-grid {
+	       fill: none;
+	       stroke: var(--main-foreground-color);
+	       stroke-width: 1.0;
+	   }
+	   .tide-plot-tide {
+	       fill: var(--background2);
+	       stroke: var(--main-foreground-color);
+	       stroke-width: 4.0;
+	   }
+	   .tide-plot-label {
+	       font-size: 1.25vw; /* Override d3's 10pt default */
+	       stroke: var(--main-foreground-color);
+	       color: var(--main-foreground-color);
+	       fill: var(--main-foreground-color);
+      }
+      .tide-plot-label-item {
+	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  stroke: var(--black);
+	  fill: var(--black);
+	  /*color: var(--main-foreground-color);*/
+	   }
+	   .tide-plot-label-background {
+	       font-size: 1.25vw; /* Override d3's 10pt default */
+	       stroke: none;
+	       fill: #c0c0c0a0;
+      }
+      .current-plot-label-item {
+	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  stroke: var(--black);
+	  fill: var(--black);
+	  /*color: var(--main-foreground-color);*/
+	   }
+	   .current-plot-label-background {
+	       font-size: 1.25vw; /* Override d3's 10pt default */
+	       stroke: none;
+	       fill: #c0c0c0a0;
+      }
+      .current-events-content {
+	  display: flex;
+	  margin-left: 1vw;
+      }
+      .current-events-table {
+	  display: table;
+	  padding-left: 1vw;
+	  border-collapse: collapse;
+	  background: var(--background2);
+	  color: var(--main-foreground-color);
+	  font-size: 1.1vw;
+      }
+      .current-events-table-header {
+	  display: table-header-group;
+	  color: var(--foreground2);
+	  background: var(--background2);
+      }
+      .current-events-table-body {
+	  display: table-row-group;
+      }
+      .current-events-table-row {
+	  display: table-row;
+	  padding-top: 0.1vh;
+	  padding-bottom: 0.1vh;
+      }
+      .current-events-table-cell {
+	  display: table-cell;
+	  padding-right: 1.0vw;
+	  padding-left: 0.5vw;
+      }
+      .current-events-table-astral {
+	  color: var(--foreground3);
+      }
+      .current-events-table-water {
+      }
+      .timelapse {
+	  margin: 2px 2px 2px 2px;
+	  display: flex;
+	  justify-content: center;
+      }
+      .burgee-small {
+	  display: inline-flex;
+	  width: 100px;
+	  height: 60.77px
+      }
+      .local-number {
+	  display: inline-flex;
+	  font-size: 2.5vw;
+	  color: var(--main-foreground-color);
+	  /*background: var(--plum);*/
+	  border-bottom: 2px solid var(--main-foreground-color);
+	  /*margin-bottom: 4px;*/
+      }
+      .wx-video {
+	  width: 100%;
+	  height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+	  object-fit: contain;
+      }
+
+      .horizontal-center {
+	  margin-left: auto;
+	  margin-right: auto;
+	  text-align: center;
+      }
+      .anemometer-cell {
+	  background: var(--background2);
+      }
+      .stfyc-anemometer-gauge {
+	  display: inline-block;
+	  width: 100%;
+	  margin: auto;
+	  /* background: var(--background2); */
+      }
+      .stfyc-anemometer-arc {
+	  fill: var(--background2);
+      }
+      .stfyc-anemometer-pointer-0 { /* gust */
+	  fill: var(--foreground2);
+	  stroke: var(--black);
+      }
+      .stfyc-anemometer-pointer-1 { /* avg */
+	  fill: var(--white);
+	  stroke: var(--black);
+      }
+      .stfyc-anemometer-label {
+	  text-anchor: middle;
+	  font-size: 1.25vw;
+	  font-weight: bold;
+	  background: var(--background2);
+	  fill: var(--main-foreground-color);
+      }
+      .stfyc-anemometer-plot-label {
+	  text-anchor: middle;
+	  font-size: 2.50vw;
+	  background: var(--background2);
+	  fill: var(--main-foreground-color);
+      }
+      .ol-label {
+	  position: absolute;
+	  background: var(--medium-grey);
+	  z-index: 10;
+	  font-family: monospace;
+	  font-size: 1.4em;
+	  font-weight: bold;
+	  transform: translate(3em, .5em);
+	  padding: 2px;
+      }
+      .ol-flex-fit {
+	  display: flex;
+	  flex: 1 1 max-content;
+	  max-width: 100%;
+	  max-height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+      }
+      .ol-semi-transparent {
+	  filter: opacity(50%);
+      }
+    </style>
+    
+    <script src="local_config.js"></script>
+    <script src="dateformat.js"></script>
+      
+    <script src="https://d3js.org/d3.v7.js"></script>
+    
+    <script src="wind.js"></script>
+
+    <script>
+      const magnetic_declination = +13; // Actually 13.2 or so
+      
+      const recent_history_hours = 6;
+      
+      // Convenience functions for scaling elements to the window size
+      function vh(v) {
+	  const h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	  return (v * h) / 100;
+      }
+
+      function vw(v) {
+	  const w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	  return (v * w) / 100;
+      }
+
+      function vmin(v) { return Math.min(vh(v), vw(v)); }
+      function vmax(v) { return Math.max(vh(v), vw(v)); }
+
+      let windHistory = null;
+      
+      function stfycWindCallback(json) {
+	  const wind = JSON.parse(json);
+	  if (wind.event == "update") {
+	      const aws_avg = wind.aws_avg.toFixed(1);
+	      const gust = wind.gust.toFixed(1);
+	      const awa = wind.awa.toFixed(0);
+	      const awa_avg = wind.awa_avg.toFixed(0);
+	      anemometer.update(1, aws_avg);
+	      anemometer.update(0, gust);
+	      d3.selectAll(".wind-span-stfyc").html(aws_avg);
+	      d3.selectAll(".gust-span-stfyc").html(gust);
+	      d3.selectAll(".awa-avg-span-stfyc").html(awa_avg);
+	      d3.selectAll(".awa-span-stfyc").html(awa);
+	  }
+	  if (wind.event == "history") {
+	      windHistory = wind.history;
+	      windPlotHistory(windHistory);
+	  }
+      }
+
+      let windRO = new ResizeObserver(elements => {
+	  for (let e of elements) {
+	      const cr = e.contentRect;
+	      console.log("windRO new size: " + cr.width + "x" + cr.height);
+	  }
+	  windPlotHistory(windHistory);
+      });
+
+      let anemometer = null;
+
+      let anemometerRO = new ResizeObserver(elements => {
+	  for (let e of elements) {
+	      const cr = e.contentRect;
+	      console.log("anemometerRO new size: " + cr.width + "x" + cr.height);
+	  }
+      });
+
+      // Gauge for anemometer
+      var gauge = function(container, configuration) {
+	  var that = {};
+	  var config = {
+	      classRoot: "gauge",
+	      size: 200,
+	      clipWidth: 200,
+	      clipHeight: 110,
+
+	      arcInset: 20,
+	      arcWidth: 20,
+	      arcSegments: 0, // # of color segments in dial - defaults to # of ticks
+	      arcColorFn: d3.interpolateHsl(d3.rgb('#e8e2ca'), d3.rgb('#3e6c0a')),
+
+	      // If using multiple pointers all values must be specified
+	      pointers: [
+		  {
+		      pointerWidth: 10,
+		      pointerTailLength: 5,
+		      pointerHeadLengthPercent: 0.9,
+		      transitionMs: 750,
+		      val: 0,
+		  }
+	      ],
+	      
+	      minValue: 0,
+	      maxValue: 10,
+	      
+	      minAngle: -90,
+	      maxAngle: 90,
+	      
+	      arcMajorTicks: 5,
+	      arcLabelFormat: d3.format(',g'),
+	      arcLabelInset: 10,
+	  };
+	  
+	  var range = undefined;
+	  var r = undefined;
+	  var pointerHeadLength = undefined;
+	  var value = 0;
+	  
+	  var svg = undefined;
+	  var arc = undefined;
+	  var scale = undefined;
+	  var ticks = undefined;
+	  var tickData = undefined;
+	  var pointer = undefined;
+	  var donut = d3.pie();
+	  
+	  function deg2rad(deg) {
+	      return deg * Math.PI / 180;
+	  }
+	  
+	  function newAngle(d) {
+	      var ratio = scale(d);
+	      var newAngle = config.minAngle + (ratio * range);
+	      return newAngle;
+	  }
+	  
+	  function configure(configuration) {
+	      var prop = undefined;
+	      for ( prop in configuration ) {
+		  config[prop] = configuration[prop];
+	      }
+	      
+	      range = config.maxAngle - config.minAngle;
+	      r = config.size / 2;
+
+	      // a linear scale that maps domain values to a percent from 0..1
+	      scale = d3.scaleLinear()
+		  .range([0,1])
+		  .domain([config.minValue, config.maxValue]);
+	      
+	      ticks = scale.ticks(config.arcMajorTicks);
+	      tickData = d3.range(config.arcMajorTicks).map(function() {return 1/config.arcMajorTicks;});
+	      
+	      arc = d3.arc()
+		  .innerRadius(r - config.arcWidth - config.arcInset)
+		  .outerRadius(r - config.arcInset)
+		  .startAngle(function(d, i) {
+		      var ratio = d * i;
+		      return deg2rad(config.minAngle + (ratio * range));
+		  })
+		  .endAngle(function(d, i) {
+		      var ratio = d * (i+1);
+		      return deg2rad(config.minAngle + (ratio * range));
+		  });
+	  }
+	  that.configure = configure;
+	  
+	  function centerTranslation() {
+	      return 'translate('+r +','+ r +')';
+	  }
+	  
+	  function isRendered() {
+	      return (svg !== undefined);
+	  }
+	  that.isRendered = isRendered;
+	  
+	  function changeHandler(e) {
+	      eid = e.id;
+	      fields = eid.split("-");
+	      id = eid.slice(0, eid.indexOf("-value"));
+	      if (e != undefined) {
+		  console.log("Anememometer change " + e.target.id + ": " + e.target.value);
+	      }
+	  }
+	  
+	  function render(newValue) {
+	      svg = d3.select(container)
+	      //.append('svg:svg')
+		  .append('svg')
+		  .classed(config.classRoot + "-gauge", true)
+	      // .attr('width', config.clipWidth)
+	      // .attr('height', config.clipHeight)
+		  .attr("viewBox", "0 0 " + config.clipWidth + " " + config.clipHeight);
+	      
+	      var centerTx = centerTranslation();
+
+	      // The circular gauge dial
+	      var arcs = svg.append('g')
+		  .classed(config.classRoot + "-arc", true)
+		  .attr('transform', centerTx);
+
+	      // Dial arc is a gradient with N segments.
+	      let gradient = tickData; // Default to # of ticks
+	      if (config.arcSegments != 0) {
+		  gradient = Array(config.arcSegments);
+		  for (let i = 0; i < config.arcSegments; i++) {
+		      gradient[i] = 1.0 / config.arcSegments;
+		  }
+	      }
+	      arcs.selectAll('path')
+		  .data(gradient)
+		  .enter().append('path')
+		  .attr('fill', function(d, i) {
+		      return config.arcColorFn(d * i);
+		  })
+		  .attr('d', arc);
+
+	      // Arc labels
+	      var lg = svg.append('g')
+		  .classed(config.classRoot + "-label", true)
+		  .attr('transform', centerTx);
+	      lg.selectAll('text')
+		  .data(ticks)
+		  .enter().append('text')
+		  .attr('transform', function(d) {
+		      var ratio = scale(d);
+		      var newAngle = config.minAngle + (ratio * range);
+		      return 'rotate(' +newAngle +') translate(0,' +(config.arcLabelInset - r) +')';
+		  })
+		  .text(config.arcLabelFormat);
+
+	      // Pointer(s)
+	      for (let i = 0; i < config.pointers.length; i++) {
+		  p = config.pointers[i];
+		  pointerHeadLength = Math.round(r * p.pointerHeadLengthPercent);
+		  const lineData = [ [p.pointerWidth / 2, 0], 
+				     [0, -pointerHeadLength],
+				     [-(p.pointerWidth / 2), 0],
+				     [0, p.pointerTailLength],
+				     [p.pointerWidth / 2, 0] ];
+		  const pointerLine = d3.line().curve(d3.curveMonotoneX);
+		  const pg = svg.append('g').data([lineData])
+			.classed(config.classRoot + "-pointer-" + i, true)
+			.attr('transform', centerTx);
+		  
+		  config.pointers[i].pointer = pg.append('path')
+		      .attr('d', pointerLine/*function(d) { return pointerLine(d) +'Z';}*/ ) // Don't need to close path w/ Z
+		      .attr('transform', 'rotate(' +config.minAngle +')'); // Start at min angle
+		  
+		  update(i, newValue === undefined ? 0 : newValue);
+	      }
+	      
+	      // Hidden input
+	      for (i in config.pointers) {
+		  let classId = `${config.classRoot}-value-${i}`;
+		  let inputId = `${config.id}-value-${i}`;
+		  form = d3.select(container).append("form")
+		      .append("input")
+		      .attr("type", "hidden")
+		      .attr("value", 0.0)
+		      .attr("id", inputId)
+		      .classed(classId, true)
+		      .on('change', changeHandler);
+	      }
+	  }
+	  that.render = render;
+
+	  function update(pointer, newValue, newConfiguration) {
+	      if (pointer === undefined) { // Called when gauge becomes visible
+		  for (let i in config.pointers) {
+		      p = config.pointers[i];
+		      // console.log("reset pointer " + i + " to " + p.val);
+		      const ratio = scale(p.val);
+		      const newAngle = config.minAngle + (ratio * range);
+		      p.pointer.transition()
+			  .duration(p.transitionMs)
+			  .ease(d3.easeElastic)
+			  .attr('transform', 'rotate(' + newAngle +')');
+		  }
+		  return;
+	      }
+	      
+	      if ( newConfiguration  !== undefined) {
+		  configure(newConfiguration);
+	      }
+
+	      config.pointers[pointer].val = newValue;
+	      if (document.hidden) {
+		  //console.log("anemometer " + pointer + ": " + newValue + " update: document is hidden");
+		  return;
+	      }
+	      
+	      const ratio = scale(newValue);
+	      const newAngle = config.minAngle + (ratio * range);
+	      config.pointers[pointer].pointer.transition()
+		  .duration(config.pointers[pointer].transitionMs)
+		  .ease(d3.easeElastic)
+		  .attr('transform', 'rotate(' + newAngle +')');
+	      //console.log("anemometer rotated to " + newAngle);
+	  }
+	  that.update = update;
+
+	  configure(configuration);
+	  
+	  return that;
+      };
+
+      let lastSec = -1;
+      let lastMinute = -1;
+      function dispatch() {
+	  const now = new Date();
+	  const time = Math.floor(now.getTime() / 1000);
+	  if (time == lastSec) {
+	      return;
+	  }
+	  lastSec = time;
+
+	  minutes = Math.floor(time/60);
+	  if (minutes == lastMinute) {
+	      return;
+	  }
+
+	  // Everything here and below executes once per minute
+
+	  const hour = now.getHours();
+	  const minute = now.getMinutes();
+	  console.log(`Dispatch: h ${hour} m ${minute} t ${time/60} l ${lastMinute}`);
+
+	  lastMinute = minutes;
+
+	  // It's a new minute so update the local and GMT clock fields
+	  u = now.toUTCString();
+	  d3.select("#time-UTC").html( u.slice(17,22) + "UTC");
+	  l = now.toTimeString();
+	  ts = l.slice(0, 5);
+	  tz = l.slice(l.indexOf("(") + 1, l.indexOf(")") - 2);
+	  d3.select("#time-local").html( ts + (l.includes("Daylight") ? "PDT" : "PST")); // Kludgey
+      }
+
+      function initialize() {
+	  console.log("Initializing wx page");
+	  curSceneTime = 0;
+	  curScene = 0;
+
+	  d3.select("#" + "localWind").classed("show", true);
+
+	  d3.interval(dispatch, 1 * 1000);
+	  //document.addEventListener("visibilitychange", visibilityChange);
+
+	  // Catch resize events for anemometer graphs because I'm too lame to get the svgs to scale
+	  windRO.observe(document.querySelector("#localWind"));
+
+	  anemometer = gauge('#anemometer-stfyc', {
+	      id: "stfyc-wind-anemometer",
+	      classRoot: "stfyc-anemometer",
+	      maxValue: 30, // in knots
+	      size: vw(30), // Sized in terms of window size
+	      clipWidth: vw(32),
+	      clipHeight: vw(17),
+	      arcInset: vw(2),
+	      arcWidth: vw(4),
+	      arcColorFn: d3.interpolateHslLong("#613CFF", "#FB4B39"), // nice blue & red hues, gradient centers on green
+	      arcSegments: 256, // make dial a smooth rainbow
+	      arcMajorTicks: 5,
+	      arcLabelFormat: d3.format('d'),
+	      arcLabelInset: vw(1.1),
+	      pointers: [
+		  { pointerWidth: vw(3), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
+		  { pointerWidth: vw(2), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
+	      ],
+	  });
+	  anemometer.render();
+	  anemometerRO.observe(document.querySelector("#anemometer-stfyc"));
+	  
+	  windInitialize(stfycWindCallback);
+      }
+    </script>
+  </head>
+
+  <body id="body" class="wx" onload="initialize();" lang="en">
+    <div id="localWind" class="wx-scene localWind">
+      <div class="wind-grid">
+	<div>
+	  <div>
+	    <span class="h3">Current StFYC Race Office Wind</span><br>
+	  </div>
+	  <div class="wind-cell anemometer-cell">
+	    <div id="anemometer-stfyc"></div>
+	    <div class="h2 stfyc-anemometer-plot-label horizontal-center">
+	      Wind <span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span> knots @<span class="awa-avg-span-stfyc"></span>&#176 (<span class="awa-span-stfyc">---</span>&#176)
+	    </div>
+	  </div>
+	</div>
+	<div id="wind-history-recent" class="wind-cell">
+	  <div>
+	    <span class="h3">Recent Wind History</span><br>
+	  </div>
+	</div>
+      </div>
+    </div>
+  </body>
+</html>

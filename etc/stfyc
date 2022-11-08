@@ -1,0 +1,6 @@
+/var/mail/stfyc {
+    su root mail
+    daily
+    rotate 7
+}
+
