@@ -1,6 +1,6 @@
-windSocket = null;
-windSocketInitializing = false;
-windCallback = null;
+let windSocket = null;
+let windSocketInitializing = false;
+let windCallback = null;
 
 function windError(e) {
     console.log("windMessage error");
@@ -18,6 +18,10 @@ function windCheck() {
     if (windSocket.readyState != 1) {
 	console.log("windCheck ready state: " + windSocket.readyState);
     }
+}
+
+function windOpen() {
+    windSStartStopHistory();
 }
 
 function windMessage(json) {
@@ -169,6 +173,10 @@ function windPlotHistory(history) {
 
 function windStartStopHistory(e) {
     const cr = e.contentRect;
+    if (windSocket.readyState != 1) {
+	console.log(`windStartStopHistory websocket not ready (${windSocket.readyState})`);
+	return;
+    }
     console.log(`wind element ${e.id} new size: ${cr.width} x ${cr.height}`);
     if ((cr.width == 0) || (cr.height == 0)) {
 	windSocket.send(JSON.stringify({"subscribe_history": false}));
@@ -177,5 +185,4 @@ function windStartStopHistory(e) {
 	windSocket.send(JSON.stringify({"subscribe_history": true}));
 	console.log("windStartStopHistory: start");
     }
-
 }
