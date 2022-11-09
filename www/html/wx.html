@@ -1198,7 +1198,10 @@
 		   );
       }
 
+      let wind24Rect = { "width": 0, "height": 0 };
+      let wind120Rect = { "width": 0, "height": 0 };
       let windsNeedRender = false;
+      
       function plotTempestWindForecast(station) {
 	  let svg, x, y, start, end;
 	  let X, Y1, Y2;
@@ -1209,21 +1212,34 @@
 	      return;
 	  }
 	  
-	  d3.select(".wind-forecast24").selectAll("*").remove();
-	  d3.select(".wind-forecast24").remove();
+	  element = "wind-forecast24"
+	  d3.select("." + element).selectAll("*").remove();
+	  d3.select("." + element).remove();
 
-	  // The closer width & height are to the actual size, the better off we are
-	  cr = d3.select("#wind-forecast24").node().getBoundingClientRect();
-	  //let width = 640;
-	  //let height = 275;
-	  let width = 1280;
-	  let height = 550;
-	  windsNeedRender = true;
-	  if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
-	      width = cr.width;
-	      height = cr.height - 20; // Kludge - space for title
-	      windsNeedRender = false;
+	  let pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
+	  let cr = d3.select("#" + element).node().getBoundingClientRect();
+	  let labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
+	  if ((cr.width == 0) && (cr.height == 0)) {
+	      return;
 	  }
+
+	  let width = wind24Rect.width;
+	  let height = wind24Rect.height;
+	  if (cr.width == currentRect.width) {
+	      console.log(`plotTempestForecast wind24 width (${currentRect.width} x ${currentRect.height}) unchanged`);
+	  } else {
+	      width = cr.width;
+	      height = cr.height;
+	      height = pcr.height - labelcr.height;
+	      let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
+	      if ((aheight < height) || (pcr.height == labelcr.height)) {
+		  height = aheight;
+	      }
+	      wind24Rect.width = width;
+	      wind24Rect.height = height;
+	  }
+	  console.log(`plotTempestForecast wind24 ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
+
 	  let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
 
 	  start = new Date(now);
@@ -1238,13 +1254,13 @@
 	      }
 	  });
 	  
-	  svg = d3.select("#wind-forecast24")
+	  svg = d3.select("#" + element)
 	      .append("svg")
 	      .classed("wind-plot", true)
-	      .classed("wind-forecast24", true)
+	      .classed(element, true)
 	      .attr("viewBox", -margin.left + " " + -margin.top + " " + (width + margin.left + margin.right) +" " + (height + margin.top + margin.bottom))
 	      .attr("preserveAspectRatio", "none")
-	      //.attr("width", width).attr("height", height)
+	      .attr("width", width).attr("height", height)
 	      .append("g")
 	      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 	  
@@ -1298,15 +1314,34 @@
 		    .curve(d3.curveBasis)
 		   );
 
-      	  d3.select(".wind-forecast120").selectAll("*").remove();
-      	  d3.select(".wind-forecast120").remove();
+	  element = "wind-forecast120"
+	  d3.select("." + element).selectAll("*").remove();
+	  d3.select("." + element).remove();
 
-	  // The closer width & height are to the actual size, the better off we are
-	  cr = d3.select("#wind-forecast24").node().getBoundingClientRect();
-	  if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
+	  pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
+	  cr = d3.select("#" + element).node().getBoundingClientRect();
+	  labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
+	  if ((cr.width == 0) && (cr.height == 0)) {
+	      return;
+	  }
+
+	  width = wind120Rect.width;
+	  height = wind120Rect.height;
+	  if (cr.width == currentRect.width) {
+	      console.log(`plotTempestForecast wind120 width (${currentRect.width} x ${currentRect.height}) unchanged`);
+	  } else {
 	      width = cr.width;
 	      height = cr.height;
+	      height = pcr.height - labelcr.height;
+	      let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
+	      if ((aheight < height) || (pcr.height == labelcr.height)) {
+		  height = aheight;
+	      }
+	      wind120Rect.width = width;
+	      wind120Rect.height = height;
 	  }
+	  console.log(`plotTempestForecast wind120 ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
+
 	  margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
 
 	  // Take these from above
@@ -1928,7 +1963,7 @@
 	      height = cr.height;
 	      height = pcr.height - labelcr.height;
 	      let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
-	      if (aheight < height) {
+	      if ((aheight < height) || (pcr.height == labelcr.height)) {
 		  height = aheight;
 	      }
 	      tideRect.width = width;
@@ -2193,7 +2228,7 @@
 	      height = cr.height;
 	      height = pcr.height - labelcr.height;
 	      let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
-	      if (aheight < height) {
+	      if ((aheight < height) || (pcr.height == labelcr.height)) {
 		  height = aheight;
 	      }
 	      currentRect.width = width;
@@ -2990,11 +3025,11 @@
 		</div>
 	      </div>
 	      <div class="wind-cell">
-		<div class="graphic-label">24-Hour Wind Forecast</div>
+		<div id="wind-forecast24-label" class="graphic-label">24-Hour Wind Forecast</div>
 		<div id="wind-forecast24" class="wind-plot"></div>
 	      </div>
 	      <div class="wind-cell">
-		<div class="graphic-label">WeatherFlow 5-Day Area Wind Forecast</div>
+		<div id="wind-forecast120-label" class="graphic-label">WeatherFlow 5-Day Area Wind Forecast</div>
 		<div id="wind-forecast120" class="wind-plot"></div>
 	      </div>
 	    </div>

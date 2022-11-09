@@ -114,7 +114,7 @@ function windPlotHistory(e, history) {
 	height = cr.height;
 	height = pcr.height - labelcr.height;
 	let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
-	if (aheight < height) {
+	if ((aheight < height) || (pcr.height == labelcr.height)) {
 	    height = aheight;
 	}
 	windRect.width = width;
