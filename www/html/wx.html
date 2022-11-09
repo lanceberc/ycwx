@@ -1387,7 +1387,7 @@
       });
 
       let windRO = new ResizeObserver(elements => {
-	  windPlotHistory(windHistory);
+	  windPlotHistory("wind-history-recent", windHistory);
 	  windStartStopHistory(elements[0]);
 	  plotTempestWindForecast("St. Francis Yacht Club");
       });
@@ -1758,7 +1758,7 @@
 	  }
 	  if (wind.event == "history") {
 	      windHistory = wind.history;
-	      windPlotHistory(windHistory);
+	      windPlotHistory("wind-history-recent", windHistory);
 	  }
       }
 
@@ -2757,10 +2757,10 @@
       function visibilityChange() {
 	  if (!document.hidden) {
 	      anemometer.update();
-	      windPlotHistory(windHistory);
+	      //windPlotHistory("wind-history-recent", windHistory);
 	      plotTempestWindForecast("St. Francis Yacht Club");
 	      //plotTides();
-	      plotCurrents();
+	      //plotCurrents();
 	  }
       }
 
@@ -2985,7 +2985,7 @@
 		</div>
 	      </div>
 	      <div class="wind-cell">
-		<div class="graphic-label">Recent Wind History</div>
+		<div id="wind-history-recent-label" class="graphic-label">Recent Wind History</div>
 		<div id="wind-history-recent" class="wind-plot">
 		</div>
 	      </div>

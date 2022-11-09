@@ -81,7 +81,9 @@ function windInitialize(callback) {
     });
 }
 
-function windPlotHistory(history) {
+let windRect = { width: 0, height: 0 };
+
+function windPlotHistory(e, history) {
     let svg, x, y, start, end;
     let data;
 
@@ -93,30 +95,46 @@ function windPlotHistory(history) {
     start = new Date(history[0].ts * 1000);
     end = new Date(history[history.length-1].ts * 1000);
 
-    d3.select(".wind-history-recent").selectAll("*").remove();
-    d3.select(".wind-history-recent").remove();
+    d3.select("." + e).selectAll("*").remove();
+    d3.select("." + e).remove();
 
-    // The closer width & height are to the actual size, the better off we are
-    cr = d3.select("#wind-history-recent").node().getBoundingClientRect();
-    let width = 1280;
-    let height = 720;
-    if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
-	width = cr.width;
-	height = cr.height - 20; // Kludge - space for title
+    let pcr = d3.select("#" + e).node().parentNode.getBoundingClientRect();
+    let cr = d3.select("#" + e).node().getBoundingClientRect();
+    let labelcr = d3.select("#" + e + "-label").node().getBoundingClientRect();
+    if ((cr.width == 0) && (cr.height == 0)) {
+	return;
     }
+
+    let width = windRect.width;
+    let height = windRect.height;
+    if (cr.width == currentRect.width) {
+	console.log(`windPlotHistory width (${currentRect.width} x ${currentRect.height}) unchanged`);
+    } else {
+	width = cr.width;
+	height = cr.height;
+	height = pcr.height - labelcr.height;
+	let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
+	if (aheight < height) {
+	    height = aheight;
+	}
+	windRect.width = width;
+	windRect.height = height;
+    }
+    console.log(`windPlotHistory ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
+
     let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
 
-    svg = d3.select("#wind-history-recent")
+    svg = d3.select("#" + e)
 	.append("svg")
 	.classed("wind-plot", true)
-	.classed("wind-history-recent", true)
+	.classed(e, true)
 	.attr("viewBox",
 	      -margin.left + " " +
 	      -margin.top + " " +
 	      (width + margin.left + margin.right) + " " +
 	      (height + margin.top + margin.bottom))
 	.attr("preserveAspectRatio", "none")
-	//.attr("width", width).attr("height", height)
+	.attr("width", width).attr("height", height)
 	.append("g")
 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
