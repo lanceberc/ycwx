@@ -201,6 +201,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     break;
 
   case LWS_CALLBACK_RECEIVE:
+    ((char *)in)[len] = 0; // Not zero terminated!
     lwsl_notice("LWS_CALLBACK_RECEIVE cJSON (len %d) %s\n", len, in);
     json = cJSON_ParseWithLength(in, len);
     if (json == NULL) {
@@ -276,16 +277,18 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     for (int i = 0; i < RECENT_BUF; i++) {
       aws_avg += aws_buf[i];
       gust = (aws_buf[i] > gust) ? aws_buf[i] : gust;
-      
-      awa_avg += awa_buf[i];
-      awa_bias += (awa_buf[i] + (awa_buf[i] < 180.0) ? 180.0 : -180.0);
-      if ((awa_buf[i] > 90.0) && (awa_buf[i] <= 270.0)) south_count++;
+
+      float s = awa_buf[i];
+      awa_avg += s;
+      awa_bias += (s + ((s < 180.0) ? 180.0 : -180.0));
+      if ((s > 90.0) && (s <= 270.0)) south_count++;
     }
     aws_avg /= RECENT_BUF;
 
     if (south_count > (RECENT_BUF/2))
       awa_avg /= RECENT_BUF; /* More than half are south-ish */
     else {
+      //lwsl_notice("south %d awa %.1f awa_bias %.2f / %d = avg %.0f", south_count, awa, awa_bias, RECENT_BUF, awa_bias/RECENT_BUF);
       awa_avg = (awa_bias / RECENT_BUF) - 180.0; /* More than half are north-ish */
       awa_avg = (awa_avg > 0.0) ? awa_avg : awa_avg + 360.0;
     }
