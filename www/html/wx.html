@@ -51,24 +51,6 @@
 	  color: var(--main-foreground-color);
 	  background: var(--background2);
       }
-      .h1 {
-	  color: var(--main-foreground-color);
-	  font-size: 2.5vw;
-	  padding: 2px;
-	  margin-bottom: 2px;
-      }
-      .h2 {
-	  color: var(--main-foreground-color);
-	  font-size: 2vw;
-	  padding: 2px;
-	  margin-bottom: 2px;
-      }
-      .h3 {
-	  color: var(--main-foreground-color);
-	  font-size: 1.5vw;
-	  padding: 2px;
-	  margin-bottom: 2px;
-      }
       .vertical-spacer-outer {
 	  display: flex;
 	  flex-direction: column;
@@ -78,17 +60,6 @@
       .vertical-spacer-inner {
 	  flex-basis: max-content;
 	  flex-grow: 10;
-      }
-      .wx-box {
-	  display: flex;
-	  flex-direction: row;
-	  flex-wrap: nowrap;
-	  flex-grow: 1;
-	  flex-basis: max-content;
-	  max-height: 100%;
-	  max-width: 100%;
-	  min-width: 0;
-	  min-height: 0;
       }
       .wx-page {
 	  display: flex;
@@ -103,14 +74,6 @@
       }
       .wx-header {
 	  display: grid;
-	  grid-template-columns: fit-content(100%) auto fit-content(100%);
-	  flex-grow: 0;
-	  width: 100%;
-	  align-items: center;
-	  justify-items: center;
-      }
-      .wx-header-none {
-	  display: none;
 	  grid-template-columns: fit-content(100%) auto fit-content(100%);
 	  flex-grow: 0;
 	  width: 100%;
@@ -174,23 +137,6 @@
 	  color: var(--main-foreground-color);
 	  list-style-type: none;
       }
-      .wx-col {
-	  display: flex;
-	  flex-direction: column;
-	  flex-grow: 1;
-	  flex-shrink: 1;
-	  flex-basis: auto;
-	  max-width: 100%;
-	  max-height: 100%;
-	  min-width: 0;
-	  min-height: 0;
-      }
-      .wx-cell-title {
-	  display: flex;
-	  margin-top: 4px;
-	  margin-bottom: 2px;
-	  font-size: 1.1vw;
-      }
       .wx-cell {
 	  display: inline-flex;
 	  flex-grow: 1;
@@ -238,20 +184,10 @@
       }
       .update5 {
       }
-      .grid-container {
-	  display: grid;
-	  grid-template-columns: auto;
-      }
-      .grid-container2x {
-	  display: grid;
-	  grid-template-columns: 50% 50%;
-      }
       .grid-item {
 	  display: table-cell;
       }
       .vertical-container {
-      }
-      .horizontal-container {
       }
       .wx-content-grid {
 	  display: grid;
@@ -276,10 +212,6 @@
 	  font-size: 1.2vw;
 	  color: var(--main-foreground-color);
 	  background: var(--background2);
-      }
-      .obs-shrink {
-	  max-height: 30%;
-	  min-height: 40%;
       }
       .obs-grid {
 	  display: grid;
@@ -355,22 +287,15 @@
 	      width: 100%;
 	      height: 100%;
 	  }
-      }
-      @media (max-aspect-ratio: 4/3) {
-	  .wind-grid {
+	  .grid-container {
 	      display: grid;
-	      grid-template-columns: 100%;
-	      border-collapse: collapse;
-	      width: 100%;
-	      height: auto;
+	      grid-template-columns: 50% 50%;
 	  }
-	  .tides-grid {
-	      display: grid;
-	      grid-template-rows: 100%;
-	      grid-template-columns: auto;
-	      border-collapse: collapse;
-	      width: 100%;
-	      height: auto;
+	  .nws-column-1 {
+	      display: none;
+	  }
+	  .nws-column-2 {
+	      display: flex;
 	  }
       }
       .wind-cell {
@@ -410,7 +335,7 @@
 	  stroke-width: 4.0;
       }
       .tides-cell {
-	  display: flex;
+	  display: block;
 	  flex-direction: column;
 	  text-align: left;
 	  /*align-self: center;*/
@@ -433,57 +358,58 @@
 	  min-width: 0px;
 	  background: var(--background2);
       }
+       /* Override d3's 10pt default */
       .tide-plot-now {
-	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  font-size: 1.25vw;
 	  stroke: var(--foreground1);
 	  stroke-width: 4.0;
-	   }
-	   .tide-plot-y-axis {
-	       font-size: 1.25vw; /* Override d3's 10pt default */
-	       stroke-width: 1.0;
+      }
+      .tide-plot-y-axis {
+	  font-size: 1.25vw;
+	  stroke-width: 1.0;
       }
       .tide-plot-x-axis {
-	  font-size: 1vw; /* Override d3's 10pt default */
+	  font-size: 1vw;
 	  stroke-width: 0.0;
-	   }
-	   .tide-plot-grid {
-	       fill: none;
-	       stroke: var(--main-foreground-color);
-	       stroke-width: 1.0;
-	   }
-	   .tide-plot-tide {
-	       fill: var(--background2);
-	       fill: var(--main-background-color);
-	       stroke: var(--main-foreground-color);
-	       stroke-width: 4.0;
-	   }
-	   .tide-plot-label {
-	       font-size: 1.25vw; /* Override d3's 10pt default */
-	       stroke: var(--main-foreground-color);
-	       color: var(--main-foreground-color);
-	       fill: var(--main-foreground-color);
+      }
+      .tide-plot-grid {
+	  fill: none;
+	  stroke: var(--main-foreground-color);
+	  stroke-width: 1.0;
+      }
+      .tide-plot-tide {
+	  fill: var(--background2);
+	  fill: var(--main-background-color);
+	  stroke: var(--main-foreground-color);
+	  stroke-width: 4.0;
+      }
+      .tide-plot-label-group {
+      }
+      .tide-plot-label {
+	  stroke: var(--main-foreground-color);
+	  color: var(--main-foreground-color);
+	  fill: var(--main-foreground-color);
       }
       .tide-plot-label-item {
-	  font-size: 1.25vw; /* Override d3's 10pt default */
 	  stroke: var(--black);
 	  fill: var(--black);
 	  /*color: var(--main-foreground-color);*/
-	   }
-	   .tide-plot-label-background {
-	       font-size: 1.25vw; /* Override d3's 10pt default */
-	       stroke: none;
-	       fill: #c0c0c0a0;
+      }
+      .tide-plot-label-background {
+	  font-size: 1.25vw;
+	  stroke: none;
+	  fill: #c0c0c0a0;
       }
       .current-plot-label-item {
-	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  font-size: 1.25vw;
 	  stroke: var(--black);
 	  fill: var(--black);
 	  /*color: var(--main-foreground-color);*/
-	   }
-	   .current-plot-label-background {
-	       font-size: 1.25vw; /* Override d3's 10pt default */
-	       stroke: none;
-	       fill: #c0c0c0a0;
+      }
+      .current-plot-label-background {
+	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  stroke: none;
+	  fill: #c0c0c0a0;
       }
       .current-events-content {
 	  display: flex;
@@ -539,56 +465,6 @@
       }
       .zpop {
 	  z-index: 5;
-      }
-      @media (min-width: 1024px) {
-	  .wx-header-2 {
-	      display: none;
-	  }
-	  .burgee-left {
-	      display: inline-flex;
-	      transform: scale(-1,1);
-	  }
-	  .burgee-right {
-	      display: inline-flex;
-	  }
-	  .menu-icon-div {
-	      display: none;
-	  }
-	  .scene-pull-down-enable {
-	      display: none;
-	  }
-      }
-      @media (max-width: 1024px) {
-	  .wx-header-1 {
-	      display: none;
-	  }
-	  .wx-header-2 {
-	      display: inline-flex;
-	  }
-	  .local-number {
-	      font-size: 4.0vw;
-	  }
-	  .wx-header {
-	      grid-template-columns: fit-content(100%) auto fit-content(100%);
-	  }
-	  .burgee-left {
-	      display: none;
-	  }
-	  .scene-pull-down-enable {
-	      width: 100px;
-	      height: 60.77px;
-	      display: inline-flex;
-	  }
-	  .scene-pull-down-enable:hover {
-	      background: var(--hover-background);
-	      color: var(--hover-foreground);
-	  }
-	  .burgee-right {
-	      display: inline-flex;
-	  }
-	  .wx-sidebar {
-	      display: none;
-	  }
       }
       .wx-video {
 	  width: 100%;
@@ -656,6 +532,127 @@
       }
       .ol-semi-transparent {
 	  filter: opacity(50%);
+      }
+      @media (max-aspect-ratio: 4/3) {
+	  .wind-grid {
+	      display: grid;
+	      grid-template-columns: 100%;
+	      border-collapse: collapse;
+	      width: 100%;
+	      height: auto;
+	  }
+	  .tides-grid {
+	      display: grid;
+	      /*grid-template-rows: 100%;
+	      grid-template-columns: auto;*/
+	      grid-template-columns: 100%;
+	      border-collapse: collapse;
+	      width: 100%;
+	      height: auto;
+	  }
+	  .grid-container {
+	      display: flex;
+	      flex-direction: column;
+	  }
+	  .nws-column-1 {
+	      display: flex;
+	      flex-direction: column;
+	  }
+	  .nws-column-2 {
+	      display: none;
+	  }
+      }
+      @media (min-width: 1024px) {
+	  .wx-header-2 {
+	      display: none;
+	  }
+	  .burgee-left {
+	      display: inline-flex;
+	      transform: scale(-1,1);
+	  }
+	  .burgee-right {
+	      display: inline-flex;
+	  }
+	  .menu-icon-div {
+	      display: none;
+	  }
+	  .scene-pull-down-enable {
+	      display: none;
+	  }
+      }
+      @media (max-width: 1024px) {
+	  .wx-header-1 {
+	      display: none;
+	  }
+	  .wx-header-2 {
+	      display: inline-flex;
+	      flex-direction: column;
+	  }
+	  .local-number {
+	      font-size: 4.0vw;
+	  }
+	  .wx-header {
+	      grid-template-columns: fit-content(100%) auto fit-content(100%);
+	  }
+	  .burgee-left {
+	      display: none;
+	  }
+	  .burgee-right {
+	      font-size: 4.0vw;
+	      height: 2em;
+	      width: 4em;
+	      display: inline-flex;
+	  }
+	  .scene-pull-down-enable {
+	      font-size: 4.0vw;
+	      height: 2em;
+	      width: 4em;
+	      display: inline-flex;
+	  }
+	  .scene-pull-down-enable:hover {
+	      background: var(--hover-background);
+	      color: var(--hover-foreground);
+	  }
+	  .wx-sidebar {
+	      display: none;
+	  }
+      }
+      @media (max-aspect-ratio: 1/1) {
+	  .current-events-table {
+	      font-size: 2.5vw;
+	  }
+	  .graphic-label {
+	      font-size: 2.5vw;
+	  }
+	  .tide-plot-label {
+	      font-size: 2.5vw;
+	  }
+	  .tide-plot-label-item {
+	      font-size: 2.5vw;
+	  }
+	  .current-plot-label {
+	      font-size: 2.5vw;
+	  }
+	  .current-plot-label-item {
+	      font-size: 2.5vw;
+	  }
+      }
+      @media (min-aspect-ratio: 1/1) {
+	  .graphic-label {
+	      font-size: 1.25vw;
+	  }
+	  .tide-plot-label {
+	      font-size: 1.25vw;
+	  }
+	  .tide-plot-label-item {
+	      font-size: 1.25vw;
+	  }
+	  .current-plot-label {
+	      font-size: 1.25vw;
+	  }
+	  .current-plot-label-item {
+	      font-size: 1.25vw;
+	  }
       }
     </style>
     
@@ -852,6 +849,9 @@
       }
 
       let nwsRO = new ResizeObserver(elements => {
+	  if (mode == "Interactive") {
+	      return;
+	  }
 	  for (let e of elements) {
 	      const cr = e.contentRect;
 	      const id = "#" + e.target.id;
@@ -906,6 +906,7 @@
 	      // Load the text (should be html) into this node - clone it to make scrolling look continuous
 	      d3.text(url).then(data => {
 		  nwsZoneText[z] = data;
+
 		  let html = "";
 		  for (let t of nwsZones) {
 		      if (html != "") {
@@ -913,9 +914,12 @@
 		      }
 		      html += nwsZoneText[t];
 		  }
-		  html += "<p></p>" // space for clone
-		  d3.select("#nws-zone-container").html(html + html)
-	      })
+		  if (mode == "Carousel") {
+		      html += "<p></p>"; // space for clone
+		      html += html;
+		  }
+		  d3.selectAll(".nws-zone-container").html(html);
+	      });
 	  }
 	  
 	  for (let z of nwsAFDs) {
@@ -925,6 +929,7 @@
 	      // Load the text (should be html) into this node - clone it to make scrolling look continuous
 	      d3.text(url).then(data => {
 		  nwsAFDText[z] = data;
+
 		  let html = "";
 		  for (let t of nwsAFDs) {
 		      if (html != "") {
@@ -932,9 +937,13 @@
 		      }
 		      html += nwsAFDText[t];
 		  }
-		  html += "<p></p>" // space for clone
-		  d3.select("#nws-afd-container").html(html + html)
-	      })
+		  
+		  if (mode == "Carousel") {
+		      html += "<p></p>"; // space for clone
+		      html += html;
+		  }
+		  d3.selectAll(".nws-afd-container").html(html);
+	      });
 	  }
       }
 
@@ -1369,6 +1378,14 @@
 		   );
       };
 
+      let tidesRO = new ResizeObserver(elements => {
+	  plotTides();
+      });
+
+      let currentsRO = new ResizeObserver(elements => {
+	  plotCurrents();
+      });
+
       let windRO = new ResizeObserver(elements => {
 	  windPlotHistory(windHistory);
 	  windStartStopHistory(elements[0]);
@@ -1730,7 +1747,7 @@
 	  if (wind.event == "update") {
 	      const aws_avg = wind.aws_avg.toFixed(1);
 	      const gust = wind.gust.toFixed(1);
-	      const awa = wind.awa;
+	      const awa = wind.awa.toFixed(0);
 	      const awa_avg = wind.awa_avg.toFixed(0);
 	      anemometer.update(1, aws_avg);
 	      anemometer.update(0, gust);
@@ -1885,7 +1902,7 @@
       const maxTide = 6.5;
       let tideData = null;
 
-      let tidesNeedRerender = false;
+      let tideRect = { "width": 0, "height": 0};
 
       function plotTides() {
 	  if (tideData == null) {
@@ -1896,16 +1913,29 @@
 
 	  const element = "tide-forecast-" + noaaTideStation;
 	  // The closer width & height are to the actual size, the better off we are
+	  let pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
 	  let cr = d3.select("#" + element).node().getBoundingClientRect();
-	  let width = 640;
-	  let height = 275;
-	  width = 877; height = 411; // As rendered on FullHD display
-	  tidesNeedRerender = true;
-	  if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
+	  let labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
+	  if ((cr.width == 0) && (cr.height == 0)) {
+	      return;
+	  }
+	  let width = tideRect.width;
+	  let height = tideRect.height;
+	  if (cr.width == tideRect.width) {
+	      console.log(`plotTides width (${tideRect.width} x ${tideRect.height}) unchanged`);
+	  } else {
 	      width = cr.width;
 	      height = cr.height;
-	      tidesNeedRerender = false;
+	      height = pcr.height - labelcr.height;
+	      let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
+	      if (aheight < height) {
+		  height = aheight;
+	      }
+	      tideRect.width = width;
+	      tideRect.height = height;
 	  }
+	  console.log(`plotTides ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
+
 	  let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
 
 	  let X = tides.map(function(d) { return(Date.parse(d.t)) });
@@ -1928,7 +1958,7 @@
 		    (width + margin.left + margin.right) + " " +
 		    (height + margin.top + margin.bottom))
 	      .attr("preserveAspectRatio", "none")
-	      //.attr("width", width).attr("height", height)
+	      .attr("width", width).attr("height", height)
 	      .append("g")
 	      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 	  
@@ -2063,6 +2093,8 @@
       const noaaCurrentStation = "SFB1203_18";
       const minCurrent = -4.5;
       const maxCurrent = 4.5;
+
+      let currentRect = { "width": 0, "height": 0};
       
       function plotCurrents() {
 	  if (tideData == null) {
@@ -2145,14 +2177,30 @@
 	  });
 
 	  element = "current-forecast-" + noaaCurrentStation;
-	  // The closer width & height are to the actual size, the better off we are
+	  let pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
 	  let cr = d3.select("#" + element).node().getBoundingClientRect();
-	  let width = 640;
-	  let height = 275;
-	  if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
+	  let labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
+	  if ((cr.width == 0) && (cr.height == 0)) {
+	      return;
+	  }
+
+	  let width = currentRect.width;
+	  let height = currentRect.height;
+	  if (cr.width == currentRect.width) {
+	      console.log(`plotCurrents width (${currentRect.width} x ${currentRect.height}) unchanged`);
+	  } else {
 	      width = cr.width;
 	      height = cr.height;
+	      height = pcr.height - labelcr.height;
+	      let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
+	      if (aheight < height) {
+		  height = aheight;
+	      }
+	      currentRect.width = width;
+	      currentRect.height = height;
 	  }
+	  console.log(`plotCurrents ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
+	  
 	  let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
 	  let X = current_data.map(function(d) { return(Date.parse(d[0])) });
 	  let Y = current_data.map(function(d) { return(d[1]) });
@@ -2160,8 +2208,8 @@
 	      return [e, Y[i]];
 	  });
 
-	  d3.select("." + element).selectAll("*").remove();
-	  d3.select("." + element).remove();
+	  d3.select("#" + element).selectAll("*").remove();
+	  //d3.select("." + element).remove();
 	  svg = d3.select("#" + element)
 	      .append("svg")
 	      .classed("tide-svg", true)
@@ -2172,7 +2220,7 @@
 		    (width + margin.left + margin.right) + " " +
 		    (height + margin.top + margin.bottom))
 	      .attr("preserveAspectRatio", "none")
-	      //.attr("width", width).attr("height", height)
+	      .attr("width", width).attr("height", height)
 	      .append("g")
 	      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 	  
@@ -2256,13 +2304,13 @@
 
 	  // Labels are drawn over Now line
 	  svg.append("g")
-	      .classed("current-plot-label-group", true)
+	      .classed("tide-plot-label-group", true)
 	      .selectAll('text')
 	      .data(data)
 	      .enter()
 	      .append("g")
 	      .attr("opacity", 1)
-	      .classed("current-plot-label", true)
+	      .classed("tide-plot-label", true)
 	      .attr("transform", function(d, i) {
 		  return("translate(" + x(d[0]) + ", " + y(d[1]) + ")")
 	      })
@@ -2468,11 +2516,6 @@
 
 	  if (mode == "Carousel") {
 	      rotateScene(); // Called once per second
-	  }
-
-	  if (tidesNeedRerender) {
-	      plotTides();
-	      plotCurrents();
 	  }
 
 	  if (windsNeedRender) {
@@ -2716,7 +2759,8 @@
 	      anemometer.update();
 	      windPlotHistory(windHistory);
 	      plotTempestWindForecast("St. Francis Yacht Club");
-	      plotTides(); plotCurrents();
+	      //plotTides();
+	      plotCurrents();
 	  }
       }
 
@@ -2749,8 +2793,7 @@
 	  fetchNWS();
 	  //setCurrentChartURL();
 
-	  // Catch resize event for scrollable containers
-	  for (let e of document.querySelectorAll(".vertical-container")) {
+	  for (let e of document.querySelectorAll(".nws-container")) {
 	      nwsRO.observe(e);
 	  }
 	  
@@ -2762,6 +2805,9 @@
 
 	  // Catch resize events for anemometer graphs because I'm too lame to get the svgs to scale
 	  windRO.observe(document.querySelector("#localWind"));
+
+	  tidesRO.observe(document.querySelector(".tides-graph"));
+	  currentsRO.observe(document.querySelector(".currents-graph"));
 
 	  anemometer = gauge('#anemometer-stfyc', {
 	      id: "stfyc-wind-anemometer",
@@ -2793,6 +2839,9 @@
 
 	  initializeTempestStreams();
 
+	  if (typeof local_windURL !== 'undefined') {
+	      windURL = local_windURL;
+	  }
 	  windInitialize(stfycWindCallback);
 
 	  fetchTidesAndCurrents();
@@ -2829,19 +2878,19 @@
 	  </div>
 	</div>
 	<div class="local-number wx-header-1">
-	  &nbsp;&nbsp;StFYC:&nbsp;
-	  &nbsp;<span id="stfyc-temp" class="temp-span-stfyc"></span>&#8457;&nbsp;
+	  &nbsp;&nbsp;StFYC:&nbsp;<span id="stfyc-temp" class="temp-span-stfyc"></span>&#8457;&nbsp;
 	  Wind&nbsp;<span id="stfyc-direction" class="direction-span-stfyc"></span>&#176M&nbsp;
 	  @&nbsp;<span id="stfyc-wind" class="wind-span-stfyc"></span>&nbsp;
 	  G&nbsp;<span id="stfyc-gust" class="gust-span-stfyc"></span>&nbsp;
 	  Tinsley:&nbsp;<span id="tinsley-temp" class="temp-span-tinsley"></span>&#8457;&nbsp;&nbsp;
 	</div>
 	<div class="local-number wx-header-2">
-	  StFYC:&nbsp;<span id="stfyc-temp" class="temp-span-stfyc"></span>&#8457;&nbsp;
-	  Tinsley:&nbsp;<span id="tinsley-temp" class="temp-span-tinsley"></span>&#8457;<br>
-	  Wind:&nbsp;<span id="stfyc-direction" class="direction-span-stfyc"></span>&#176M&nbsp;
-	  @<span id="stfyc-wind" class="wind-span-stfyc"></span>&nbsp;
-	  G&nbsp;<span id="stfyc-gust" class="gust-span-stfyc"></span>
+	  <div>
+	  StFYC:&nbsp;<span id="stfyc-temp" class="temp-span-stfyc"></span>&#8457;&nbsp;Tinsley:&nbsp;<span id="tinsley-temp" class="temp-span-tinsley"></span>&#8457;
+	  </div>
+	  <div>
+	  Wind:&nbsp;<span id="stfyc-direction" class="direction-span-stfyc"></span>&#176M&nbsp;@<span id="stfyc-wind" class="wind-span-stfyc"></span>&nbsp;G&nbsp;<span id="stfyc-gust" class="gust-span-stfyc"></span>
+	  </div>
 	</div>
         <div class="burgee-small burgee-right">
 	  <image src="data/lib/stfyc-burgee.svg"></image>
@@ -2886,14 +2935,12 @@
 	    <div class="ol-flex-fit" style="flex-direction: column;">
 	      <div class="obs-grid">
 		<div class="obs-cell">
-		  <div>
-		    <span class="h3">Local Observations</span><br>
-		    <div id="sfLocalObservationsTable" class="obs-table"></div>
-		  </div>
+		  <div class="graphic-label">Local Observations</div>
+		  <div id="sfLocalObservationsTable" class="obs-table"></div>
 		</div>
 	      </div>
 	      <div class="ol-flex-fit" style="flex-direction: column;">
-		<div><span class="h3">Local Radar & Warnings</span></div>
+		<div class="graphic-label">Local Radar & Warnings</div>
 		<div class="ol-flex-fit">
 		  <div id="localRadar" class="ol-flex-fit">
 		    <div id="localRadarLabel" class="ol-label">Local NEXRAD Radar</div>
@@ -2904,13 +2951,23 @@
 	  </div>
 
 	  <div id="ZoneForecasts" class="wx-scene">
-	    <div class="wx-cell" style="overflow: hidden">
-	      <div class="grid-container2x" style="vertical-align: top">
-		<div id="nws-zoneForecasts" class="nws-column">
-		  <div id="nws-zone-container" class="vertical-container"></div>
+	    <div class="nws-container nws-column-2">
+	      <div class="wx-cell" style="overflow: hidden">
+		<div class="grid-container" style="vertical-align: top">
+		  <div id="nws-zoneForecasts" class="nws-column">
+		    <div class="nws-zone-container"></div>
+		  </div>
+		  <div id="nws-afd" class="nws-column">
+		    <div class="nws-afd-container"></div>
+		  </div>
 		</div>
-		<div id="nws-afd" class="nws-column">
-		  <div id="nws-afd-container" class="vertical-container"></div>
+	      </div>
+	    </div>
+	    <div class="nws-container nws-column-1">
+	      <div class="grid-container" style="vertical-align: top">
+		<div class="nws-column">
+		  <div class="nws-zone-container"></div>
+		  <div class="nws-afd-container"></div>
 		</div>
 	      </div>
 	    </div>
@@ -2919,33 +2976,25 @@
 	  <div id="localWind" class="wx-scene localWind">
 	    <div class="wind-grid">
 	      <div>
-		<div>
-		  <span class="h3">Current StFYC Race Office Wind</span><br>
-		</div>
+		<div class="graphic-label">Current StFYC Race Office Wind</div>
 		<div class="wind-cell anemometer-cell">
 		  <div id="anemometer-stfyc"></div>
-		  <div class="h2 stfyc-anemometer-plot-label horizontal-center">
+		  <div class="stfyc-anemometer-plot-label horizontal-center">
 		    Wind <span class="awa-avg-span-stfyc"></span>&#176 (<span class="awa-span-stfyc">---</span>) @<span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span>&nbsp;kts
 		  </div>
 		</div>
 	      </div>
 	      <div class="wind-cell">
-		<div>
-		  <span class="h3">Recent Wind History</span><br>
-		</div>
+		<div class="graphic-label">Recent Wind History</div>
 		<div id="wind-history-recent" class="wind-plot">
 		</div>
 	      </div>
 	      <div class="wind-cell">
-		<div>
-		  <span class="h3">24-Hour Wind Forecast</span><br>
-		</div>
+		<div class="graphic-label">24-Hour Wind Forecast</div>
 		<div id="wind-forecast24" class="wind-plot"></div>
 	      </div>
 	      <div class="wind-cell">
-		<div>
-		  <span class="h3">WeatherFlow 5-Day Area Wind Forecast</span><br>
-		</div>
+		<div class="graphic-label">WeatherFlow 5-Day Area Wind Forecast</div>
 		<div id="wind-forecast120" class="wind-plot"></div>
 	      </div>
 	    </div>
@@ -2953,18 +3002,20 @@
 	  
 	  <div id="sfTides" class="wx-scene">
 	    <div class="tides-grid">
-	      <div id="tide-forecast-9414290" class="tides-cell">
-		<div><span class="h3">Tide Height @ Ft Point</span><br></div>
-	      </div>
-	      <div id="current-forecast-SFB1203_18" class="tides-cell">
-		<div><span class="h3">Tidal Current 0.46nm E of Golden Gate Bridge (depth 30ft)</span><br></div>
+	      <div class="tides-cell">
+		<div id="tide-forecast-9414290-label" class="graphic-label">Tide Height @ Ft Point</div>
+		<div id="tide-forecast-9414290" class="tides-graph"></div>
 	      </div>
 	      <div class="tides-cell">
-		<div><span class="h3">NOAA SFBOFS Currents</span><br></div>
+		<div id="current-forecast-SFB1203_18-label" class="graphic-label">Tidal Current 0.46nm E of Golden Gate Bridge (depth 30ft)</div>
+		<div id="current-forecast-SFB1203_18" class="currents-graph"></div>
+	      </div>
+	      <div class="tides-cell">
+		<div class="graphic-label">NOAA SFBOFS Currents</div>
 		<div><img id="sfCurrentChart" class="wx-image update5" alt="current chart SFB1202" src="data/SFBOFS/latest.png"></div>
 	      </div>
 	      <div id="current-events-SFB1203_18" class="tides-cell">
-		<div><span class="h3">Today @ 0.46nm E of Golden Gate Bridge (depth 30ft)</span><br></div>
+		<div class="graphic-label">Today @ 0.46nm E of Golden Gate Bridge (depth 30ft)</div>
 		<div id="current-events-content-SFB1203_18" class="current-events-content"></div>
 		<!--
 		    <span class="h3">Current Prediction @ GG Bridge</span><br>
@@ -3025,7 +3076,7 @@
 
 	  <div id="currentMapScene" class="wx-scene">
 	    <div id="currentMap" class="ol-flex-fit" width="1280" height="720">
-	      <div id="currentLabel" class="ol-label">
+	      <div id="currentLabel" class="graphic-label">
 	      </div>
 	    </div>
 	  </div>
@@ -3033,7 +3084,7 @@
 	  <div id="nationalRadarScene" class="wx-scene">
 	    <div class="ol-flex-fit">
 	      <div id="nationalRadar" class="ol-flex-fit">
-		<div id="nationalRadarLabel" class="ol-label">National RADAR</div>
+		<div id="nationalRadarLabel" class="graphic-label">National RADAR</div>
 	      </div>
 	    </div>
 	  </div>
@@ -3066,9 +3117,9 @@
 	  </div>
 	  
 	  <div id="aboutScene" class="wx-scene">
-	    <div id="about" class="grid-container2x">
+	    <div id="about" class="grid-container">
 	      <div>
-		<h2>About</h2>
+		<div>About</div><br>
 		NOAA PORTS - Weather Observations, Tides & Currents<br>
 		NOAA SF Bay Operational Forecast System (SFBOFS) - Tides & Currents<br>
 		NOAA Ocean Prediction Center - Surface Analysis<br>
