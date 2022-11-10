@@ -307,6 +307,7 @@
 	  min-height: 0px;
 	  max-width: 100%;
 	  min-width: 0px;
+	  margin: 2px;
       }
       .wind-plot {
 	  font-size: 1.25vw;
@@ -343,6 +344,7 @@
 	  min-height: 0px;
 	  max-width: 100%;
 	  min-width: 0px;
+	  margin: 2px;
       }
       .tide-plot {
 	  display: flex;
@@ -636,6 +638,9 @@
 	  .current-plot-label-item {
 	      font-size: 2.5vw;
 	  }
+	  .current-events-table {
+	      font-size: 2.5vw;
+	  }
       }
       @media (min-aspect-ratio: 1/1) {
 	  .graphic-label {
@@ -659,12 +664,16 @@
     <script src="local_config.js"></script>
     <script src="dateformat.js"></script>
       
-    <script src="https://d3js.org/d3.v7.js"></script>
+    <script src="data/lib/d3.v7.js"></script>
     <script src="data/lib/jquery-3.6.0.min.js"></script>
 
     <!-- Open Layers -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.css">
     <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.js"></script>
+    <!--
+    <link rel="stylesheet" href="data/lib/ol.css">
+    <script src="data/lib/ol.js"></script>
+    -->
 
     <!--
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.14.1/css/ol.css" type="text/css">
@@ -783,6 +792,7 @@
 	      { "div": "nationalRadarScene", "label": "National Radar", "duration": 30 },
 	      { "div": "cloudTopsScene", "label": "IR Cloud Tops", "duration": 30 },
 	      { "div": "vesselFinderScene", "label": "Local AIS", "duration": 30 },
+	      { "div": "linksScene", "label": "Links", "duration": 30 },
 	      { "div": "aboutScene", "label": "About", "duration": 30 },
 	  ],
 	  "Test": [
@@ -3144,6 +3154,39 @@
 		</div>
 	      </div>
 	    </div>
+	  </div>
+
+	  <div id="linksScene" class="wx-scene">
+	    <div id="links">
+	      <h2>Weather Sites</h2>
+	      <a href="https://weather.gov/mtr">NWS Bay Area</a> - The Weather Field Office (WFO) in Monterey<br>
+	      <a href="https://tropicaltidbits.com">Tropical Tidbits</a> - Dr Levi Cowen's site with many weather models and his excellent storm analysis when appropriate.<br>
+	      <a href="https://windy.com">Windy</a> - Excellent display of current weather and models.<br>
+	      <a href="https://www.wunderground.com/">Weather Underground</a> - Started by Dr Jeff Masters, it was a great grass-roots weather site until it was purchased first by The Weather Channel, then by IBM.<br>
+	      <a href="https://sailflow.com/map#37.831,-122.453,12,1">SailFlow SF Bay</a> - San Francisco site for SailFlow, a part of WeatherFlow. They also do iWindSurf, iKiteSurf, FishWeather, and WindAlert.<br>
+	      <a href="https://sailflow.com/spot/411">Sail Flow Anita Rock</a> - Live data, recent history, and weather forecasts.<br>
+	      <a href="https://ocean.weather.gov/Pac_tab.php">OPC Pacific</a> - Ocean Prediction Center North Pacific.<br>
+	      <a href="https://www.weathernerds.org/">Weather Nerds</a> - 'Nuf said.<br>
+	      <a href="https://weather.cod.edu/satrad/">COD Satellite & Radar</a> - College of DuPage Weather Site.<br>
+	      <a href="http://www.wrh.noaa.gov/map/?&zoom=5&scroll_zoom=false&center=40,-97&boundaries=false,false,false,false,false,false,false,false,false,false,false&tab=layers&hazard=true&hazard_type=all&hazard_opacity=60&elements=temp,wind,gust&temp_filter=-80,130&gust_filter=0,150&rh_filter=0,100&elev_filter=-300,14000&precip_filter=0.01,30&obs_popup=false&obs_density=60&obs_provider=ALL&radar=true&radar_min=20&radar_loop=false&radar_opacity=70>NWS US Map</a> - The Continental US (CONUS) w/ radar & warning area overlays.<br>
+	      <a href="https://"></a> - <br>
+	      <h2>NOAA/NWS Weather</h2>
+	      <a href="https://weather.gov">NWS Main Page</a> - The National Weather Service<br>
+	      <a href="https://weather.gov/mtr">NWS Bay Area</a> - The Weather Field Office (WFO) in Monterey<br>
+	      <a href="https://weather.gov/ncep">NCEP Main Page</a> - The National Center for Environmental Prediction<br>
+	      <a href="https://www.wpc.ncep.noaa.gov">WPC Main Page</a> - The Weather Prediction Center<br>
+	      <a href="https://ocean.weather.gov">OPC Main Page</a> - The Ocean Prediction Center<br>
+	      <a href="https://spc.noaa.gov">SPC Main Page</a> - The Storm Prediction Center<br>
+	      <a href="https://www.ospo.noaa.gov/Products/ocean/sst/contour/">OSPO SST</a> - Sea Surface Temperature from satellite observations.<br>
+	      <a href="https://www.ospo.noaa.gov/data/sst/contour/californ.c.gif">SST California Coast</a> - Local SST Analysis.<br>
+	      <h2>NOAA/NWS Modeling</h2>
+	      <a href="https://www.emc.ncep.noaa.gov/">NOAA NCEP</a> - The National Center for Environmental Prediction<br>
+	      <a href=""></a> - <br>
+	      <a href="https://www.mmm.ucar.edu/models/wrf">NCAR WRF</a> - National Center for Atmospheric Reaerch WRF model<br>
+	      <a href=""></a> - <br>
+	    </div>
+	      <h2>NOAA/NWS Modeling</h2>
+	      <a href="https://"></a> - <br>
 	  </div>
 	  
 	  <div id="aboutScene" class="wx-scene">
