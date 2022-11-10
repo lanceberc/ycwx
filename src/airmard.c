@@ -201,7 +201,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     break;
 
   case LWS_CALLBACK_RECEIVE:
-    ((char *)in)[len] = 0; // Not zero terminated!
+    //((char *)in)[len] = 0; // Not zero terminated!
     lwsl_notice("LWS_CALLBACK_RECEIVE cJSON (len %d) %s\n", len, in);
     json = cJSON_ParseWithLength(in, len);
     if (json == NULL) {
