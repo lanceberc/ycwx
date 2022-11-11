@@ -17,6 +17,9 @@
 #define LWS_INTERNAL
 #endif
 
+// Use the North-biased stats from the Airmar
+#define TRUE_WIND 1
+
 // Our sensor is not pointed north - add SENSOR_OFFSET to each reading
 #define SENSOR_OFFSET 75.0
 
@@ -129,7 +132,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     (struct per_vhost_data__wind *) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
   int n, m;
   lws_sock_file_fd_type u;
-  uint8_t buf[64];
+  uint8_t buf[128];
   cJSON *json;
 
   switch (reason) {
@@ -243,28 +246,59 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 
       return 1;
     }
+    
+    buf[n] = 0;
     //lwsl_hexdump_level(LLL_NOTICE, buf, (unsigned int)n);
+    //lwsl_user("Read (%d) %s", n, buf);
 		
     struct timeval tv;
     gettimeofday(&tv, NULL);
     
     float awa, aws;
-    char awa_ref, aws_unit;
-    if (strncmp((const char *)&buf, "$WIMWV", sizeof("$WIMWV")-1)) {
-      break;
-    }
-		
-    int r = sscanf(buf, "$WIMWV,%f,%c,%f,%c,", &awa, &awa_ref, &aws, &aws_unit);
-    if ((r != 4) || (awa_ref != 'R') || (aws_unit != 'N')) {
-      break;
-    }
+    float twa_t, twa_m, tws_n, tws_m;
+    char twa_t_ref, twa_m_ref, tws_n_unit, tws_m_unit, awa_ref, aws_unit;
 
-    // Adjust reading for sensor not pointing north
-    awa += SENSOR_OFFSET;
-    awa = (awa < 360.0) ? awa : awa - 360.0;
+    /*
+     * $GPZDA,233202,27,03,2003,00,00*4D
+     * $GPGGA,233202,3748.4418,N,12226.7771,W,2,9,0.9,12.6,M,,,,*05
+     * $WIMDA,29.3262,I,0.9931,B,14.5,C,,,,,,,314.1,T,299.1,M,4.1,N,2.1,M*24
+     * $WIMWD,314.1,T,299.1,M,4.1,N,2.1,M*58
+     * $WIMWV,199.4,R,4.0,N,A*22
+     * $WIMWV,200.8,T,4.0,N,A*2B
+     */
 
+    if (TRUE_WIND) {
+      // $WIMWD,314.1,T,299.1,M,4.1,N,2.1,M*58
+      if (!strncmp((const char *)&buf, "$WIMWD", sizeof("$WIMWD")-1)) {
+	int r = sscanf(buf, "$WIMWD,%f,%c,%f,%c,%f,%c,%f,%c", &twa_t, &twa_t_ref, &twa_m, &twa_m_ref, &tws_n, &tws_n_unit, &tws_m, &tws_m_unit);
+	if ((r != 8) || (twa_m_ref != 'M') || (tws_n_unit != 'N')) {
+	  //lwsl_user("Bad Parse %d %c %c", r, twa_m_ref, tws_m_unit);
+	  break;
+	}
+	awa = twa_m;
+	aws = tws_n;
+	//lwsl_user("Wind %3.0f @ %4.1f", awa, aws);
+      } else {
+	break;
+      }
+    } else {
+      // $WIMWV,201.8,R,4.4,N,A*28
+      if (!strncmp((const char *)&buf, "$WIMWV", sizeof("$WIMWV")-1)) {
+	int r = sscanf(buf, "$WIMWV,%f,%c,%f,%c,", &awa, &awa_ref, &aws, &aws_unit);
+	if ((r != 4) || (awa_ref != 'R') || (aws_unit != 'N')) {
+	  break;
+	}
+	// Adjust reading for sensor not pointing north
+	awa += SENSOR_OFFSET;
+	awa = (awa < 360.0) ? awa : awa - 360.0;
+      } else {
+	break;
+      }
+    }
+    
     aws_buf[buf_idx] = aws;
     awa_buf[buf_idx] = awa;
+
     
     /* Determine average wind angle - what happens when wind is oscillating from dead ahead?
      * If some samples are slightly positive and others are 'negative' (close to 360) then
