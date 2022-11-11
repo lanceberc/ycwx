@@ -154,6 +154,8 @@
 	  min-width: 0;
 	  min-height: 0;
       }
+      .wx-not-button {
+      }
       .wx-button {
 	  display: none;
 	  padding: .25em;
@@ -178,6 +180,10 @@
       .active-scene:hover {
 	  background: var(--hover-background);
 	  color: var(--hover-foreground);
+      }
+      .scene-not-button {
+	  color: var(--foreground2);
+	  background: var(--white);
       }
       .show {
 	  display: inline-flex;
@@ -2695,8 +2701,11 @@
 	      let b = list.append("div")
 		  .attr('id', "scene-index-" + i)
 		  .html(sc.label);
-	      if (sc.div != "")
-	      	  b.classed('scene-button', true)
+	      if (sc.div == "") {
+	      	  b.classed('scene-not-button', true);
+	      } else {
+	      	  b.classed('scene-button', true);
+	      }
 	  });
       }
 
@@ -2778,7 +2787,7 @@
 	      mode = "Interactive";
       	      d3.select("#mode-button")
 		  .html("Interactive");
-	      d3.selectAll("#scene-list>div")
+	      d3.selectAll("#scene-list>div:not(.scene-not-button)")
 		  .classed("active-scene", true)
 		  .on('click', handleSceneClick);
 	  }
