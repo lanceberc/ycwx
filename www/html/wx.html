@@ -409,7 +409,6 @@
 	  fill: #c0c0c0a0;
       }
       .current-plot-label-item {
-	  font-size: 1.25vw;
 	  stroke: var(--black);
 	  fill: var(--black);
 	  /*color: var(--main-foreground-color);*/
@@ -429,7 +428,6 @@
 	  border-collapse: collapse;
 	  background: var(--background2);
 	  color: var(--main-foreground-color);
-	  font-size: 1.1vw;
       }
       .current-events-table-header {
 	  display: table-header-group;
@@ -630,42 +628,12 @@
 	  }
       }
       @media (max-aspect-ratio: 1/1) {
-	  .current-events-table {
-	      font-size: 2.5vw;
-	  }
-	  .graphic-label {
-	      font-size: 2.5vw;
-	  }
-	  .tide-plot-label {
-	      font-size: 2.5vw;
-	  }
-	  .tide-plot-label-item {
-	      font-size: 2.5vw;
-	  }
-	  .current-plot-label {
-	      font-size: 2.5vw;
-	  }
-	  .current-plot-label-item {
-	      font-size: 2.5vw;
-	  }
-	  .current-events-table {
+	  .label {
 	      font-size: 2.5vw;
 	  }
       }
       @media (min-aspect-ratio: 1/1) {
-	  .graphic-label {
-	      font-size: 1.25vw;
-	  }
-	  .tide-plot-label {
-	      font-size: 1.25vw;
-	  }
-	  .tide-plot-label-item {
-	      font-size: 1.25vw;
-	  }
-	  .current-plot-label {
-	      font-size: 1.25vw;
-	  }
-	  .current-plot-label-item {
+	  .label {
 	      font-size: 1.25vw;
 	  }
       }
@@ -2124,11 +2092,13 @@
 	      .append("g")
 	      .attr("opacity", 1)
 	      .classed("tide-plot-label", true)
+	      .classed("label", true)
 	      .attr("transform", function(d, i) {
 		  return("translate(" + x(d[0]) + ", " + y(labelClamp(d[1])) + ")")
 	      })
 	      .append('text')
 	      .classed("tide-plot-label-item", true)
+	      .classed("label", true)
 	      .attr("text-anchor", "middle")
 	      .attr("dx", 0)
 	      .attr("dy", function(d, i) { return(d[3] == "H" ? "-0.45em" : "1.3em") } )
@@ -2206,7 +2176,8 @@
 
 	      let table = d3.select("#current-events-content-" + noaaCurrentStation).append("div")
 		  .classed("current-events-table", true)
-		  .classed("current-events-table-" + noaaCurrentStation, true);
+		  .classed("current-events-table-" + noaaCurrentStation, true)
+		  .classed("label", true);
 
 	      let header = table.append("div")
 		  .classed("current-events-table-header", true)
@@ -2374,11 +2345,13 @@
 	      .append("g")
 	      .attr("opacity", 1)
 	      .classed("tide-plot-label", true)
+	      .classed("label", true)
 	      .attr("transform", function(d, i) {
 		  return("translate(" + x(d[0]) + ", " + y(d[1]) + ")")
 	      })
 	      .append('text')
 	      .classed("current-plot-label-item", true)
+	      .classed("label", true)
 	      .attr("text-anchor", "middle")
 	      .attr("dx", 0)
 	      .attr("dy", function(d, i) { return(d[3] == "Max Flood" ? "-0.45em" : "1.3em") } )
@@ -3001,12 +2974,12 @@
 	    <div class="ol-flex-fit" style="flex-direction: column;">
 	      <div class="obs-grid">
 		<div class="obs-cell">
-		  <div class="graphic-label">Local Observations</div>
+		  <div class="label">Local Observations</div>
 		  <div id="sfLocalObservationsTable" class="obs-table"></div>
 		</div>
 	      </div>
 	      <div class="ol-flex-fit" style="flex-direction: column;">
-		<div class="graphic-label">Local Radar & Warnings</div>
+		<div class="label">Local Radar & Warnings</div>
 		<div class="ol-flex-fit">
 		  <div id="localRadar" class="ol-flex-fit">
 		    <div id="localRadarLabel" class="ol-label">Local NEXRAD Radar</div>
@@ -3042,7 +3015,7 @@
 	  <div id="localWind" class="wx-scene localWind">
 	    <div class="wind-grid">
 	      <div>
-		<div class="graphic-label">Current StFYC Race Office Wind</div>
+		<div class="label">Current StFYC Race Office Wind</div>
 		<div class="wind-cell anemometer-cell">
 		  <div id="anemometer-stfyc"></div>
 		  <div class="stfyc-anemometer-plot-label horizontal-center">
@@ -3051,16 +3024,16 @@
 		</div>
 	      </div>
 	      <div class="wind-cell">
-		<div id="wind-history-recent-label" class="graphic-label">Recent Wind History</div>
+		<div id="wind-history-recent-label" class="label">Recent Wind History</div>
 		<div id="wind-history-recent" class="wind-plot">
 		</div>
 	      </div>
 	      <div class="wind-cell">
-		<div id="wind-forecast24-label" class="graphic-label">24-Hour Wind Forecast</div>
+		<div id="wind-forecast24-label" class="label">24-Hour Wind Forecast</div>
 		<div id="wind-forecast24" class="wind-plot"></div>
 	      </div>
 	      <div class="wind-cell">
-		<div id="wind-forecast120-label" class="graphic-label">WeatherFlow 5-Day Area Wind Forecast</div>
+		<div id="wind-forecast120-label" class="label">WeatherFlow 5-Day Area Wind Forecast</div>
 		<div id="wind-forecast120" class="wind-plot"></div>
 	      </div>
 	    </div>
@@ -3069,19 +3042,19 @@
 	  <div id="sfTides" class="wx-scene">
 	    <div class="tides-grid">
 	      <div class="tides-cell">
-		<div id="tide-forecast-9414290-label" class="graphic-label">Tide Height @ Ft Point</div>
+		<div id="tide-forecast-9414290-label" class="label">Tide Height @ Ft Point</div>
 		<div id="tide-forecast-9414290" class="tides-graph"></div>
 	      </div>
 	      <div class="tides-cell">
-		<div id="current-forecast-SFB1203_18-label" class="graphic-label">Tidal Current 0.46nm E of Golden Gate Bridge (depth 30ft)</div>
+		<div id="current-forecast-SFB1203_18-label" class="label">Tidal Current 0.46nm E of Golden Gate Bridge (depth 30ft)</div>
 		<div id="current-forecast-SFB1203_18" class="currents-graph"></div>
 	      </div>
 	      <div class="tides-cell">
-		<div class="graphic-label">NOAA SFBOFS Currents</div>
+		<div class="label">NOAA SFBOFS Currents</div>
 		<div><img id="sfCurrentChart" class="wx-image update5" alt="current chart SFB1202" src="data/SFBOFS/latest.png"></div>
 	      </div>
 	      <div id="current-events-SFB1203_18" class="tides-cell">
-		<div class="graphic-label">Today @ 0.46nm E of Golden Gate Bridge (depth 30ft)</div>
+		<div class="label">Today @ 0.46nm E of Golden Gate Bridge (depth 30ft)</div>
 		<div id="current-events-content-SFB1203_18" class="current-events-content"></div>
 		<!--
 		    <span class="h3">Current Prediction @ GG Bridge</span><br>
@@ -3141,12 +3114,12 @@
 	  </div>
 
 	  <div id="currentMapScene" class="wx-scene">
-	    <div id="currentLabel" class="graphic-label"></div>
+	    <div id="currentLabel" class="label"></div>
 	    <div id="currentMap" class="ol-flex-fit" width="1280" height="720"></div>
 	  </div>
 
 	  <div id="nationalRadarScene" class="wx-scene">
-	    <div id="nationalRadarLabel" class="graphic-label">National RADAR</div>
+	    <div id="nationalRadarLabel" class="label">National RADAR</div>
 	    <div id="nationalRadar" class="ol-flex-fit"></div>
 	  </div>
 
