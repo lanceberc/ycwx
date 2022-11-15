@@ -191,6 +191,9 @@ function windPlotHistory(e, history) {
 
 function windStartStopHistory(e) {
     const cr = e.contentRect;
+    if (windSocket == null) {
+	return;
+    }
     if (windSocket.readyState != 1) {
 	console.log(`windStartStopHistory websocket not ready (${windSocket.readyState})`);
 	return;

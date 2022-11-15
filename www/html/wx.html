@@ -483,35 +483,36 @@
       .anemometer-cell {
 	  background: var(--background2);
       }
-      .stfyc-anemometer-gauge {
+      .anemometer-stfyc-gauge {
 	  display: inline-block;
 	  width: 100%;
 	  margin: auto;
 	  /* background: var(--background2); */
       }
-      .stfyc-anemometer-arc {
+      .anemometer-stfyc-arc {
 	  fill: var(--background2);
       }
-      .stfyc-anemometer-pointer-0 { /* gust */
+      .anemometer-stfyc-pointer-0 { /* gust */
 	  fill: var(--foreground2);
 	  stroke: var(--black);
       }
-      .stfyc-anemometer-pointer-1 { /* avg */
+      .anemometer-stfyc-pointer-1 { /* avg */
 	  fill: var(--white);
 	  stroke: var(--black);
       }
-      .stfyc-anemometer-label {
+      .anemometer-stfyc-label {
 	  text-anchor: middle;
 	  font-size: 1.25vw;
 	  font-weight: bold;
 	  background: var(--background2);
 	  fill: var(--main-foreground-color);
       }
-      .stfyc-anemometer-plot-label {
+      .anemometer-stfyc-plot-label {
 	  text-anchor: middle;
 	  font-size: 2.50vw;
 	  background: var(--background2);
 	  fill: var(--main-foreground-color);
+	  width: 100%;
       }
       .ol-label {
 	  position: absolute;
@@ -1426,28 +1427,27 @@
 
       var anemometer = null;
 
+      /*
       let anemometerRO = new ResizeObserver(elements => {
 	  for (let e of elements) {
 	      const cr = e.contentRect;
 	      console.log("anemometerRO new size: " + cr.width + "x" + cr.height);
 	  }
       });
+      */
 
       // Gauge for anemometer
+      let gauges = {};
+      
       var gauge = function(container, configuration) {
-	  var that = {};
-	  var config = {
+	  let that = {};
+	  let config = {
 	      classRoot: "gauge",
-	      size: 200,
-	      clipWidth: 200,
-	      clipHeight: 110,
 
-	      arcInset: 20,
-	      arcWidth: 20,
 	      arcSegments: 0, // # of color segments in dial - defaults to # of ticks
 	      arcColorFn: d3.interpolateHsl(d3.rgb('#e8e2ca'), d3.rgb('#3e6c0a')),
 
-	      // If using multiple pointers all values must be specified
+	      // If using multiple pointers all values must be specified when configuring
 	      pointers: [
 		  {
 		      pointerWidth: 10,
@@ -1467,6 +1467,8 @@
 	      arcMajorTicks: 5,
 	      arcLabelFormat: d3.format(',g'),
 	      arcLabelInset: 10,
+
+	      pcr: {width: 0, height:0}
 	  };
 	  
 	  let range = undefined;
@@ -1480,7 +1482,6 @@
 	  var ticks = undefined;
 	  var tickData = undefined;
 	  var pointer = undefined;
-	  var donut = d3.pie();
 	  
 	  function deg2rad(deg) {
 	      return deg * Math.PI / 180;
@@ -1493,35 +1494,9 @@
 	  }
 	  
 	  function configure(configuration) {
-	      var prop = undefined;
-	      for ( prop in configuration ) {
+	      for (let prop in configuration ) {
 		  config[prop] = configuration[prop];
 	      }
-	      
-	      range = config.maxAngle - config.minAngle;
-	      radius = config.size / 2;
-
-	      // a linear scale that maps domain values to a percent from 0..1
-	      scale = d3.scaleLinear()
-		  .range([0,1])
-		  .domain([config.minValue, config.maxValue]);
-	      
-	      ticks = scale.ticks(config.arcMajorTicks);
-	      tickData = d3.range(config.arcMajorTicks).map(function() {return 1/config.arcMajorTicks;});
-
-	      /*
-	      arc = d3.arc()
-		  .innerRadius(radius - config.arcWidth - config.arcInset)
-		  .outerRadius(radius - config.arcInset)
-		  .startAngle(function(d, i) {
-		      var ratio = d * i;
-		      return deg2rad(config.minAngle + (ratio * range));
-		  })
-		  .endAngle(function(d, i) {
-		      var ratio = d * (i+1);
-		      return deg2rad(config.minAngle + (ratio * range));
-		  });
-	      */
 	  }
 	  that.configure = configure;
 	  
@@ -1544,48 +1519,64 @@
 	  }
 	  
 	  function render(newValue) {
-	      const pcr = d3.select(container).node().parentNode.parentNode.getBoundingClientRect();
-	      const cr = d3.select(container).node().getBoundingClientRect();
-	      const labelcr = d3.select(container + "-label").node().getBoundingClientRect();
-	      const plotlabelcr = d3.select(container + "-plot-label").node().getBoundingClientRect();
+	      range = config.maxAngle - config.minAngle;
+	      
+	      // a linear scale that maps domain values to a percent from 0..1
+	      scale = d3.scaleLinear()
+		  .range([0,1])
+		  .domain([config.minValue, config.maxValue]);
+	      
+	      ticks = scale.ticks(config.arcMajorTicks);
+	      tickData = d3.range(config.arcMajorTicks).map(function() {return 1/config.arcMajorTicks;});
+
+	      const id = '#' + container;
+
+	      const pcr = d3.select(id).node().parentNode.getBoundingClientRect();
+	      const cr = d3.select(id).node().getBoundingClientRect();
+	      const labelcr = d3.select(id + "-label").node().getBoundingClientRect();
+	      const plotlabelcr = d3.select(id + "-plot-label").node().getBoundingClientRect();
 	      console.log(`gauge cr ${cr.width} x ${cr.height}`);
 
-	      let svg;
 	      if ((cr.width == 0) && (cr.height == 0)) {
-		  svg = d3.select(container)
-		  //.append('svg:svg')
-		      .append('svg')
-		      .classed(config.classRoot + "-gauge", true)
-		  // .attr('width', config.clipWidth)
-		  // .attr('height', config.clipHeight)
-		      .attr("viewBox", "0 0 " + config.clipWidth + " " + config.clipHeight);
-	      } else {
-		  let width = cr.width;
-		  let height = pcr.height - (labelcr.height + plotlabelcr.height);
-		  let aheight = width * (9.0 / 16.0);
-		  //let aheight = width * (3.0 / 4.0);
-		  if ((aheight < height) || (pcr.height == (labelcr.height + plotlabelcr.height))) {
-		      height = aheight;
-		  }
-		  
-		  svg = d3.select(container)
-		      .append('svg')
-		      .classed(config.classRoot + "-gauge", true)
-		      .attr('width', width)
-		      .attr('height', height)
-		      .attr("viewBox", "0 0 " + width + " " + height);
-
-		  radius = width / 2;
-		  console.log(`gauge pcr ${pcr.width} x ${pcr.height}`);
-		  console.log(`gauge label ${labelcr.width} x ${labelcr.height}`);
-		  console.log(`gauge plotlabel ${plotlabelcr.width} x ${plotlabelcr.height}`);
-		  console.log(`gauge aheight ${aheight}`);
-		  console.log(`gauge viewBox ${width} x ${height}`);
-		  console.log(`gauge radius ${radius}`);
+		  return;
 	      }
+
+	      if ((typeof gauges[container].pcr !== 'undefined') &&
+		  (Math.round(gauges[container].pcr.width) == Math.round(pcr.width)) &&
+		  (Math.round(gauges[container].pcr.height) == Math.round(pcr.height))) {
+		  return;
+	      }
+
+	      gauges[container].pcr = pcr;
+
+	      let width = cr.width;
+	      let height = pcr.height - (labelcr.height + plotlabelcr.height);
+	      let aheight = width * (9.0 / 16.0);
+	      //let aheight = width * (3.0 / 4.0);
+	      if ((aheight < height) || (pcr.height == (labelcr.height + plotlabelcr.height))) {
+		  height = aheight;
+	      }
+
+	      d3.select(id).selectAll("*").remove();
+	      const svg = d3.select(id)
+		    .append('svg')
+		    .classed(config.classRoot + "-gauge", true)
+		    .attr('width', width)
+		    .attr('height', height)
+		    .attr("viewBox", "0 0 " + width + " " + height);
+
+	      radius = width / 2;
+	      radius = (radius < height) ? radius : height;
+		  
+	      console.log(`gauge pcr ${pcr.width} x ${pcr.height}`);
+	      console.log(`gauge label ${labelcr.width} x ${labelcr.height}`);
+	      console.log(`gauge plotlabel ${plotlabelcr.width} x ${plotlabelcr.height}`);
+	      console.log(`gauge aheight ${aheight}`);
+	      console.log(`gauge viewBox ${width} x ${height}`);
+	      console.log(`gauge radius ${radius}`);
 	      
 	      let centerTx = centerTranslation();
-
+	      
 	      arc = d3.arc()
 		  .innerRadius(radius/2)
 		  .outerRadius(radius - plotlabelcr.height)
@@ -1602,6 +1593,7 @@
 	      const arcs = svg.append('g')
 		  .classed(config.classRoot + "-arc", true)
 		  .attr('transform', centerTx);
+
 
 	      // Dial arc is a gradient with N segments.
 	      let gradient = tickData; // Default to # of ticks
@@ -1629,7 +1621,7 @@
 		  .attr('transform', function(d) {
 		      var ratio = scale(d);
 		      var newAngle = config.minAngle + (ratio * range);
-		      return 'rotate(' +newAngle +') translate(0,' +(config.arcLabelInset - radius) +')';
+		      return 'rotate(' +newAngle +') translate(0,' + ((plotlabelcr.height/2) - radius) +')';
 		  })
 		  .text(config.arcLabelFormat);
 
@@ -1658,7 +1650,7 @@
 	      for (i in config.pointers) {
 		  let classId = `${config.classRoot}-value-${i}`;
 		  let inputId = `${config.id}-value-${i}`;
-		  form = d3.select(container).append("form")
+		  form = d3.select(id).append("form")
 		      .append("input")
 		      .attr("type", "hidden")
 		      .attr("value", 0.0)
@@ -1668,6 +1660,15 @@
 	      }
 	  }
 	  that.render = render;
+
+	  let gaugeRO = new ResizeObserver(elements => {
+	      for (let e of elements) {
+		  const cr = e.contentRect;
+		  const id = e.target.id
+		  console.log(`gaugeRO ${id} new size ${cr.width} x ${cr.height}`);
+		  gauges[id].render();
+	      }
+	  });
 
 	  function update(pointer, newValue, newConfiguration) {
 	      if (pointer === undefined) { // Called when gauge becomes visible
@@ -1684,13 +1685,18 @@
 		  return;
 	      }
 	      
-	      if ( newConfiguration  !== undefined) {
+	      if (newConfiguration !== undefined) {
 		  configure(newConfiguration);
 	      }
 
 	      config.pointers[pointer].val = newValue;
 	      if (document.hidden) {
 		  //console.log("anemometer " + pointer + ": " + newValue + " update: document is hidden");
+		  return;
+	      }
+
+	      // Called before gauge is rendered
+	      if (typeof config.pointers[pointer].pointer === 'undefined') {
 		  return;
 	      }
 	      
@@ -1705,7 +1711,12 @@
 	  that.update = update;
 
 	  configure(configuration);
-	  
+
+	  gauges[container] = that;
+
+	  gaugeRO.observe(document.querySelector('#' + container));
+	  console.log(`gauge ${container} initialized`);
+
 	  return that;
       };
 
@@ -2895,28 +2906,20 @@
 	  tidesRO.observe(document.querySelector(".tides-graph"));
 	  currentsRO.observe(document.querySelector(".currents-graph"));
 
-	  anemometer = gauge('#anemometer-stfyc', {
-	      id: "stfyc-wind-anemometer",
-	      classRoot: "stfyc-anemometer",
+	  anemometer = gauge('anemometer-stfyc', {
+	      //id: "stfyc-wind-anemometer",
+	      classRoot: "anemometer-stfyc",
 	      maxValue: 30, // in knots
-	      size: vw(30), // Sized in terms of window size
-	      clipWidth: vw(32),
-	      clipHeight: vw(17),
-	      arcInset: vw(2),
-	      arcWidth: vw(4),
 	      arcColorFn: d3.interpolateHslLong("#613CFF", "#FB4B39"), // nice blue & red hues, gradient centers on green
 	      arcSegments: 256, // make dial a smooth rainbow
 	      arcMajorTicks: 5,
 	      arcLabelFormat: d3.format('d'),
-	      arcLabelInset: vw(1.1),
 	      pointers: [
 		  { pointerWidth: vw(3), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
 		  { pointerWidth: vw(2), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
 	      ],
 	  });
-	  anemometer.render();
-	  anemometerRO.observe(document.querySelector("#anemometer-stfyc"));
-	  
+
 	  // Use WebSocket for current? Tempest web service is flakey, so use all ways to get data
 	  fetchTempestCurrent("St. Francis Yacht Club");
 	  fetchTempestCurrent("Tinsley Island");
@@ -3063,11 +3066,9 @@
 	    <div class="wind-grid">
 	      <div class="wind-cell">
 		<div id="anemometer-stfyc-label" class="label">Current StFYC Race Office Wind</div>
-		<div class="anemometer-cell">
-		  <div id="anemometer-stfyc"></div>
-		  <div id="anemometer-stfyc-plot-label" class="stfyc-anemometer-plot-label horizontal-center">
+		<div id="anemometer-stfyc" class="anemometer-cell"></div>
+		<div id="anemometer-stfyc-plot-label" class="anemometer-stfyc-plot-label anemometer-cell horizontal-center">
 		    Wind <span class="awa-avg-span-stfyc"></span>&#176 (<span class="awa-span-stfyc">---</span>) @<span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span>&nbsp;kts
-		  </div>
 		</div>
 	      </div>
 	      <div class="wind-cell">
