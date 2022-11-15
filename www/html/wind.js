@@ -149,12 +149,12 @@ function windPlotHistory(e, history) {
     // x-axis
     svg.append("g")
 	.attr("transform", "translate(0," + height + ")")
-	.classed("wind-plot-x-axis", true)
+	.classed("label", true)
 	.call(d3.axisBottom(x));
 
     // y-axis
     svg.append("g")
-	.classed("wind-plot-y-axis", true)
+	.classed("label", true)
 	.call(d3.axisLeft(y)
 	      .tickArguments([5]));
 
