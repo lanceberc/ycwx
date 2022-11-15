@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StFYC Weather Information</title>
     <style>
@@ -323,14 +324,8 @@
 	  min-width: 0px;
 	  background: var(--background2);
       }
-      .wind-plot-y-axis {
-	  font-size: 1.25vw; /* Override d3's 10pt default */
-	  }
-	   .wind-plot-x-axis {
-	       font-size: 1vw; /* Override d3's 10pt default */
-      }
-      .wind-plot-wind-lull {
-      }
+
+      /* Override d3's 10pt default */
       .wind-plot-wind-avg {
 	  fill: var(--main-background-color);
 	  stroke: var(--main-foreground-color);
@@ -572,24 +567,6 @@
 	      display: none;
 	  }
       }
-      @media (min-width: 1024px) {
-	  .wx-header-2 {
-	      display: none;
-	  }
-	  .burgee-left {
-	      display: inline-flex;
-	      transform: scale(-1,1);
-	  }
-	  .burgee-right {
-	      display: inline-flex;
-	  }
-	  .menu-icon-div {
-	      display: none;
-	  }
-	  .scene-pull-down-enable {
-	      display: none;
-	  }
-      }
       @media (max-width: 1024px) {
 	  .wx-header-1 {
 	      display: none;
@@ -614,7 +591,7 @@
 	      display: inline-flex;
 	  }
 	  .scene-pull-down-enable {
-	      font-size: 4.0vw;
+	      /* font-size: 4.0vw; */
 	      height: 2em;
 	      width: 4em;
 	      display: inline-flex;
@@ -627,9 +604,33 @@
 	      display: none;
 	  }
       }
+      @media (min-width: 1024px) {
+	  .wx-header-2 {
+	      display: none;
+	  }
+	  .burgee-left {
+	      display: inline-flex;
+	      transform: scale(-1,1);
+	  }
+	  .burgee-right {
+	      display: inline-flex;
+	  }
+	  .menu-icon-div {
+	      display: none;
+	  }
+	  .scene-pull-down-enable {
+	      display: none;
+	  }
+      }
       @media (max-aspect-ratio: 1/1) {
 	  .label {
 	      font-size: 2.5vw;
+	  }
+	  .stfyc-anemometer-label {
+	      font-size: 2.50vw;
+	  }
+	  .stfyc-anemometer-plot-label {
+	      font-size: 5.00vw;
 	  }
       }
       @media (min-aspect-ratio: 1/1) {
@@ -1154,12 +1155,12 @@
 	  // x-axis
 	  svg.append("g")
 	      .attr("transform", "translate(0," + height + ")")
-	      .classed("wind-plot-x-axis", true)
+	      .classed("label", true)
 	      .call(d3.axisBottom(x));
 
 	  // y-axis
 	  svg.append("g")
-	      .classed("wind-plot-y-axis", true)
+	      .classed("label", true)
 	      .call(d3.axisLeft(y)
 		    .tickArguments([5]));
 
@@ -1271,12 +1272,12 @@
 	  // x-axis
 	  svg.append("g")
 	      .attr("transform", "translate(0," + height + ")")
-	      .classed("wind-plot-x-axis", true)
+	      .classed("label", true)
 	      .call(d3.axisBottom(x));
 
 	  // y-axis
 	  svg.append("g")
-	      .classed("wind-plot-y-axis", true)
+	      .classed("label", true)
 	      .call(d3.axisLeft(y)
 		    .tickArguments([5]));
 
@@ -1368,12 +1369,12 @@
 	  // x-axis
 	  svg.append("g")
 	      .attr("transform", "translate(0," + height + ")")
-	      .classed("wind-plot-x-axis", true)
+	      .classed("label", true)
 	      .call(d3.axisBottom(x));
 
 	  // y-axis
 	  svg.append("g")
-	      .classed("wind-plot-y-axis", true)
+	      .classed("label", true)
 	      .call(d3.axisLeft(y)
 		    .tickArguments([5]));
 
@@ -1468,8 +1469,8 @@
 	      arcLabelInset: 10,
 	  };
 	  
-	  var range = undefined;
-	  var r = undefined;
+	  let range = undefined;
+	  let radius = undefined;
 	  var pointerHeadLength = undefined;
 	  var value = 0;
 	  
@@ -1498,7 +1499,7 @@
 	      }
 	      
 	      range = config.maxAngle - config.minAngle;
-	      r = config.size / 2;
+	      radius = config.size / 2;
 
 	      // a linear scale that maps domain values to a percent from 0..1
 	      scale = d3.scaleLinear()
@@ -1507,10 +1508,11 @@
 	      
 	      ticks = scale.ticks(config.arcMajorTicks);
 	      tickData = d3.range(config.arcMajorTicks).map(function() {return 1/config.arcMajorTicks;});
-	      
+
+	      /*
 	      arc = d3.arc()
-		  .innerRadius(r - config.arcWidth - config.arcInset)
-		  .outerRadius(r - config.arcInset)
+		  .innerRadius(radius - config.arcWidth - config.arcInset)
+		  .outerRadius(radius - config.arcInset)
 		  .startAngle(function(d, i) {
 		      var ratio = d * i;
 		      return deg2rad(config.minAngle + (ratio * range));
@@ -1519,11 +1521,12 @@
 		      var ratio = d * (i+1);
 		      return deg2rad(config.minAngle + (ratio * range));
 		  });
+	      */
 	  }
 	  that.configure = configure;
 	  
 	  function centerTranslation() {
-	      return 'translate('+r +','+ r +')';
+	      return 'translate('+ radius +','+ radius +')';
 	  }
 	  
 	  function isRendered() {
@@ -1541,16 +1544,60 @@
 	  }
 	  
 	  function render(newValue) {
-	      const svg = d3.select(container)
-	      //.append('svg:svg')
-		  .append('svg')
-		  .classed(config.classRoot + "-gauge", true)
-	      // .attr('width', config.clipWidth)
-	      // .attr('height', config.clipHeight)
-		  .attr("viewBox", "0 0 " + config.clipWidth + " " + config.clipHeight);
+	      const pcr = d3.select(container).node().parentNode.parentNode.getBoundingClientRect();
+	      const cr = d3.select(container).node().getBoundingClientRect();
+	      const labelcr = d3.select(container + "-label").node().getBoundingClientRect();
+	      const plotlabelcr = d3.select(container + "-plot-label").node().getBoundingClientRect();
+	      console.log(`gauge cr ${cr.width} x ${cr.height}`);
+
+	      let svg;
+	      if ((cr.width == 0) && (cr.height == 0)) {
+		  svg = d3.select(container)
+		  //.append('svg:svg')
+		      .append('svg')
+		      .classed(config.classRoot + "-gauge", true)
+		  // .attr('width', config.clipWidth)
+		  // .attr('height', config.clipHeight)
+		      .attr("viewBox", "0 0 " + config.clipWidth + " " + config.clipHeight);
+	      } else {
+		  let width = cr.width;
+		  let height = pcr.height - (labelcr.height + plotlabelcr.height);
+		  let aheight = width * (9.0 / 16.0);
+		  //let aheight = width * (3.0 / 4.0);
+		  if ((aheight < height) || (pcr.height == (labelcr.height + plotlabelcr.height))) {
+		      height = aheight;
+		  }
+		  
+		  svg = d3.select(container)
+		      .append('svg')
+		      .classed(config.classRoot + "-gauge", true)
+		      .attr('width', width)
+		      .attr('height', height)
+		      .attr("viewBox", "0 0 " + width + " " + height);
+
+		  radius = width / 2;
+		  console.log(`gauge pcr ${pcr.width} x ${pcr.height}`);
+		  console.log(`gauge label ${labelcr.width} x ${labelcr.height}`);
+		  console.log(`gauge plotlabel ${plotlabelcr.width} x ${plotlabelcr.height}`);
+		  console.log(`gauge aheight ${aheight}`);
+		  console.log(`gauge viewBox ${width} x ${height}`);
+		  console.log(`gauge radius ${radius}`);
+	      }
 	      
 	      let centerTx = centerTranslation();
 
+	      arc = d3.arc()
+		  .innerRadius(radius/2)
+		  .outerRadius(radius - plotlabelcr.height)
+		  .startAngle(function(d, i) {
+		      var ratio = d * i;
+		      return deg2rad(config.minAngle + (ratio * range));
+		  })
+		  .endAngle(function(d, i) {
+		      var ratio = d * (i+1);
+		      return deg2rad(config.minAngle + (ratio * range));
+		  });
+	      
 	      // The circular gauge dial
 	      const arcs = svg.append('g')
 		  .classed(config.classRoot + "-arc", true)
@@ -1582,14 +1629,14 @@
 		  .attr('transform', function(d) {
 		      var ratio = scale(d);
 		      var newAngle = config.minAngle + (ratio * range);
-		      return 'rotate(' +newAngle +') translate(0,' +(config.arcLabelInset - r) +')';
+		      return 'rotate(' +newAngle +') translate(0,' +(config.arcLabelInset - radius) +')';
 		  })
 		  .text(config.arcLabelFormat);
 
 	      // Pointer(s)
 	      for (let i = 0; i < config.pointers.length; i++) {
 		  p = config.pointers[i];
-		  pointerHeadLength = Math.round(r * p.pointerHeadLengthPercent);
+		  pointerHeadLength = Math.round(radius * p.pointerHeadLengthPercent);
 		  const lineData = [ [p.pointerWidth / 2, 0], 
 				     [0, -pointerHeadLength],
 				     [-(p.pointerWidth / 2), 0],
@@ -2529,13 +2576,13 @@
       function handleScenePullDownClick(e) {
 	  if (sceneMenuIsPopped) {
 	      d3.select(".wx-sidebar")
-		  .classed(".zpop", true)
-		  .attr("style", "display: block");
+		  .classed(".zpop", false)
+		  .attr("style", "display: none");
 	      sceneMenuIsPopped = false;
 	  } else {
 	      d3.select(".wx-sidebar")
-		  .classed(".zpop", false)
-		  .attr("style", "");
+		  .classed(".zpop", true)
+		  .attr("style", "display: block");
 	      sceneMenuIsPopped = true;
 	  }
       }
@@ -2728,7 +2775,7 @@
 		  .html(f["label"]);
 	  }
 
-	  bodyId = localObs["tableId"] + "-body";
+	  const bodyId = localObs["tableId"] + "-body";
 	  const b = d3.select("#" + localObs["tableId"]).append("div").attr("id", bodyId).classed("obs-body", true)
 	  for (let s = 0; s < localObs["stations"].length; s++) {
 	      var stid;
@@ -3014,11 +3061,11 @@
 
 	  <div id="localWind" class="wx-scene localWind">
 	    <div class="wind-grid">
-	      <div>
-		<div class="label">Current StFYC Race Office Wind</div>
-		<div class="wind-cell anemometer-cell">
+	      <div class="wind-cell">
+		<div id="anemometer-stfyc-label" class="label">Current StFYC Race Office Wind</div>
+		<div class="anemometer-cell">
 		  <div id="anemometer-stfyc"></div>
-		  <div class="stfyc-anemometer-plot-label horizontal-center">
+		  <div id="anemometer-stfyc-plot-label" class="stfyc-anemometer-plot-label horizontal-center">
 		    Wind <span class="awa-avg-span-stfyc"></span>&#176 (<span class="awa-span-stfyc">---</span>) @<span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span>&nbsp;kts
 		  </div>
 		</div>
