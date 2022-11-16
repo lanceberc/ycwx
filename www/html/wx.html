@@ -500,7 +500,7 @@
 	  fill: var(--white);
 	  stroke: var(--black);
       }
-      .anemometer-stfyc-label {
+      .anemometer-stfyc-gauge-label {
 	  text-anchor: middle;
 	  font-size: 1.25vw;
 	  font-weight: bold;
@@ -627,10 +627,10 @@
 	  .label {
 	      font-size: 2.5vw;
 	  }
-	  .stfyc-anemometer-label {
-	      font-size: 2.50vw;
+	  .anemometer-stfyc-gauge-label {
+	      font-size: 5.00vw;
 	  }
-	  .stfyc-anemometer-plot-label {
+	  .anemometer-stfyc-plot-label {
 	      font-size: 5.00vw;
 	  }
       }
@@ -1473,7 +1473,6 @@
 	  
 	  let range = undefined;
 	  let radius = undefined;
-	  var pointerHeadLength = undefined;
 	  var value = 0;
 	  
 	  var svg = undefined;
@@ -1613,7 +1612,7 @@
 
 	      // Arc labels
 	      var lg = svg.append('g')
-		  .classed(config.classRoot + "-label", true)
+		  .classed(config.classRoot + "-gauge-label", true)
 		  .attr('transform', centerTx);
 	      lg.selectAll('text')
 		  .data(ticks)
@@ -1628,12 +1627,15 @@
 	      // Pointer(s)
 	      for (let i = 0; i < config.pointers.length; i++) {
 		  p = config.pointers[i];
-		  pointerHeadLength = Math.round(radius * p.pointerHeadLengthPercent);
-		  const lineData = [ [p.pointerWidth / 2, 0], 
+		  const pointerHeadLength = Math.round(radius * p.pointerHeadLengthPercent);
+		  const pointerWidth = Math.round(radius * p.pointerWidthPercent);
+		  const pointerTailLength = Math.round(radius * p.pointerTailPercent);
+		  const lineData = [ [pointerWidth / 2, 0],
 				     [0, -pointerHeadLength],
-				     [-(p.pointerWidth / 2), 0],
-				     [0, p.pointerTailLength],
-				     [p.pointerWidth / 2, 0] ];
+				     [-(pointerWidth / 2), 0],
+				     [0, pointerTailLength],
+				     [pointerWidth / 2, 0] ];
+
 		  const pointerLine = d3.line().curve(d3.curveMonotoneX);
 		  const pg = svg.append('g').data([lineData])
 			.classed(config.classRoot + "-pointer-" + i, true)
@@ -1641,7 +1643,7 @@
 		  
 		  config.pointers[i].pointer = pg.append('path')
 		      .attr('d', pointerLine/*function(d) { return pointerLine(d) +'Z';}*/ ) // Don't need to close path w/ Z
-		      .attr('transform', 'rotate(' +config.minAngle +')'); // Start at min angle
+		      .attr('transform', 'rotate(' + config.minAngle +')'); // Start at min angle
 		  
 		  update(i, newValue === undefined ? 0 : newValue);
 	      }
@@ -2907,7 +2909,6 @@
 	  currentsRO.observe(document.querySelector(".currents-graph"));
 
 	  anemometer = gauge('anemometer-stfyc', {
-	      //id: "stfyc-wind-anemometer",
 	      classRoot: "anemometer-stfyc",
 	      maxValue: 30, // in knots
 	      arcColorFn: d3.interpolateHslLong("#613CFF", "#FB4B39"), // nice blue & red hues, gradient centers on green
@@ -2915,8 +2916,8 @@
 	      arcMajorTicks: 5,
 	      arcLabelFormat: d3.format('d'),
 	      pointers: [
-		  { pointerWidth: vw(3), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
-		  { pointerWidth: vw(2), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
+		  { pointerWidthPercent: 0.15, pointerHeadLengthPercent: 0.9, pointerTailPercent: 0.04, transitionMs: 1000, val: 0, },
+		  { pointerWidthPercent: 0.10, pointerHeadLengthPercent: 0.9, pointerTailPercent: 0.02, transitionMs: 1000, val: 0, },
 	      ],
 	  });
 
