@@ -296,8 +296,8 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
       last.airmar_twa = twa_m;
       last.airmar_tws = tws_n;
       if (SOURCE == AIRMAR_TRUE) {
-	speed = twa_m;
-	dir = tws_n;
+	speed = tws_n;
+	dir = twa_m;
       }
     }
       
@@ -315,7 +315,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
       last.airmar_aws = aws;
       if (SOURCE == AIRMAR_APPARENT) {
 	speed = aws;
-	dir = aws;
+	dir = awa;
       }
     }
 
@@ -363,7 +363,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     else {
       //lwsl_notice("south %d awa %.1f awa_bias %.2f / %d = avg %.0f", south_count, awa, awa_bias, RECENT_BUF, awa_bias/RECENT_BUF);
       awa_avg = (awa_bias / RECENT_BUF) - 180.0; /* More than half are north-ish */
-      awa_avg = (awa_avg > 0.0) ? awa_avg : awa_avg + 360.0;
+      awa_avg = (awa_avg >= 0.0) ? awa_avg : awa_avg + 360.0;
     }
 
     int new_history = 0;
