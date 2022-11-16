@@ -47,6 +47,20 @@ char *hist_buf;
 int hist_last_minute;
 int hist_entry_json_len;
 
+#define AIRMAR_TRUE 1
+#define AIRMAR_APPARENT 2
+
+#define SOURCE AIRMAR_TRUE
+
+struct {
+  float airmar_tws;
+  float airmar_twa;
+  float airmar_aws;
+  float airmar_awa;
+  float airmar_baro;
+  float airmar_temp;
+} last;
+
 /* should the buffer be in the vhd? */
 #define RECENT_BUF 120
 float aws_buf[RECENT_BUF];
@@ -256,7 +270,9 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     
     float awa, aws;
     float twa_t, twa_m, tws_n, tws_m;
-    char twa_t_ref, twa_m_ref, tws_n_unit, tws_m_unit, awa_ref, aws_unit;
+    float baro_i, baro_m, temp;
+    char twa_t_ref, twa_m_ref, tws_n_unit, tws_m_unit, awa_ref, aws_unit, baro_i_unit, baro_m_unit, temp_unit;
+    float speed, dir;
 
     /*
      * $GPZDA,233202,27,03,2003,00,00*4D
@@ -267,38 +283,61 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
      * $WIMWV,200.8,T,4.0,N,A*2B
      */
 
-    if (TRUE_WIND) {
-      // $WIMWD,314.1,T,299.1,M,4.1,N,2.1,M*58
-      if (!strncmp((const char *)&buf, "$WIMWD", sizeof("$WIMWD")-1)) {
-	int r = sscanf(buf, "$WIMWD,%f,%c,%f,%c,%f,%c,%f,%c", &twa_t, &twa_t_ref, &twa_m, &twa_m_ref, &tws_n, &tws_n_unit, &tws_m, &tws_m_unit);
-	if ((r != 8) || (twa_m_ref != 'M') || (tws_n_unit != 'N')) {
-	  //lwsl_user("Bad Parse %d %c %c", r, twa_m_ref, tws_m_unit);
-	  break;
-	}
-	awa = twa_m;
-	aws = tws_n;
-	//lwsl_user("Wind %3.0f @ %4.1f", awa, aws);
-      } else {
+    speed = -1;
+    dir = -1;
+    
+    // $WIMWD,314.1,T,299.1,M,4.1,N,2.1,M*58
+    if (!strncmp((const char *)&buf, "$WIMWD", sizeof("$WIMWD")-1)) {
+      int r = sscanf(buf, "$WIMWD,%f,%c,%f,%c,%f,%c,%f,%c", &twa_t, &twa_t_ref, &twa_m, &twa_m_ref, &tws_n, &tws_n_unit, &tws_m, &tws_m_unit);
+      if ((r != 8) || (twa_m_ref != 'M') || (tws_n_unit != 'N')) {
+	//lwsl_user("Bad Parse %d %c %c", r, twa_m_ref, tws_m_unit);
 	break;
       }
-    } else {
-      // $WIMWV,201.8,R,4.4,N,A*28
-      if (!strncmp((const char *)&buf, "$WIMWV", sizeof("$WIMWV")-1)) {
-	int r = sscanf(buf, "$WIMWV,%f,%c,%f,%c,", &awa, &awa_ref, &aws, &aws_unit);
-	if ((r != 4) || (awa_ref != 'R') || (aws_unit != 'N')) {
-	  break;
-	}
-	// Adjust reading for sensor not pointing north
-	awa += SENSOR_OFFSET;
-	awa = (awa < 360.0) ? awa : awa - 360.0;
-      } else {
-	break;
+      last.airmar_twa = twa_m;
+      last.airmar_tws = tws_n;
+      if (SOURCE == AIRMAR_TRUE) {
+	speed = twa_m;
+	dir = tws_n;
       }
     }
-    
-    aws_buf[buf_idx] = aws;
-    awa_buf[buf_idx] = awa;
+      
+    // $WIMWV,201.8,R,4.4,N,A*28
+    if (!strncmp((const char *)&buf, "$WIMWV", sizeof("$WIMWV")-1)) {
+      int r = sscanf(buf, "$WIMWV,%f,%c,%f,%c,", &awa, &awa_ref, &aws, &aws_unit);
+      if ((r != 4) || (awa_ref != 'R') || (aws_unit != 'N')) {
+	break;
+      }
+      // Adjust reading for sensor not pointing north
+      awa += SENSOR_OFFSET;
+      awa = (awa < 360.0) ? awa : awa - 360.0;
 
+      last.airmar_awa = awa;
+      last.airmar_aws = aws;
+      if (SOURCE == AIRMAR_APPARENT) {
+	speed = aws;
+	dir = aws;
+      }
+    }
+
+    // $WIMDA,29.3262,I,0.9931,B,14.5,C,,,,,,,314.1,T,299.1,M,4.1,N,2.1,M*24
+    // $WIMDA,29.4384,I,0.9969,B,20.1,C,,,,,,,37.7,T,22.7,M,7.7,N,4.0,M*26
+    if (!strncmp((const char *)&buf, "$WIMDA", sizeof("$WIMDA")-1)) {
+      int r = sscanf(buf, "$WIMDA,%f,%c,%f,%c,%f,%c,,,,,,,%f,%c,%f,%c,%f,%c,%f,%c", &baro_i, &baro_i_unit, &baro_m, &baro_m_unit, &temp, &temp_unit, &twa_t, &twa_t_ref, &twa_m, &twa_m_ref, &tws_n, &tws_n_unit, &tws_m, &tws_m_unit);
+      if ((r != 14) || (baro_m_unit != 'B') || (temp_unit != 'C')) {
+	lwsl_user("Bad Parse %d %c %c", r, baro_m_unit, temp_unit);
+	break;
+      }
+      last.airmar_baro = baro_m * 1000.0;
+      last.airmar_temp = ((temp * 9.0) / 5.0) + 32.0;
+    }
+    
+    // Return if this wasn't the sentence we're using for wind source
+    if (speed < 0.0) return 0;
+
+    //lwsl_user("speed %.1f dir %.1f\n", speed, dir);
+
+    aws_buf[buf_idx] = speed;
+    awa_buf[buf_idx] = dir;
     
     /* Determine average wind angle - what happens when wind is oscillating from dead ahead?
      * If some samples are slightly positive and others are 'negative' (close to 360) then
@@ -327,13 +366,12 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
       awa_avg = (awa_avg > 0.0) ? awa_avg : awa_avg + 360.0;
     }
 
-
     int new_history = 0;
     int this_minute = tv.tv_sec / 60;
     int index = (this_minute % HIST_ENTRIES);
     if (this_minute != hist_last_minute) {
       if (!(this_minute % HIST_FREQUENCY)) {
-	char entry[64];
+	char entry[128];
 	// Create history JSON buffer
 	strcpy(&hist_buf[LWS_PRE], "{ \"event\": \"history\", \"history\": [");
 	for (int i = 0; i < HIST_ENTRIES; i++) { // BARF - this is n^2 in HIST_ENTRIES
@@ -342,7 +380,20 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 	  strcat(hist_buf, entry);
 	}
 	hist_buf[strlen(hist_buf) - 1] = 0; // Chomp off the trailing comma
-	strcat(hist_buf, "] }");
+	strcat(hist_buf, "]");
+	sprintf(entry, ", \"baro\": %.1f", last.airmar_baro);
+	strcat(hist_buf, entry);
+	sprintf(entry, ", \"temp\": %.1f", last.airmar_temp);
+	strcat(hist_buf, entry);
+	sprintf(entry, ", \"airmar_tws\": %.1f", last.airmar_tws);
+	strcat(hist_buf, entry);
+	sprintf(entry, ", \"airmar_twa\": %.1f", last.airmar_twa);
+	strcat(hist_buf, entry);
+	sprintf(entry, ", \"airmar_aws\": %.1f", last.airmar_aws);
+	strcat(hist_buf, entry);
+	sprintf(entry, ", \"airmar_awa\": %.1f", last.airmar_awa);
+	strcat(hist_buf, entry);
+	strcat(hist_buf, "}");
 	//lwsl_user("HISTORY %d entries length %d", HIST_ENTRIES, strlen(&hist_buf[LWS_PRE]));
 	//lwsl_user("%s", &hist_buf[LWS_PRE]);
 	new_history = 1;
@@ -359,7 +410,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
       wind_hist[index].gust = gust;
 
     memset(&vhd->msg[0], 0, sizeof(vhd->msg));
-    sprintf(&vhd->msg[LWS_PRE], "{ \"event\": \"update\", \"aws_avg\": %4.1f, \"gust\": %4.1f, \"awa\": %5.1f, \"awa_avg\": %5.1f }", aws_avg, gust, awa, awa_avg);
+    sprintf(&vhd->msg[LWS_PRE], "{ \"event\": \"update\", \"aws_avg\": %4.1f, \"gust\": %4.1f, \"awa\": %5.1f, \"awa_avg\": %5.1f }", aws_avg, speed, dir, awa_avg);
     vhd->msglen = strlen(&vhd->msg[LWS_PRE]);
     // lwsl_notice("idx %3d %4.1f %s\n", aws, buf_idx, &vhd->msg[LWS_PRE]);
     buf_idx = (buf_idx + 1) % RECENT_BUF;
