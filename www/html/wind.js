@@ -107,8 +107,8 @@ function windPlotHistory(e, history) {
 
     let width = windRect.width;
     let height = windRect.height;
-    if (cr.width == currentRect.width) {
-	console.log(`windPlotHistory width (${currentRect.width} x ${currentRect.height}) unchanged`);
+    if (cr.width == windRect.width) {
+	console.log(`windPlotHistory width (${windRect.width} x ${windRect.height}) unchanged`);
     } else {
 	width = cr.width;
 	height = cr.height;
