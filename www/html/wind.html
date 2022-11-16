@@ -356,16 +356,9 @@
 	  min-width: 0px;
 	  background: var(--background2);
       }
-      .wind-plot-y-axis {
-	  font-size: 1.25vw; /* Override d3's 10pt default */
-	  }
-	   .wind-plot-x-axis {
-	       font-size: 1vw; /* Override d3's 10pt default */
-      }
-      .wind-plot-wind-lull {
-      }
+      /* Override d3's 10pt default */
       .wind-plot-wind-avg {
-	  fill: var(--background2);
+	  fill: var(--main-background-color);
 	  stroke: var(--main-foreground-color);
 	  stroke-width: 4.0;
       }
@@ -526,35 +519,36 @@
       .anemometer-cell {
 	  background: var(--background2);
       }
-      .stfyc-anemometer-gauge {
+      .anemometer-stfyc-gauge {
 	  display: inline-block;
 	  width: 100%;
 	  margin: auto;
 	  /* background: var(--background2); */
       }
-      .stfyc-anemometer-arc {
+      .anemometer-stfyc-arc {
 	  fill: var(--background2);
       }
-      .stfyc-anemometer-pointer-0 { /* gust */
+      .anemometer-stfyc-pointer-0 { /* gust */
 	  fill: var(--foreground2);
 	  stroke: var(--black);
       }
-      .stfyc-anemometer-pointer-1 { /* avg */
+      .anemometer-stfyc-pointer-1 { /* avg */
 	  fill: var(--white);
 	  stroke: var(--black);
       }
-      .stfyc-anemometer-label {
+      .anemometer-stfyc-gauge-label {
 	  text-anchor: middle;
-	  font-size: 1.25vw;
+	  font-size: 2.0vw;
 	  font-weight: bold;
 	  background: var(--background2);
 	  fill: var(--main-foreground-color);
       }
-      .stfyc-anemometer-plot-label {
+      .anemometer-stfyc-plot-label {
 	  text-anchor: middle;
 	  font-size: 2.50vw;
 	  background: var(--background2);
 	  fill: var(--main-foreground-color);
+	  width: 100%;
       }
       .ol-label {
 	  position: absolute;
@@ -577,6 +571,106 @@
       .ol-semi-transparent {
 	  filter: opacity(50%);
       }
+      @media (max-aspect-ratio: 4/3) {
+	  .wind-grid {
+	      display: grid;
+	      grid-template-columns: 100%;
+	      border-collapse: collapse;
+	      width: 100%;
+	      height: auto;
+	  }
+	  .tides-grid {
+	      display: grid;
+	      /*grid-template-rows: 100%;
+	      grid-template-columns: auto;*/
+	      grid-template-columns: 100%;
+	      border-collapse: collapse;
+	      width: 100%;
+	      height: auto;
+	  }
+	  .grid-container {
+	      display: flex;
+	      flex-direction: column;
+	  }
+	  .nws-column-1 {
+	      display: flex;
+	      flex-direction: column;
+	  }
+	  .nws-column-2 {
+	      display: none;
+	  }
+      }
+      @media (max-width: 1024px) {
+	  .wx-header-1 {
+	      display: none;
+	  }
+	  .wx-header-2 {
+	      display: inline-flex;
+	      flex-direction: column;
+	  }
+	  .local-number {
+	      font-size: 4.0vw;
+	  }
+	  .wx-header {
+	      grid-template-columns: fit-content(100%) auto fit-content(100%);
+	  }
+	  .burgee-left {
+	      display: none;
+	  }
+	  .burgee-right {
+	      font-size: 4.0vw;
+	      height: 2em;
+	      width: 4em;
+	      display: inline-flex;
+	  }
+	  .scene-pull-down-enable {
+	      /* font-size: 4.0vw; */
+	      height: 2em;
+	      width: 4em;
+	      display: inline-flex;
+	  }
+	  .scene-pull-down-enable:hover {
+	      background: var(--hover-background);
+	      color: var(--hover-foreground);
+	  }
+	  .wx-sidebar {
+	      display: none;
+	  }
+      }
+      @media (min-width: 1024px) {
+	  .wx-header-2 {
+	      display: none;
+	  }
+	  .burgee-left {
+	      display: inline-flex;
+	      transform: scale(-1,1);
+	  }
+	  .burgee-right {
+	      display: inline-flex;
+	  }
+	  .menu-icon-div {
+	      display: none;
+	  }
+	  .scene-pull-down-enable {
+	      display: none;
+	  }
+      }
+      @media (max-aspect-ratio: 1/1) {
+	  .label {
+	      font-size: 2.5vw;
+	  }
+	  .anemometer-stfyc-gauge-label {
+	      font-size: 5.00vw;
+	  }
+	  .anemometer-stfyc-plot-label {
+	      font-size: 5.00vw;
+	  }
+      }
+      @media (min-aspect-ratio: 1/1) {
+	  .label {
+	      font-size: 1.25vw;
+	  }
+      }
     </style>
     
     <script src="local_config.js"></script>
@@ -584,6 +678,7 @@
       
     <script src="https://d3js.org/d3.v7.js"></script>
     
+    <script src="gauge.js"></script>
     <script src="wind.js"></script>
 
     <script>
@@ -618,12 +713,12 @@
 	      anemometer.update(0, gust);
 	      d3.selectAll(".wind-span-stfyc").html(aws_avg);
 	      d3.selectAll(".gust-span-stfyc").html(gust);
-	      d3.selectAll(".awa-avg-span-stfyc").html(awa_avg);
 	      d3.selectAll(".awa-span-stfyc").html(awa);
+	      d3.selectAll(".awa-avg-span-stfyc").html(awa_avg);
 	  }
 	  if (wind.event == "history") {
 	      windHistory = wind.history;
-	      windPlotHistory(windHistory);
+	      windPlotHistory("wind-history-recent", windHistory);
 	  }
       }
 
@@ -634,245 +729,6 @@
 	  }
 	  windPlotHistory(windHistory);
       });
-
-      let anemometer = null;
-
-      let anemometerRO = new ResizeObserver(elements => {
-	  for (let e of elements) {
-	      const cr = e.contentRect;
-	      console.log("anemometerRO new size: " + cr.width + "x" + cr.height);
-	  }
-      });
-
-      // Gauge for anemometer
-      var gauge = function(container, configuration) {
-	  var that = {};
-	  var config = {
-	      classRoot: "gauge",
-	      size: 200,
-	      clipWidth: 200,
-	      clipHeight: 110,
-
-	      arcInset: 20,
-	      arcWidth: 20,
-	      arcSegments: 0, // # of color segments in dial - defaults to # of ticks
-	      arcColorFn: d3.interpolateHsl(d3.rgb('#e8e2ca'), d3.rgb('#3e6c0a')),
-
-	      // If using multiple pointers all values must be specified
-	      pointers: [
-		  {
-		      pointerWidth: 10,
-		      pointerTailLength: 5,
-		      pointerHeadLengthPercent: 0.9,
-		      transitionMs: 750,
-		      val: 0,
-		  }
-	      ],
-	      
-	      minValue: 0,
-	      maxValue: 10,
-	      
-	      minAngle: -90,
-	      maxAngle: 90,
-	      
-	      arcMajorTicks: 5,
-	      arcLabelFormat: d3.format(',g'),
-	      arcLabelInset: 10,
-	  };
-	  
-	  var range = undefined;
-	  var r = undefined;
-	  var pointerHeadLength = undefined;
-	  var value = 0;
-	  
-	  var svg = undefined;
-	  var arc = undefined;
-	  var scale = undefined;
-	  var ticks = undefined;
-	  var tickData = undefined;
-	  var pointer = undefined;
-	  var donut = d3.pie();
-	  
-	  function deg2rad(deg) {
-	      return deg * Math.PI / 180;
-	  }
-	  
-	  function newAngle(d) {
-	      var ratio = scale(d);
-	      var newAngle = config.minAngle + (ratio * range);
-	      return newAngle;
-	  }
-	  
-	  function configure(configuration) {
-	      var prop = undefined;
-	      for ( prop in configuration ) {
-		  config[prop] = configuration[prop];
-	      }
-	      
-	      range = config.maxAngle - config.minAngle;
-	      r = config.size / 2;
-
-	      // a linear scale that maps domain values to a percent from 0..1
-	      scale = d3.scaleLinear()
-		  .range([0,1])
-		  .domain([config.minValue, config.maxValue]);
-	      
-	      ticks = scale.ticks(config.arcMajorTicks);
-	      tickData = d3.range(config.arcMajorTicks).map(function() {return 1/config.arcMajorTicks;});
-	      
-	      arc = d3.arc()
-		  .innerRadius(r - config.arcWidth - config.arcInset)
-		  .outerRadius(r - config.arcInset)
-		  .startAngle(function(d, i) {
-		      var ratio = d * i;
-		      return deg2rad(config.minAngle + (ratio * range));
-		  })
-		  .endAngle(function(d, i) {
-		      var ratio = d * (i+1);
-		      return deg2rad(config.minAngle + (ratio * range));
-		  });
-	  }
-	  that.configure = configure;
-	  
-	  function centerTranslation() {
-	      return 'translate('+r +','+ r +')';
-	  }
-	  
-	  function isRendered() {
-	      return (svg !== undefined);
-	  }
-	  that.isRendered = isRendered;
-	  
-	  function changeHandler(e) {
-	      eid = e.id;
-	      fields = eid.split("-");
-	      id = eid.slice(0, eid.indexOf("-value"));
-	      if (e != undefined) {
-		  console.log("Anememometer change " + e.target.id + ": " + e.target.value);
-	      }
-	  }
-	  
-	  function render(newValue) {
-	      svg = d3.select(container)
-	      //.append('svg:svg')
-		  .append('svg')
-		  .classed(config.classRoot + "-gauge", true)
-	      // .attr('width', config.clipWidth)
-	      // .attr('height', config.clipHeight)
-		  .attr("viewBox", "0 0 " + config.clipWidth + " " + config.clipHeight);
-	      
-	      var centerTx = centerTranslation();
-
-	      // The circular gauge dial
-	      var arcs = svg.append('g')
-		  .classed(config.classRoot + "-arc", true)
-		  .attr('transform', centerTx);
-
-	      // Dial arc is a gradient with N segments.
-	      let gradient = tickData; // Default to # of ticks
-	      if (config.arcSegments != 0) {
-		  gradient = Array(config.arcSegments);
-		  for (let i = 0; i < config.arcSegments; i++) {
-		      gradient[i] = 1.0 / config.arcSegments;
-		  }
-	      }
-	      arcs.selectAll('path')
-		  .data(gradient)
-		  .enter().append('path')
-		  .attr('fill', function(d, i) {
-		      return config.arcColorFn(d * i);
-		  })
-		  .attr('d', arc);
-
-	      // Arc labels
-	      var lg = svg.append('g')
-		  .classed(config.classRoot + "-label", true)
-		  .attr('transform', centerTx);
-	      lg.selectAll('text')
-		  .data(ticks)
-		  .enter().append('text')
-		  .attr('transform', function(d) {
-		      var ratio = scale(d);
-		      var newAngle = config.minAngle + (ratio * range);
-		      return 'rotate(' +newAngle +') translate(0,' +(config.arcLabelInset - r) +')';
-		  })
-		  .text(config.arcLabelFormat);
-
-	      // Pointer(s)
-	      for (let i = 0; i < config.pointers.length; i++) {
-		  p = config.pointers[i];
-		  pointerHeadLength = Math.round(r * p.pointerHeadLengthPercent);
-		  const lineData = [ [p.pointerWidth / 2, 0], 
-				     [0, -pointerHeadLength],
-				     [-(p.pointerWidth / 2), 0],
-				     [0, p.pointerTailLength],
-				     [p.pointerWidth / 2, 0] ];
-		  const pointerLine = d3.line().curve(d3.curveMonotoneX);
-		  const pg = svg.append('g').data([lineData])
-			.classed(config.classRoot + "-pointer-" + i, true)
-			.attr('transform', centerTx);
-		  
-		  config.pointers[i].pointer = pg.append('path')
-		      .attr('d', pointerLine/*function(d) { return pointerLine(d) +'Z';}*/ ) // Don't need to close path w/ Z
-		      .attr('transform', 'rotate(' +config.minAngle +')'); // Start at min angle
-		  
-		  update(i, newValue === undefined ? 0 : newValue);
-	      }
-	      
-	      // Hidden input
-	      for (i in config.pointers) {
-		  let classId = `${config.classRoot}-value-${i}`;
-		  let inputId = `${config.id}-value-${i}`;
-		  form = d3.select(container).append("form")
-		      .append("input")
-		      .attr("type", "hidden")
-		      .attr("value", 0.0)
-		      .attr("id", inputId)
-		      .classed(classId, true)
-		      .on('change', changeHandler);
-	      }
-	  }
-	  that.render = render;
-
-	  function update(pointer, newValue, newConfiguration) {
-	      if (pointer === undefined) { // Called when gauge becomes visible
-		  for (let i in config.pointers) {
-		      p = config.pointers[i];
-		      // console.log("reset pointer " + i + " to " + p.val);
-		      const ratio = scale(p.val);
-		      const newAngle = config.minAngle + (ratio * range);
-		      p.pointer.transition()
-			  .duration(p.transitionMs)
-			  .ease(d3.easeElastic)
-			  .attr('transform', 'rotate(' + newAngle +')');
-		  }
-		  return;
-	      }
-	      
-	      if ( newConfiguration  !== undefined) {
-		  configure(newConfiguration);
-	      }
-
-	      config.pointers[pointer].val = newValue;
-	      if (document.hidden) {
-		  //console.log("anemometer " + pointer + ": " + newValue + " update: document is hidden");
-		  return;
-	      }
-	      
-	      const ratio = scale(newValue);
-	      const newAngle = config.minAngle + (ratio * range);
-	      config.pointers[pointer].pointer.transition()
-		  .duration(config.pointers[pointer].transitionMs)
-		  .ease(d3.easeElastic)
-		  .attr('transform', 'rotate(' + newAngle +')');
-	      //console.log("anemometer rotated to " + newAngle);
-	  }
-	  that.update = update;
-
-	  configure(configuration);
-	  
-	  return that;
-      };
 
       let lastSec = -1;
       let lastMinute = -1;
@@ -919,28 +775,22 @@
 	  // Catch resize events for anemometer graphs because I'm too lame to get the svgs to scale
 	  windRO.observe(document.querySelector("#localWind"));
 
-	  anemometer = gauge('#anemometer-stfyc', {
-	      id: "stfyc-wind-anemometer",
-	      classRoot: "stfyc-anemometer",
+	  anemometer = new Gauge('anemometer-stfyc', {
+	      classRoot: "anemometer-stfyc",
 	      maxValue: 30, // in knots
-	      size: vw(30), // Sized in terms of window size
-	      clipWidth: vw(32),
-	      clipHeight: vw(17),
-	      arcInset: vw(2),
-	      arcWidth: vw(4),
 	      arcColorFn: d3.interpolateHslLong("#613CFF", "#FB4B39"), // nice blue & red hues, gradient centers on green
 	      arcSegments: 256, // make dial a smooth rainbow
 	      arcMajorTicks: 5,
 	      arcLabelFormat: d3.format('d'),
-	      arcLabelInset: vw(1.1),
 	      pointers: [
-		  { pointerWidth: vw(3), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
-		  { pointerWidth: vw(2), pointerHeadLengthPercent: 0.9, pointerTailLength: vw(1), transitionMs: 1000, val: 0, },
+		  { pointerWidthPercent: 0.15, pointerHeadLengthPercent: 0.9, pointerTailPercent: 0.04, transitionMs: 1000, val: 0, },
+		  { pointerWidthPercent: 0.10, pointerHeadLengthPercent: 0.9, pointerTailPercent: 0.02, transitionMs: 1000, val: 0, },
 	      ],
 	  });
-	  anemometer.render();
-	  anemometerRO.observe(document.querySelector("#anemometer-stfyc"));
 	  
+	  if (typeof local_windURL !== 'undefined') {
+	      windURL = local_windURL;
+	  }
 	  windInitialize(stfycWindCallback);
       }
     </script>
@@ -949,22 +799,21 @@
   <body id="body" class="wx" onload="initialize();" lang="en">
     <div id="localWind" class="wx-scene localWind">
       <div class="wind-grid">
-	<div>
-	  <div>
-	    <span class="h3">Current StFYC Race Office Wind</span><br>
-	  </div>
-	  <div class="wind-cell anemometer-cell">
-	    <div id="anemometer-stfyc"></div>
-	    <div class="h2 stfyc-anemometer-plot-label horizontal-center">
-	      Wind <span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span> knots @<span class="awa-avg-span-stfyc"></span>&#176 (<span class="awa-span-stfyc">---</span>&#176)
-	    </div>
+
+	<div class="wind-cell">
+	  <div id="anemometer-stfyc-label" class="label">Current StFYC Race Office Wind</div>
+	  <div id="anemometer-stfyc" class="anemometer-cell"></div>
+	  <div id="anemometer-stfyc-plot-label" class="anemometer-stfyc-plot-label anemometer-cell horizontal-center">
+	    Wind <span class="awa-avg-span-stfyc"></span>&#176 (<span class="awa-span-stfyc">---</span>) @<span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span>&nbsp;kts
 	  </div>
 	</div>
-	<div id="wind-history-recent" class="wind-cell">
-	  <div>
-	    <span class="h3">Recent Wind History</span><br>
+	
+	<div class="wind-cell">
+	  <div id="wind-history-recent-label" class="label">Recent Wind History</div>
+	  <div id="wind-history-recent" class="wind-plot">
 	  </div>
 	</div>
+	      
       </div>
     </div>
   </body>
