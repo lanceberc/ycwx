@@ -410,7 +410,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
       wind_hist[index].gust = gust;
 
     memset(&vhd->msg[0], 0, sizeof(vhd->msg));
-    sprintf(&vhd->msg[LWS_PRE], "{ \"event\": \"update\", \"aws_avg\": %4.1f, \"gust\": %4.1f, \"awa\": %5.1f, \"awa_avg\": %5.1f }", aws_avg, speed, dir, awa_avg);
+    sprintf(&vhd->msg[LWS_PRE], "{ \"event\": \"update\", \"aws_avg\": %4.1f, \"gust\": %4.1f, \"awa\": %5.1f, \"awa_avg\": %5.1f }", aws_avg, gust, dir, awa_avg);
     vhd->msglen = strlen(&vhd->msg[LWS_PRE]);
     // lwsl_notice("idx %3d %4.1f %s\n", aws, buf_idx, &vhd->msg[LWS_PRE]);
     buf_idx = (buf_idx + 1) % RECENT_BUF;
