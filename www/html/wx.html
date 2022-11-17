@@ -278,11 +278,14 @@
 	  font-family: "Courier New";
       }
       .text-scene {
-	  background: var(--white);
-	  color: var(--black);
+	  /* background: var(--white); */
+	  /* color: var(--black); */
 	  height: 90vh;
 	  overflow: scroll;
 	  padding: 1em;
+      }
+      .text-scene a:link {
+	  color: var(--white);
       }
       @media (min-aspect-ratio: 4/3) {
 	  .wind-grid {
@@ -2954,13 +2957,16 @@
 	  <div id="aboutScene" class="wx-scene">
 	    <div class="text-scene">
 	      <h2>About the Content</h2>
+	      <p>
+		"Everybody talks about the weather but nobody does anything about it" - <a href="https://quoteinvestigator.com/2010/04/23/everybody-talks-about-the-weather/">Charles Dudley Warner</a>
+	      </p>
 	      <h3>Current Conditions</h3>
 	      <p>
 		The current conditions shown at the top of the page comes from several sensors at StFYC and Tinsley Island.
 	      </p>
 	      <p>
-		An <a href="https://airmar.com/productdescription.html?id=160">Airmar PB-200</a> above the Race Office which
-		contains an ultrasonic doppler-based anemometer, thermometer, barometer, and several other sensors. It sends data once
+		An <a href="https://airmar.com/productdescription.html?id=160">Airmar PB-200</a> above the Race Office has
+		an ultrasonic doppler-based anemometer, thermometer, barometer, and several other sensors. It sends data once
 		per second via NMEA-0183 to a computer over a RS-422 4800 Baud serial line (read and interpreted by bespoke StFYC
 		software).
 	      </p>
@@ -3014,6 +3020,15 @@
 		<a href="https://www.weather.gov/mtr/">SF Bay Weather Field Office (WFO)</a> in
 		Monterey near the Naval Postgraduate School which develops and runs some of the Navy's weather models.
 	      </p>
+	      <h3>WeatherFlow Forecasts</h3>
+	      <p>
+		<a href="https://weatherflow.com/">WeatherFlow</a> combines the data it gathers from customer weather stations with NOAA
+		models to produce forecasts tailored to customer locations and different activities. They also
+		run the popular sports weather web sites & apps
+		<a href="https://sailflow.com/">SailFlow</a>,
+		<a href="https://wx.iwindsurf.com/">iWindSurf</a>, and
+		<a href="https://wx.ikitesurf.com/">iKiteSurf</a>.
+	      </p>
 	      <h3>Surface Analysis</h3>
 	      <p>
 		The surface analysis chart is produced by human forecasters at
@@ -3027,10 +3042,18 @@
 		repository. Raw images are processed (reprojected to Mercator, cropped, etc) using
 		<a href="https://github.com/lanceberc/GOES/blob/master/GOES_GDAL.ipynb">locally-developed image processing code</a>.
 		The <a href="https://rammb-slider.cira.colostate.edu/?sat=goes-17">GeoColor algorithm</a> used to color the images was developed at
-		<a href"https://www.cira.colostate.edu/">CIRA/RAAMB</a>.
+		<a href="https://www.cira.colostate.edu/">CIRA/RAAMB</a>.
 	      </p>
 	      <p>
 		Time-lapse MPEG movies are created locally from the satellite images using <a href="https://ffmpeg.org/">FFmpeg</a>.
+	      </p>
+	      <h3>National Radar & Warnings, Cloud Tops</h3>
+	      <p>
+		Over the past several years NOAA has made a push to make its various data and forecast products available on
+		the Internet in many forms. The National Radar map overlays recent NEXRAD radar mosaics on top of current hazard,
+		watch, and warning areas. More information is available from NOAA's
+		<a href="https://nowcoast.noaa.gov/mariner.html">NowCOAST</a> and
+		<a href="https://www.wrh.noaa.gov/map/?&zoom=14&scroll_zoom=false&center=39.198404895765826,-120.23180007934572&boundaries=false,false,false,false,false,false,false,false,false&tab=observation&obs=true&obs_type=air_temp&obs_popup=true&obs_density=10&obs_provider=ALL">Weather & Hazards</a> data viewers.
 	      </p>
 	      <h3>Data Ingestion and Processing</h3>
 	      <p>
