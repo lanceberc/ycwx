@@ -1,8 +1,11 @@
+#include <signal.h>
+#include <termios.h> // Contains POSIX terminal control definitions
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
+#include <sys/select.h>
 #include <arpa/inet.h>
-#include <signal.h>
+#include <netinet/in.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -11,6 +14,9 @@
 #include <libwebsockets.h>
 #include <cjson/cJSON.h>
 
+#define HAS_TEMPEST 1
+#define HAS_AIRMAR 1
+
 // 8000 + 0184 - why not?
 #define PORT 8184
 
@@ -18,13 +24,11 @@
 #define HIST_ENTRIES (6*60)
 #define JSONBUF_SIZE 4096
 
-typedef enum {
-  none = 0,
-  airmar_wind = 1,
-  airmar_history = 2,
-  tempest_wind = 4,
-  tempest_history = 8,
-} sensor_subscriptions;
+#define SUBSCRIBE_NONE 0
+#define SUBSCRIBE_AIRMAR_WIND 1
+#define SUBSCRIBE_AIRMAR_HIST 2
+#define SUBSCRIBE_TEMPEST_WIND 4
+#define SUBSCRIBE_TEMPEST_HIST 8
 
 /* Tempest data structures */
 #define TEMPEST_ADDR "255.255.255.255"
@@ -76,12 +80,60 @@ int tempest_hist_size;
 int tempest_hist_last_minute;
 int tempest_hist_entry_json_len;
 
+/* Airmar data structures */
+static char nmeafn[] = "/dev/ttyUSB0";
+
+#define AIRMAR_TRUE 1
+#define AIRMAR_APPARENT 2
+
+#define SOURCE AIRMAR_TRUE
+
+// Our sensor is not pointed north - add SENSOR_OFFSET to each reading
+#define SENSOR_OFFSET 75.0
+
+/* should the buffer be in the vhd? */
+#define AIRMAR_RECENT 120
+
+struct {
+  unsigned int sec;
+  double speed;
+  double dir;
+} airmar_recent[AIRMAR_RECENT];
+
+char airmar_wind_msgbuf[256];
+char *airmar_wind_msg;
+char airmar_wind_len;
+int airmar_recent_idx = 0;
+
+#define AIRMAR_HIST_ENTRY_JSON "{\"ts\": %u, \"aws\": %4.1f, \"gust\": %4.1f, \"awa\": %5.1f},"
+#define AIRMAR_HIST_FREQUENCY 1
+struct {
+  unsigned long ts;
+  float speed;
+  float gust;
+  float dir;
+} airmar_hist[HIST_ENTRIES]; // six hours of wind history
+unsigned int airmar_hist_last_minute;
+char airmar_hist_msgbuf[MSGBUF];
+char *airmar_hist_msg;
+int airmar_hist_len;
+
+struct {
+  float tws;
+  float twa;
+  float aws;
+  float awa;
+  float baro;
+  float temp;
+} airmar_last_samples;
+
+
 /* websocket client state */
 struct per_session_data__wind {
   struct per_session_data__wind *pss_list; /* linked list to next client */
   struct lws *wsi;
-  sensor_subscriptions subscriptions;
-  sensor_subscriptions needs;
+  unsigned int subscriptions;
+  unsigned int needs;
 };
 
 /* one of these is created for each vhost our protocol is used with */
@@ -92,34 +144,79 @@ struct per_vhost_data__wind {
 
   struct per_session_data__wind *pss_list; /* linked-list of live pss*/
 
-  int tempest_sock; /* Serial port file descriptor */
+  int airmar_fd; /* Serial port file descriptor for Airmar NMEA-0183 device (4800 baud) */
+  int tempest_sock; /* Socket for Tempest broadcast UDP packets */
 };
 
-static void init_history() {
-  // Measure how big a history json message is
+unsigned int init_tempest(struct lws *wsi, void *user)
+{
+  struct per_session_data__wind *pss = (struct per_session_data__wind *)user;
+  struct per_vhost_data__wind *vhd =
+    (struct per_vhost_data__wind *) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
+
+  int fd;
+  lws_sock_file_fd_type u;
+
+  // Should open the file in "cooked" mode to make sure we don't get per-character upcalls
+  if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    perror("socket");
+    return(1);
+  }
+  vhd->tempest_sock = fd;
+  
+  u_int yes = 1;
+  if (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &yes, sizeof(yes)) < 0) {
+    perror("setsockopt");
+    return 1;
+  }
+
+  struct sockaddr_in addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  addr.sin_port = htons(TEMPEST_PORT);
+
+  if (bind(fd, (struct sockaddr *) &addr, sizeof(struct sockaddr)) < 0) {
+    lwsl_err("Unable to bind\n");
+    return 1;
+  }
+
+  u.filefd = (lws_filefd_type)(long long)fd;
+  if (!lws_adopt_descriptor_vhost(lws_get_vhost(wsi),
+				  LWS_ADOPT_RAW_FILE_DESC, u, "wind", NULL)) {
+    lwsl_err("Failed to adopt serial port file descriptor\n");
+    close(fd);
+    vhd->tempest_sock = -1;
+
+    return 1;
+  }
+  tempest_wind_msg = &tempest_wind_msgbuf[LWS_PRE];
+  tempest_hist_msg = &tempest_hist_msgbuf[LWS_PRE];
+  lwsl_user("LWS_CALLBACK_PROTOCOL_INIT: tempest socket fd %d\n", fd);
+
   struct timeval tv;
   gettimeofday(&tv, NULL);
-
   lwsl_user("Initializing history sec %u", tv.tv_sec);
-  int i;
   unsigned m = tv.tv_sec / 60;
-  for (i = 0; i < HIST_ENTRIES; i++) {
+  for (int i = 0; i < HIST_ENTRIES; i++) {
     int idx = (tv.tv_sec - i) % HIST_ENTRIES;
     tempest_hist[idx].sec = (m - i) * 60; // convert from minute to seconds
     tempest_hist[idx].speed = 0.0;
     tempest_hist[idx].gust = 0.0;
     tempest_hist[idx].dir = 0.0;
   }
+
+  return 0;
 }
 
-static sensor_subscriptions
+static unsigned int
 process_tempest(struct lws *wsi, void *user)
 {
   struct per_session_data__wind *pss = (struct per_session_data__wind *)user;
   struct per_vhost_data__wind *vhd =
     (struct per_vhost_data__wind *) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
 
-  sensor_subscriptions new_data = none;
+  unsigned int new_publication = SUBSCRIBE_NONE;
 
   cJSON *json;
   char jsonbuf[JSONBUF_SIZE];
@@ -213,7 +310,7 @@ process_tempest(struct lws *wsi, void *user)
     sprintf(tempest_wind_msg, "{\"speed\": %4.1f, \"speed_avg\": %4.1f, \"gust\": %4.1f, \"dir\": %3.0f, \"dir_avg\": %3.0f}", speed, speed_avg, gust, dir, dir_avg);
     tempest_wind_len = strlen(tempest_wind_msg);
     
-    new_data |= tempest_wind;
+    new_publication |= SUBSCRIBE_TEMPEST_WIND;
   }
 
   // {"serial_number":"ST-00057643","type":"obs_st","hub_sn":"HB-00073154","obs":[[1668645436,0.18,1.94,2.94,19,3,1025.67,15.61,44.46,1698,0.02,14,0.000000,0,0,0,2.713,1]],"firmware_revision":165}
@@ -293,28 +390,250 @@ process_tempest(struct lws *wsi, void *user)
 	strcat(tempest_hist_msg, "]}");
 	tempest_hist_len = strlen(tempest_hist_msg); // do we need to include the LWS_PRE?
 	       
-	//lwsl_user("HISTORY %d entries length %d", HIST_ENTRIES, strlen(&hist_buf[LWS_PRE]));
-	//lwsl_user("%s", &hist_buf[LWS_PRE]);
-	new_data |= tempest_history;
+	//lwsl_user("tempest history %d entries length %d", TEMPEST_HIST_ENTRIES, tempest_hist_len);
+	//lwsl_user("%s", tempest_hist_msg);
+	new_publication |= SUBSCRIBE_TEMPEST_HIST;
       }
       //lwsl_user("new minute seconds %u index %d ", tv.tv_sec, index);
     }
   }
 
   cJSON_Delete(json);
-  return new_data;
+  return new_publication;
 }
 
-static sensor_subscriptions
+unsigned int init_airmar(struct lws *wsi, void *user)
+{
+  struct per_session_data__wind *pss = (struct per_session_data__wind *)user;
+  struct per_vhost_data__wind *vhd =
+    (struct per_vhost_data__wind *) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
+
+  int fd;
+  lws_sock_file_fd_type u;
+
+  airmar_wind_msg = &airmar_wind_msgbuf[LWS_PRE];
+  airmar_hist_msg = &airmar_hist_msgbuf[LWS_PRE];
+  
+  // Should open the file in "cooked" mode to make sure we don't get per-character upcalls
+  if ((fd = lws_open(nmeafn, O_RDONLY)) < 0) {
+    lwsl_err("Unable to open %s\n", nmeafn);
+    return 1;
+  }
+  vhd->airmar_fd = fd;
+  
+  struct termios tty;
+  memset(&tty, 0, sizeof(struct termios));
+  if(tcgetattr(fd, &tty) != 0) {
+    lwsl_user("Error %i from tcgetattr: %s\n", errno, strerror(errno));
+  }
+
+  cfmakeraw(&tty);
+  tty.c_iflag |= IGNPAR | IUTF8;
+  tty.c_cflag |= CS8;
+  tty.c_cflag &= ~CSTOPB;
+  tty.c_cflag |= CRTSCTS;
+  tty.c_lflag |= ICANON; // Turn on canonical mode - let the driver wait for a <cr> before returning
+
+  if (tcsetattr(fd, TCSANOW, &tty) != 0) {
+    lwsl_user("Error %i from tcsetattr: %s\n", errno, strerror(errno));
+    return 1;
+  }
+
+  // Airmar is 4800 baud
+  cfsetispeed(&tty, B4800);
+  cfsetospeed(&tty, B4800);
+    
+  u.filefd = (lws_filefd_type)(long long)fd;
+  if (!lws_adopt_descriptor_vhost(lws_get_vhost(wsi),
+				  LWS_ADOPT_RAW_FILE_DESC, u, "wind", NULL)) {
+    lwsl_err("Failed to adopt serial port file descriptor\n");
+    close(vhd->airmar_fd);
+    vhd->airmar_fd = -1;
+    
+    return 1;
+  }
+  return 0;
+}
+
+unsigned int
 process_airmar(struct lws *wsi, void *user, void *in, size_t len)
 {
   struct per_session_data__wind *pss = (struct per_session_data__wind *)user;
   struct per_vhost_data__wind *vhd =
     (struct per_vhost_data__wind *) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
 
-  sensor_subscriptions new_data = none;
+  uint8_t buf[128];
+  
+  unsigned int new_publication = SUBSCRIBE_NONE;
+  int n;
 
-  return new_data;
+  /* Read and parse a text line from the weather station, tell clients there's data to send */
+  lwsl_debug("LWS_CALLBACK_RAW_RX_FILE\n");
+  if (n = (int)read(vhd->airmar_fd, buf, sizeof(buf)) < 0) {
+    lwsl_err("Reading from %s failed\n", nmeafn);
+    return 1;
+  }
+    
+  buf[n] = 0;
+  //lwsl_hexdump_level(LLL_NOTICE, buf, (unsigned int)n);
+  //lwsl_user("Read (%d) %s", n, buf);
+		
+  float awa, aws;
+  float twa_t, twa_m, tws_n, tws_m;
+  float baro_i, baro_m, temp;
+  char twa_t_ref, twa_m_ref, tws_n_unit, tws_m_unit, awa_ref, aws_unit, baro_i_unit, baro_m_unit, temp_unit;
+  float speed, dir;
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned int this_second = tv.tv_sec;
+  unsigned int this_minute = this_second / 60;
+    
+  /* Regular sentences from the Airmar PB-200
+   * $GPZDA,233202,27,03,2003,00,00*4D
+   * $GPGGA,233202,3748.4418,N,12226.7771,W,2,9,0.9,12.6,M,,,,*05
+   * $WIMDA,29.3262,I,0.9931,B,14.5,C,,,,,,,314.1,T,299.1,M,4.1,N,2.1,M*24
+   * $WIMWD,314.1,T,299.1,M,4.1,N,2.1,M*58
+   * $WIMWV,199.4,R,4.0,N,A*22
+   * $WIMWV,200.8,T,4.0,N,A*2B
+   */
+
+  speed = -1;
+  dir = -1;
+    
+  // $WIMWD,314.1,T,299.1,M,4.1,N,2.1,M*58
+  if (!strncmp((const char *)&buf, "$WIMWD", sizeof("$WIMWD")-1)) {
+    int r = sscanf(buf, "$WIMWD,%f,%c,%f,%c,%f,%c,%f,%c", &twa_t, &twa_t_ref, &twa_m, &twa_m_ref, &tws_n, &tws_n_unit, &tws_m, &tws_m_unit);
+    if ((r != 8) || (twa_m_ref != 'M') || (tws_n_unit != 'N')) {
+      //lwsl_user("Bad Parse %d %c %c", r, twa_m_ref, tws_m_unit);
+    } else {
+      airmar_last_samples.twa = twa_m;
+      airmar_last_samples.tws = tws_n;
+      if (SOURCE == AIRMAR_TRUE) {
+	speed = tws_n;
+	dir = twa_m;
+	new_publication |= SUBSCRIBE_AIRMAR_WIND;
+      }
+    }
+  }
+      
+  // $WIMWV,201.8,R,4.4,N,A*28
+  if (!strncmp((const char *)&buf, "$WIMWV", sizeof("$WIMWV")-1)) {
+    int r = sscanf(buf, "$WIMWV,%f,%c,%f,%c,", &awa, &awa_ref, &aws, &aws_unit);
+    if ((r != 4) || (awa_ref != 'R') || (aws_unit != 'N')) {
+      lwsl_user("Bad Parse %d %c %c", r, awa_ref, aws_unit);
+    } else {
+      // Adjust reading for sensor not pointing north
+      awa += SENSOR_OFFSET;
+      awa = (awa < 360.0) ? awa : awa - 360.0;
+      
+      airmar_last_samples.awa = awa;
+      airmar_last_samples.aws = aws;
+      if (SOURCE == AIRMAR_APPARENT) {
+	speed = aws;
+	dir = awa;
+	new_publication |= SUBSCRIBE_AIRMAR_WIND;
+      }
+    }
+  }
+
+  // $WIMDA,29.3262,I,0.9931,B,14.5,C,,,,,,,314.1,T,299.1,M,4.1,N,2.1,M*24
+  // $WIMDA,29.4384,I,0.9969,B,20.1,C,,,,,,,37.7,T,22.7,M,7.7,N,4.0,M*26
+  if (!strncmp((const char *)&buf, "$WIMDA", sizeof("$WIMDA")-1)) {
+    int r = sscanf(buf, "$WIMDA,%f,%c,%f,%c,%f,%c,,,,,,,%f,%c,%f,%c,%f,%c,%f,%c", &baro_i, &baro_i_unit, &baro_m, &baro_m_unit, &temp, &temp_unit, &twa_t, &twa_t_ref, &twa_m, &twa_m_ref, &tws_n, &tws_n_unit, &tws_m, &tws_m_unit);
+    if ((r != 14) || (baro_m_unit != 'B') || (temp_unit != 'C')) {
+      lwsl_user("Bad Parse %d %c %c", r, baro_m_unit, temp_unit);
+    } else {
+      airmar_last_samples.baro = baro_m * 1000.0;
+      airmar_last_samples.temp = ((temp * 9.0) / 5.0) + 32.0;
+    }
+  }
+    
+  // Return if this wasn't the sentence we're using for wind source
+  if (speed < 0.0) return 0;
+
+  //lwsl_user("speed %.1f dir %.1f\n", speed, dir);
+
+  airmar_recent[airmar_recent_idx].sec = this_second;
+  airmar_recent[airmar_recent_idx].speed = speed;
+  airmar_recent[airmar_recent_idx].dir = dir;
+    
+  /* Determine average wind angle - what happens when wind is oscillating from dead ahead?
+   * If some samples are slightly positive and others are 'negative' (close to 360) then
+   * the average is close to 180! This is not zero, as it should be. So keep track of a total
+   * of the angles + 180 degrees - more samples are 'north' use the biased total, otherwise
+   * use the unbiased total.
+   */
+  float aws_avg = 0.0, gust = 0.0, awa_avg = 0.0, awa_bias = 0.0;
+  int south_count = 0;
+  int sample_count = 0;
+  for (int i = 0; i < AIRMAR_RECENT; i++) {
+    if (airmar_recent[i].sec <= (this_second - 120)) continue;
+    sample_count++;
+    aws_avg += airmar_recent[i].speed;
+    gust = (airmar_recent[i].speed > gust) ? airmar_recent[i].speed : gust;
+    
+    float s = airmar_recent[i].dir;
+    awa_avg += s;
+    awa_bias += (s + ((s < 180.0) ? 180.0 : -180.0));
+    if ((s > 90.0) && (s <= 270.0)) south_count++;
+  }
+  aws_avg /= sample_count;
+
+  if (south_count > (sample_count/2))
+    awa_avg /= sample_count; /* More than half are south-ish */
+  else {
+    //lwsl_notice("south %d awa %.1f awa_bias %.2f / %d = avg %.0f", south_count, awa, awa_bias, RECENT_BUF, awa_bias/RECENT_BUF);
+    awa_avg = (awa_bias / sample_count) - 180.0; /* More than half are north-ish */
+    awa_avg = (awa_avg >= 0.0) ? awa_avg : awa_avg + 360.0;
+  }
+
+  unsigned int index = (this_minute % HIST_ENTRIES);
+
+  // Use the data in this bucket before we reassign it to the new minute
+  if (this_minute != airmar_hist_last_minute) {
+    if (!(this_minute % AIRMAR_HIST_FREQUENCY)) {
+      char entry[128];
+      // Create history JSON buffer
+      strcpy(airmar_hist_msg, "{ \"event\": \"history\"");
+      sprintf(entry, ", \"baro\": %.1f", airmar_last_samples.baro);
+      strcat(airmar_hist_msg, entry);
+      sprintf(entry, ", \"temp\": %.1f", airmar_last_samples.temp);
+      strcat(airmar_hist_msg, entry);
+      sprintf(entry, ", \"airmar_tws\": %.1f", airmar_last_samples.tws);
+      strcat(airmar_hist_msg, entry);
+      sprintf(entry, ", \"airmar_twa\": %.1f", airmar_last_samples.twa);
+      strcat(airmar_hist_msg, entry);
+      sprintf(entry, ", \"airmar_aws\": %.1f", airmar_last_samples.aws);
+      strcat(airmar_hist_msg, entry);
+      sprintf(entry, ", \"airmar_awa\": %.1f", airmar_last_samples.awa);
+      strcat(airmar_hist_msg, entry);
+      strcat(airmar_hist_msg, ", \"history\", \"history\": [");
+      for (int i = 0; i < HIST_ENTRIES; i++) { // BARF - this is n^2 in HIST_ENTRIES
+	int h = (this_minute + i) % HIST_ENTRIES;
+	sprintf(entry, AIRMAR_HIST_ENTRY_JSON, airmar_hist[h].ts, airmar_hist[h].speed, airmar_hist[h].gust, airmar_hist[h].dir);
+	strcat(airmar_hist_msg, entry);
+      }
+      airmar_hist_msg[strlen(airmar_hist_msg) - 1] = 0; // Chomp off the trailing comma
+      strcat(airmar_hist_msg, "]");
+      strcat(airmar_hist_msg, "}");
+      airmar_hist_len = strlen(airmar_hist_msg);
+      //lwsl_user("airmar history %d entries length %d", HIST_ENTRIES, airmar_hist_len);
+      //lwsl_user("%s", airmar_hist_msg);
+      new_publication |= SUBSCRIBE_AIRMAR_HIST;
+    }
+    airmar_hist[index].gust = 0;
+    airmar_hist_last_minute = this_minute;
+    //lwsl_user("new minute seconds %u index %d ", tv.tv_sec, index);
+  }
+
+  airmar_hist[index].ts = this_minute * 60;
+  airmar_hist[index].speed = aws_avg;
+  airmar_hist[index].dir = awa_avg;
+  if (gust > airmar_hist[index].gust)
+    airmar_hist[index].gust = gust;
+  
+  return new_publication;
 }
 
 static int
@@ -339,47 +658,16 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     vhd->protocol = lws_get_protocol(wsi);
     vhd->vhost = lws_get_vhost(wsi);
 
-    // Should open the file in "cooked" mode to make sure we don't get per-character upcalls
-    if ((vhd->tempest_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-      perror("socket");
-      return(1);
-    }
-
-    u_int yes = 1;
-    if (setsockopt(vhd->tempest_sock, SOL_SOCKET, SO_BROADCAST, &yes, sizeof(yes)) < 0) {
-      perror("setsockopt");
-      return 1;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons(TEMPEST_PORT);
-
-    if (bind(vhd->tempest_sock, (struct sockaddr *) &addr, sizeof(struct sockaddr)) < 0) {
-      lwsl_err("Unable to bind\n");
-      return 1;
-    }
-
-    u.filefd = (lws_filefd_type)(long long)vhd->tempest_sock;
-    if (!lws_adopt_descriptor_vhost(lws_get_vhost(wsi),
-				    LWS_ADOPT_RAW_FILE_DESC, u, "wind", NULL)) {
-      lwsl_err("Failed to adopt serial port file descriptor\n");
-      close(vhd->tempest_sock);
-      vhd->tempest_sock = -1;
-
-      return 1;
-    }
-    tempest_wind_msg = &tempest_wind_msgbuf[LWS_PRE];
-    tempest_hist_msg = &tempest_hist_msgbuf[LWS_PRE];
-    lwsl_user("LWS_CALLBACK_PROTOCOL_INIT: socket fd %d\n", vhd->tempest_sock);
+    if (HAS_TEMPEST) init_tempest(wsi, user);
+    if (HAS_AIRMAR) init_airmar(wsi, user);
 
     break;
 
   case LWS_CALLBACK_PROTOCOL_DESTROY:
     if (vhd->tempest_sock != -1)
       close(vhd->tempest_sock);
+    if (vhd->airmar_fd != -1)
+      close(vhd->airmar_fd);
     break;
 
   case LWS_CALLBACK_ESTABLISHED:
@@ -396,34 +684,61 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     break;
 
   case LWS_CALLBACK_SERVER_WRITEABLE:
-    /* notice we allowed for LWS_PRE in the payload already */
-
-    // Send history if it's been called for
-    if (pss->needs & tempest_history) {
-      //lwsl_user("Sending history");
-      m = lws_write(wsi, tempest_hist_msg, tempest_hist_len, LWS_WRITE_TEXT);
-      if (m < tempest_hist_len) {
+    // Write only one message per callback
+    
+    if (pss->needs & SUBSCRIBE_TEMPEST_HIST) {
+      //lwsl_user("Sending tempest history");
+      if ((m = lws_write(wsi, tempest_hist_msg, tempest_hist_len, LWS_WRITE_TEXT)) < tempest_hist_len) {
 	lwsl_err("ERROR %d writing tempest history to ws socket\n", m);
 	return -1;
       }
-      lws_callback_on_writable(pss->wsi); // Still need to send last wind reading
-      pss->needs &= tempest_history;
+      pss->needs &= ~SUBSCRIBE_TEMPEST_HIST;
+      if (pss->needs) lws_callback_on_writable(pss->wsi); // Still need something else
       break;
     }
     
-    if (pss->needs & tempest_wind) {
-      //lwsl_user("Sending update %s\n", &vhd->msg[LWS_PRE]);
+    if (pss->needs & SUBSCRIBE_TEMPEST_WIND) {
+      //lwsl_user("Sending tempest update %s\n", tempest_hist_msg);
       m = lws_write(wsi, tempest_wind_msg, tempest_wind_len, LWS_WRITE_TEXT);
       if (m < tempest_wind_len) {
 	lwsl_err("ERROR %d writing tempest wind to ws socket\n", m);
 	return -1;
       }
-      pss->needs &= tempest_wind;
+      pss->needs &= ~SUBSCRIBE_TEMPEST_WIND;
+      if (pss->needs) lws_callback_on_writable(pss->wsi); // Still need something else
       break;
+    }
+
+    if (pss->needs & SUBSCRIBE_AIRMAR_HIST) {
+      //lwsl_user("Sending airmar history");
+      if ((m = lws_write(wsi, airmar_hist_msg, airmar_hist_len, LWS_WRITE_TEXT)) < airmar_hist_len) {
+	lwsl_err("ERROR %d writing tempest history (%d) to ws socket\n", m, airmar_hist_len);
+	return -1;
+      }
+      pss->needs &= ~SUBSCRIBE_AIRMAR_HIST;
+      if (pss->needs) lws_callback_on_writable(pss->wsi); // Still need something else
+      break;
+    }
+    
+    if (pss->needs & SUBSCRIBE_AIRMAR_WIND) {
+      //lwsl_user("Sending tempest update %s\n", tempest_hist_msg);
+      if ((m = lws_write(wsi, airmar_wind_msg, airmar_wind_len, LWS_WRITE_TEXT)) < tempest_wind_len) {
+	lwsl_err("ERROR %d writing tempest wind (%d) to ws socket\n", m, airmar_wind_len);
+	return -1;
+      }
+      pss->needs &= ~SUBSCRIBE_TEMPEST_WIND;
+      if (pss->needs) lws_callback_on_writable(pss->wsi); // Still need something else
+      break;
+    }
+
+    if (pss->needs) {
+      lwsl_notice("LWS_CALLBACK_SERVER_WRITEABLE clearing needs %d\n", pss->needs);
+      pss->needs = SUBSCRIBE_NONE;
     }
     break;
 
   case LWS_CALLBACK_RECEIVE:
+    /* A client is sending us something - probably a subscription request */
     //((char *)in)[len] = 0; // Not zero terminated!
     lwsl_notice("LWS_CALLBACK_RECEIVE cJSON (len %d) %s\n", len, in);
     json = cJSON_ParseWithLength(in, len);
@@ -434,27 +749,54 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 
     const cJSON *tempest_wind = cJSON_GetObjectItemCaseSensitive(json, "subscribe_tempest_wind");
     const cJSON *tempest_history = cJSON_GetObjectItemCaseSensitive(json, "subscribe_tempest_history");
+    const cJSON *airmar_wind = cJSON_GetObjectItemCaseSensitive(json, "subscribe_airmar_wind");
+    const cJSON *airmar_history = cJSON_GetObjectItemCaseSensitive(json, "subscribe_airmar_history");
 
     if (tempest_wind != NULL) {
       if (cJSON_IsBool(tempest_wind)) {
 	lwsl_notice("LWS_CALLBACK_RECEIVE subscribe_tempest_wind %d\n", tempest_wind->valueint);
 	if (tempest_wind->valueint == 1) {
-	  pss->subscriptions |= tempest_wind;
+	  pss->subscriptions |= SUBSCRIBE_TEMPEST_WIND;
 	} else {
-	  pss->subscriptions &= ~tempest_wind;
+	  pss->subscriptions &= ~SUBSCRIBE_TEMPEST_WIND;
 	}
-	lwsl_notice("LWS_CALLBACK_RECEIVE subscribe_wind %d\n", pss->subscribe_tempest_wind);
+	lwsl_notice("LWS_CALLBACK_RECEIVE subscriptions %d\n", pss->subscriptions);
       }
     }
 
-    if (history != NULL) {
+    if (tempest_history != NULL) {
       if (cJSON_IsBool(tempest_history)) {
 	lwsl_notice("LWS_CALLBACK_RECEIVE subscribe_tempest_history %d\n", tempest_history->valueint);
 	if (tempest_history->valueint == 1) {
-	  pss->subscriptions |= tempest_history;
+	  pss->subscriptions |= SUBSCRIBE_TEMPEST_HIST;
 	} else {
-	  pss->subscriptions &= ~tempest_history;
+	  pss->subscriptions &= ~SUBSCRIBE_TEMPEST_HIST;
 	}
+	lwsl_notice("LWS_CALLBACK_RECEIVE subscriptions %d\n", pss->subscriptions);
+      }
+    }
+
+    if (airmar_wind != NULL) {
+      if (cJSON_IsBool(airmar_wind)) {
+	lwsl_notice("LWS_CALLBACK_RECEIVE subscribe_airmar_wind %d\n", airmar_wind->valueint);
+	if (airmar_wind->valueint == 1) {
+	  pss->subscriptions |= SUBSCRIBE_AIRMAR_WIND;
+	} else {
+	  pss->subscriptions &= ~SUBSCRIBE_AIRMAR_WIND;
+	}
+	lwsl_notice("LWS_CALLBACK_RECEIVE subscriptions %d\n", pss->subscriptions);
+      }
+    }
+
+    if (airmar_history != NULL) {
+      if (cJSON_IsBool(airmar_history)) {
+	lwsl_notice("LWS_CALLBACK_RECEIVE subscribe_airmar_history %d\n", airmar_history->valueint);
+	if (airmar_history->valueint == 1) {
+	  pss->subscriptions |= SUBSCRIBE_AIRMAR_HIST;
+	} else {
+	  pss->subscriptions &= ~SUBSCRIBE_AIRMAR_HIST;
+	}
+	lwsl_notice("LWS_CALLBACK_RECEIVE subscriptions %d\n", pss->subscriptions);
       }
     }
 
@@ -466,26 +808,38 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     break;
 
   case LWS_CALLBACK_RAW_RX_FILE:
-    /* Read and parse a text line from the weather station, tell clients there's data to send */
+    /* One of our sensors has new data - either the Airmar serial port or the Tempest
+     * has sent a broadcast packet.
+     */
     lwsl_debug("LWS_CALLBACK_RAW_RX_FILE len %d\n", len);
 
-    /* For now, the Airmar is on a serial line so the callback has an actual data length
-     * while the Tempest is an unread socket with length zero.
-     * There has to be a better way to figure out which fd has input available.
+    unsigned int new_pubs = SUBSCRIBE_NONE;
+    
+    /* LWS doesn't tell us the fd that has input - maybe there's an API call
+     * buried somewhere. Instead, use a select() polling call to see which
+     * fd is ready.
      */
+    fd_set fds;
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+    FD_SET(vhd->tempest_sock, &fds);
+    FD_SET(vhd->airmar_fd, &fds);
+    int bigsock = ((vhd->tempest_sock > vhd->airmar_fd)? vhd->tempest_sock : vhd->airmar_fd) + 1;
 
-    sensor_subscriptions new_pubs;
-    if (len == 0) {
-      new_pubs = process_tempest(wsi, user);
-    } else {
-      new_pubs = process_airmar(wsi, user, in, len);
+    if ((ret = select(bigsock, &fds, NULL, NULL, &timeout)) < 0) {
+      lwsl_user("LWS_CALLBACK_RAW_RX_FILE select %d errno %d\n", ret, errno);
+      break;
     }
 
-    /* Enable writing on clients subscribed to this data */
+    if (FD_ISSET(vhd->tempest_sock, &fds)) new_pubs |= process_tempest(wsi, user);
+    if (FD_ISSET(vhd->airmar_fd, &fds)) new_pubs |= process_airmar(wsi, user, in, len);
+
+    /* Enable writing on clients subscribed to the new data */
     lws_start_foreach_llp(struct per_session_data__wind **,
 			  ppss, vhd->pss_list) {
       (*ppss)->needs |= ((*ppss)->subscriptions & new_pubs);
-      if ((*ppss)->needs != none) lws_callback_on_writable((*ppss)->wsi);
+      if ((*ppss)->needs != SUBSCRIBE_NONE) lws_callback_on_writable((*ppss)->wsi);
     } lws_end_foreach_llp(ppss, pss_list);
     break;
 		
@@ -555,8 +909,6 @@ int main(int argc, const char **argv)
     lwsl_err("lws init failed\n");
     return 1;
   }
-
-  init_history(); // this should be in the vhd
 
   while (n >= 0 && !interrupted)
     n = lws_service(context, 0);
