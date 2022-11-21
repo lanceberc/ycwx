@@ -307,7 +307,7 @@ process_tempest(struct lws *wsi, void *user)
     tempest_last_samples.rapid_dir = dir;
     tempest_last_samples.rapid_dir_avg = dir_avg;
     
-    sprintf(tempest_wind_msg, "{\"speed\": %4.1f, \"speed_avg\": %4.1f, \"gust\": %4.1f, \"dir\": %3.0f, \"dir_avg\": %3.0f}", speed, speed_avg, gust, dir, dir_avg);
+    sprintf(tempest_wind_msg, "{\"event\": \"tempest_update\", \"speed\": %4.1f, \"speed_avg\": %4.1f, \"gust\": %4.1f, \"dir\": %3.0f, \"dir_avg\": %3.0f}", speed, speed_avg, gust, dir, dir_avg);
     tempest_wind_len = strlen(tempest_wind_msg);
     
     new_publication |= SUBSCRIBE_TEMPEST_WIND;
@@ -550,7 +550,7 @@ process_airmar(struct lws *wsi, void *user, void *in, size_t len)
   }
     
   // Return if this wasn't the sentence we're using for wind source
-  if (speed < 0.0) return 0;
+  if (new_publication == SUBSCRIBE_NONE) return 0;
 
   //lwsl_user("speed %.1f dir %.1f\n", speed, dir);
 
@@ -588,6 +588,9 @@ process_airmar(struct lws *wsi, void *user, void *in, size_t len)
     awa_avg = (awa_avg >= 0.0) ? awa_avg : awa_avg + 360.0;
   }
 
+  sprintf(airmar_wind_msg, "{\"event\": \"airmar_update\", \"speed\": %4.1f, \"speed_avg\": %4.1f, \"gust\": %4.1f, \"dir\": %3.0f, \"dir_avg\": %3.0f}", speed, aws_avg, gust, dir, awa_avg);
+  airmar_wind_len = strlen(tempest_wind_msg);
+
   unsigned int index = (this_minute % HIST_ENTRIES);
 
   // Use the data in this bucket before we reassign it to the new minute
@@ -595,7 +598,7 @@ process_airmar(struct lws *wsi, void *user, void *in, size_t len)
     if (!(this_minute % AIRMAR_HIST_FREQUENCY)) {
       char entry[128];
       // Create history JSON buffer
-      strcpy(airmar_hist_msg, "{ \"event\": \"history\"");
+      strcpy(airmar_hist_msg, "{ \"event\": \"airmar_history\"");
       sprintf(entry, ", \"baro\": %.1f", airmar_last_samples.baro);
       strcat(airmar_hist_msg, entry);
       sprintf(entry, ", \"temp\": %.1f", airmar_last_samples.temp);
@@ -827,6 +830,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     FD_SET(vhd->airmar_fd, &fds);
     int bigsock = ((vhd->tempest_sock > vhd->airmar_fd)? vhd->tempest_sock : vhd->airmar_fd) + 1;
 
+    int ret;
     if ((ret = select(bigsock, &fds, NULL, NULL, &timeout)) < 0) {
       lwsl_user("LWS_CALLBACK_RAW_RX_FILE select %d errno %d\n", ret, errno);
       break;
