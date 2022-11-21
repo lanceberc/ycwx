@@ -1551,19 +1551,19 @@
       
       function stfycWindCallback(json) {
 	  const wind = JSON.parse(json);
-	  if (wind.event == "update") {
+	  if (wind.event == "airmar_update") {
 	      const aws_avg = wind.aws_avg.toFixed(1);
 	      const gust = wind.gust.toFixed(1);
 	      const awa = wind.awa.toFixed(0);
 	      const awa_avg = wind.awa_avg.toFixed(0);
 	      anemometer.update(1, aws_avg);
 	      anemometer.update(0, gust);
-	      d3.selectAll(".wind-span-stfyc").html(aws_avg);
+	      d3.selectAll(".wind-span-stfyc").html(speed_avg);
 	      d3.selectAll(".gust-span-stfyc").html(gust);
-	      d3.selectAll(".awa-span-stfyc").html(awa);
-	      d3.selectAll(".awa-avg-span-stfyc").html(awa_avg);
+	      d3.selectAll(".awa-span-stfyc").html(dir);
+	      d3.selectAll(".awa-avg-span-stfyc").html(dir_avg);
 	  }
-	  if (wind.event == "history") {
+	  if (wind.event == "airmar_history") {
 	      windHistory = wind.history;
 	      windPlotHistory("wind-history-recent", windHistory);
 	  }
