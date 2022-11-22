@@ -76,8 +76,16 @@ function windInitialize(callback) {
     windSocket.addEventListener('message', windMessage);
     windSocket.addEventListener('open', function(e) {
 	console.log("windSocket() open");
-	windSocket.send(JSON.stringify({"subscribe_wind": true}));
-	windSocket.send(JSON.stringify({"subscribe_history": true}));
+	windSocket.send(JSON.stringify({"subscribe_airmar_wind": true}));
+	windSocket.send(JSON.stringify({"subscribe_airmar_history": true}));
+
+	console.log("windInitialize localTempest " + typeof localTempest);
+
+	if (typeof localTempest !== 'undefined') {
+	    windSocket.send(JSON.stringify({"subscribe_tempest_wind": true}));
+	    windSocket.send(JSON.stringify({"subscribe_tempest_history": true}));
+	    console.log("windStartStopHistory: start");
+	}
     });
 }
 
@@ -92,8 +100,8 @@ function windPlotHistory(e, history) {
 	return;
     }
 
-    start = new Date(history[0].ts * 1000);
-    end = new Date(history[history.length-1].ts * 1000);
+    start = new Date(history[0].sec * 1000);
+    end = new Date(history[history.length-1].sec * 1000);
 
     d3.select("." + e).selectAll("*").remove();
     d3.select("." + e).remove();
@@ -172,8 +180,8 @@ function windPlotHistory(e, history) {
 	.datum(history)
 	.classed("wind-plot-wind-avg", true)
 	.attr("d", d3.area()
-	      .x(function(d) { return x(d.ts * 1000) })
-	      .y1(function(d) { return y(d.aws) })
+	      .x(function(d) { return x(d.sec * 1000) })
+	      .y1(function(d) { return y(d.speed) })
 	      .y0(function(d) { return y(0) })
 	      .curve(d3.curveBasis)
 	     );
@@ -183,7 +191,7 @@ function windPlotHistory(e, history) {
 	.datum(history)
 	.classed("wind-plot-wind-gust", true)
 	.attr("d", d3.line()
-	      .x(function(d) { return x(d.ts * 1000) })
+	      .x(function(d) { return x(d.sec * 1000) })
 	      .y(function(d) { return y(d.gust) })
 	      .curve(d3.curveBasis)
 	     );
@@ -200,10 +208,24 @@ function windStartStopHistory(e) {
     }
     console.log(`wind element ${e.id} new size: ${cr.width} x ${cr.height}`);
     if ((cr.width == 0) || (cr.height == 0)) {
-	windSocket.send(JSON.stringify({"subscribe_history": false}));
+	windSocket.send(JSON.stringify({"subscribe_airmar_history": false}));
 	console.log("windStartStopHistory: stop");
     } else {
-	windSocket.send(JSON.stringify({"subscribe_history": true}));
+	windSocket.send(JSON.stringify({"subscribe_airmar_history": true}));
 	console.log("windStartStopHistory: start");
+    }
+
+    console.log("windStartStopHistory localTempest " + typeof localTempest);
+
+    if (typeof localTempest !== 'undefined') {
+	if ((cr.width == 0) || (cr.height == 0)) {
+	    windSocket.send(JSON.stringify({"subscribe_tempest_wind": false}));
+	    windSocket.send(JSON.stringify({"subscribe_tempest_history": false}));
+	    console.log("windStartStopHistory: stop");
+	} else {
+	    windSocket.send(JSON.stringify({"subscribe_tempest_wind": true}));
+	    windSocket.send(JSON.stringify({"subscribe_tempest_history": true}));
+	    console.log("windStartStopHistory: start");
+	}
     }
 }

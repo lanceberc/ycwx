@@ -332,7 +332,7 @@
       }
       .wind-grid {
 	  display: grid;
-	  grid-template-rows: 60% 40%;
+	  grid-template-rows: 50% 50%;
 	  grid-template-columns: 50% 50%;
 	  border-collapse: collapse;
 	  width: 100%;
@@ -347,6 +347,7 @@
 	  min-height: 0px;
 	  max-width: 100%;
 	  min-width: 0px;
+	  margin: 2px;
       }
       .wind-plot {
 	  font-size: 1.25vw;
@@ -704,21 +705,38 @@
       
       function stfycWindCallback(json) {
 	  const wind = JSON.parse(json);
-	  if (wind.event == "update") {
-	      const aws_avg = wind.aws_avg.toFixed(1);
+	  //console.log("wind update " + json);
+	  if (wind.event == "airmar_update") {
+	      const speed_avg = wind.speed_avg.toFixed(1);
 	      const gust = wind.gust.toFixed(1);
-	      const awa = wind.awa.toFixed(0);
-	      const awa_avg = wind.awa_avg.toFixed(0);
-	      anemometer.update(1, aws_avg);
+	      const dir = wind.dir.toFixed(0);
+	      const dir_avg = wind.dir_avg.toFixed(0);
+	      anemometer.update(1, speed_avg);
 	      anemometer.update(0, gust);
-	      d3.selectAll(".wind-span-stfyc").html(aws_avg);
+	      d3.selectAll(".wind-span-stfyc").html(speed_avg);
 	      d3.selectAll(".gust-span-stfyc").html(gust);
-	      d3.selectAll(".awa-span-stfyc").html(awa);
-	      d3.selectAll(".awa-avg-span-stfyc").html(awa_avg);
+	      d3.selectAll(".awa-span-stfyc").html(dir);
+	      d3.selectAll(".awa-avg-span-stfyc").html(dir_avg);
 	  }
-	  if (wind.event == "history") {
+	  if (wind.event == "airmar_history") {
 	      windHistory = wind.history;
 	      windPlotHistory("wind-history-recent", windHistory);
+	  }
+	  if (wind.event == "tempest_update") {
+	      const speed_avg = wind.speed_avg.toFixed(1);
+	      const gust = wind.gust.toFixed(1);
+	      const dir = wind.dir.toFixed(0);
+	      const dir_avg = wind.dir_avg.toFixed(0);
+	      tempest_anemometer.update(1, speed_avg);
+	      tempest_anemometer.update(0, gust);
+	      d3.selectAll(".tempest-wind-span-stfyc").html(speed_avg);
+	      d3.selectAll(".tempest-gust-span-stfyc").html(gust);
+	      d3.selectAll(".tempest-awa-span-stfyc").html(dir);
+	      d3.selectAll(".tempest-awa-avg-span-stfyc").html(dir_avg);
+	  }
+	  if (wind.event == "tempest_history") {
+	      windHistory = wind.history;
+	      windPlotHistory("tempest-wind-history-recent", windHistory);
 	  }
       }
 
@@ -762,6 +780,8 @@
 	  d3.select("#time-local").html( ts + (l.includes("Daylight") ? "PDT" : "PST")); // Kludgey
       }
 
+      let localTempest = true;
+
       function initialize() {
 	  console.log("Initializing wx page");
 	  curSceneTime = 0;
@@ -776,6 +796,19 @@
 	  windRO.observe(document.querySelector("#localWind"));
 
 	  anemometer = new Gauge('anemometer-stfyc', {
+	      classRoot: "anemometer-stfyc",
+	      maxValue: 30, // in knots
+	      arcColorFn: d3.interpolateHslLong("#613CFF", "#FB4B39"), // nice blue & red hues, gradient centers on green
+	      arcSegments: 256, // make dial a smooth rainbow
+	      arcMajorTicks: 5,
+	      arcLabelFormat: d3.format('d'),
+	      pointers: [
+		  { pointerWidthPercent: 0.15, pointerHeadLengthPercent: 0.9, pointerTailPercent: 0.04, transitionMs: 1000, val: 0, },
+		  { pointerWidthPercent: 0.10, pointerHeadLengthPercent: 0.9, pointerTailPercent: 0.02, transitionMs: 1000, val: 0, },
+	      ],
+	  });
+	  
+	  tempest_anemometer = new Gauge('tempest-anemometer-stfyc', {
 	      classRoot: "anemometer-stfyc",
 	      maxValue: 30, // in knots
 	      arcColorFn: d3.interpolateHslLong("#613CFF", "#FB4B39"), // nice blue & red hues, gradient centers on green
@@ -811,6 +844,20 @@
 	<div class="wind-cell">
 	  <div id="wind-history-recent-label" class="label">Recent Wind History</div>
 	  <div id="wind-history-recent" class="wind-plot">
+	  </div>
+	</div>
+	      
+	<div class="wind-cell">
+	  <div id="tempest-anemometer-stfyc-label" class="label">Current StFYC Tempest Wind</div>
+	  <div id="tempest-anemometer-stfyc" class="anemometer-cell"></div>
+	  <div id="tempest-anemometer-stfyc-plot-label" class="anemometer-stfyc-plot-label anemometer-cell horizontal-center">
+	    Wind <span class="tempest-awa-avg-span-stfyc"></span>&#176 (<span class="tempest-awa-span-stfyc">---</span>) @<span class="tempest-wind-span-stfyc"></span> Gust <span class="tempest-gust-span-stfyc"></span>&nbsp;kts
+	  </div>
+	</div>
+	
+	<div class="wind-cell">
+	  <div id="tempest-wind-history-recent-label" class="label">Recent Wind History</div>
+	  <div id="tempest-wind-history-recent" class="wind-plot">
 	  </div>
 	</div>
 	      
