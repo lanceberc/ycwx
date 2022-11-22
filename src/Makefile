@@ -9,6 +9,6 @@ sensord: sensord.c
 clean:
 	rm airmard sensord tempestd
 
-install: airmard
-	-mv ~/bin/airmard ~/bin/airmard.running
-	cp airmard ~/bin
+install: sensord
+	-mv ~/bin/sensord ~/bin/sensord.running
+	cp sensord ~/bin
