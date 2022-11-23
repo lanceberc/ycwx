@@ -16,7 +16,10 @@ import re
 import logging
 import multiprocessing
 import subprocess
+import sys
 #from PIL import Image, ImageDraw, ImageFont, ImageFile
+
+quittingtime = datetime.datetime.now()
 
 maxretries = 4
 sockettimeout = 30 # surface analysis charts aren't very big
@@ -55,14 +58,14 @@ source = "NESDIS"
 regions = {}
 regions["GOES-East"] = {"goes": "16", "dir": "FD", "sector": "FD", "res": "5424x5424"}
 regions["GOES-West"] = {"goes": "17", "dir": "FD", "sector": "FD", "res": "5424x5424"}
-regions["GOES-West"] = {"goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
+#regions["GOES-West"] = {"goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
 regions["CONUS-East"] = {"goes": "16", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 regions["CONUS-West"] = {"goes": "17", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 #regions["CONUS-West"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "10000x6000"}
-regions["CONUS-West"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+#regions["CONUS-West"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 regions["PSW"] = {"goes": "17", "dir": "SECTOR/psw", "sector": "psw", "res": "2400x2400"}
 regions["West_Coast"] = {"goes": "17", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
-regions["West_Coast"] = {"goes": "18", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
+#regions["West_Coast"] = {"goes": "18", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
 
 imageProcess = {}
 imageProcess["CONUS-West"] = [
@@ -100,16 +103,23 @@ def urltryhard(url):
     resp = None
     while not done and (tries < maxretries):
         tries = tries + 1
+        if (datetime.datetime.now() > quittingtime):
+            logging.warning("Fetching has surpassed time limit - exiting");
+            sys.exit(-1);
         if certificate_error and insecure == None:
             # A null context disables certificate verification
             insecure = ssl.SSLContext()
         if not isopen:
             if tries > 1:
                 logging.warning("URL Open #%d - %s" % (tries, url))
+            else:
+                logging.debug("URL Open #%d - %s" % (tries, url))
             try:
                 connection = urllib.request.urlopen(url = url, context = insecure, data = None, timeout = sockettimeout) # Open shouldn't take this long
                 if tries > 1:
                     logging.warning("URL Open complete")
+                else:
+                    logging.debug("URL Open complete")
                 isopen = True
             except urllib.error.HTTPError as e: # HTTPError is a subclass of URLError so check for it first
                 logging.warning("URL Open HTTPError: %r" % (e))
@@ -129,6 +139,8 @@ def urltryhard(url):
         if isopen:
             if tries > 1:
                 logging.warning("URL Read #%d - %s" % (tries, url))
+            else:
+                logging.debug("URL Read #%d - %s" % (tries, url))
             try:
                 resp = connection.read()
                 if tries > 1:
@@ -230,6 +242,7 @@ if __name__ == '__main__':
     parser.add_argument("-region", choices=reg, default="GOES-West", help="GOES Satellite")
     parser.add_argument("-force", default=False, action='store_true', dest="force", help="Overwrite existing output")
     parser.add_argument("-log", choices=["debug", "info", "warning", "error", "critical"], default="info", help="Log level")
+    parser.add_argument("-timelimit", default=5, type=int, help="Exit if not complete in TIMELIMIT minutes");
     args = parser.parse_args()
 
     if args.log == "debug":
@@ -245,6 +258,8 @@ if __name__ == '__main__':
 
     region = args.region
     force = args.force
+
+    quittingtime = datetime.datetime.now() + datetime.timedelta(minutes=args.timelimit);
 
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=loglevel)
     logging.debug(args)
