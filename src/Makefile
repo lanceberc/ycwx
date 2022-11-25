@@ -10,5 +10,6 @@ clean:
 	rm airmard sensord tempestd
 
 install: sensord
-	-mv ~/bin/sensord ~/bin/sensord.running
+	mkdir -p ~/bin
+	touch ~/bin/sensord && mv ~/bin/sensord ~/bin/sensord.running
 	cp sensord ~/bin
