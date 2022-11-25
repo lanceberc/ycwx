@@ -1,0 +1,17 @@
+version: '2.4'
+services:
+
+    ycwx:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      container_name: ycwx
+      volumes:
+      - /d/Downloads/:/downloads/
+      # - ./../:/ebsmnt/www/
+      # - ./../../projects/:/mnt/home/
+      - ./:/docker/
+      environment:
+        - "PS1=[ycwx $$(whoami):$$(pwd)] $$ "
+      ports:
+        - 5678:5678
