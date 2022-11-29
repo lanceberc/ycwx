@@ -228,8 +228,8 @@ def fetchts(region, ts, url):
         if os.path.exists(latest):
             try:
                 os.unlink(latest)
-            except BaseException as err:
-                print(f"Unexpected {err=}, {type(err)=}")
+            except OSError as err:
+                print("Error unlinking %s: %s (error type %s)" % (latest, err, type(err)))
         os.symlink(fn, latest)
         return 1
     return 0
