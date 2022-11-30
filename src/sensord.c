@@ -296,7 +296,7 @@ process_tempest(struct lws *wsi, void *user)
     else {
       //lwsl_notice("south %d awa %.1f awa_bias %.2f / %d = avg %.0f", south_count, awa, awa_bias, RECENT_BUF, awa_bias/RECENT_BUF);
       dir_avg = (dir_bias / samples) - 180.0; /* More than half are north-ish */
-      if (dir_avg < 0) dir_avg +- 360.0;
+      if (dir_avg < 0) dir_avg += 360.0;
     }
 
     tempest_last_samples.rapid_speed = speed;
