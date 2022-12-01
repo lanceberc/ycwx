@@ -721,6 +721,8 @@
 	  if (wind.event == "airmar_history") {
 	      windHistory = wind.history;
 	      windPlotHistory("wind-history-recent", windHistory);
+	      d3.selectAll(".baro-span-stfyc").html(wind.baro);
+	      d3.selectAll(".temperature-span-stfyc").html(wind.temp);
 	  }
 	  if (wind.event == "tempest_update") {
 	      const speed_avg = wind.speed_avg.toFixed(1);
@@ -735,6 +737,8 @@
 	      d3.selectAll(".tempest-awa-avg-span-stfyc").html(dir_avg);
 	  }
 	  if (wind.event == "tempest_history") {
+	      d3.selectAll(".tempest-baro-span-stfyc").html(wind.baro);
+	      d3.selectAll(".tempest-temperature-span-stfyc").html((wind.temp * (9.0 /5.0) + 32.0).toFixed(1));
 	      windHistory = wind.history;
 	      windPlotHistory("tempest-wind-history-recent", windHistory);
 	  }
@@ -834,7 +838,10 @@
       <div class="wind-grid">
 
 	<div class="wind-cell">
-	  <div id="anemometer-stfyc-label" class="label">Current StFYC Race Office Wind</div>
+	  <div id="anemometer-stfyc-label" class="label">StFYC Race Office Airmar
+	    <span class="baro-span-stfyc"></span>mb
+	    <span class="temperature-span-stfyc"></span>&deg;F
+	  </div>
 	  <div id="anemometer-stfyc" class="anemometer-cell"></div>
 	  <div id="anemometer-stfyc-plot-label" class="anemometer-stfyc-plot-label anemometer-cell horizontal-center">
 	    Wind <span class="awa-avg-span-stfyc"></span>&#176 (<span class="awa-span-stfyc">---</span>) @<span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span>&nbsp;kts
@@ -848,7 +855,10 @@
 	</div>
 	      
 	<div class="wind-cell">
-	  <div id="tempest-anemometer-stfyc-label" class="label">Current StFYC Tempest Wind</div>
+	  <div id="tempest-anemometer-stfyc-label" class="label">Current StFYC Tempest Wind
+	    <span class="tempest-baro-span-stfyc"></span>mb
+	    <span class="tempest-temperature-span-stfyc"></span>&deg;F
+	  </div>
 	  <div id="tempest-anemometer-stfyc" class="anemometer-cell"></div>
 	  <div id="tempest-anemometer-stfyc-plot-label" class="anemometer-stfyc-plot-label anemometer-cell horizontal-center">
 	    Wind <span class="tempest-awa-avg-span-stfyc"></span>&#176 (<span class="tempest-awa-span-stfyc">---</span>) @<span class="tempest-wind-span-stfyc"></span> Gust <span class="tempest-gust-span-stfyc"></span>&nbsp;kts
