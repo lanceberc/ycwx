@@ -1827,8 +1827,14 @@ def process_region(region):
         bdir = "%s%s/%s" % (datastore_prefix, output_prefix, region)
         latest = "%s/%s" % (bdir, "latest.jpg")
         if os.path.lexists(latest): # lexists returns true if the path is good or the link is broken
-            os.unlink(latest)
-        os.symlink(ofn, latest)
+            try:
+                os.unlink(latest)
+            except OSError as err:
+                print("Error unlinking %s: %s (error type %s)" % (latest, err, type(err)))
+        try:
+            os.symlink(ofn, latest)
+        except OSError as err:
+            print("Error linking %s -> %s: %s (error type %s)" % (latest, ofn, err, type(err)))
 
         if args.oneshot == True:
             return
