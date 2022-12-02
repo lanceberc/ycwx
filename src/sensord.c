@@ -432,7 +432,8 @@ unsigned int init_airmar(struct lws *wsi, void *user)
   }
   
   // Should open the file in "cooked" mode to make sure we don't get per-character upcalls
-  if ((fd = lws_open(nmeafn, O_RDONLY)) < 0) {
+  //if ((fd = lws_open(nmeafn, O_RDONLY)) < 0) {
+  if ((fd = lws_open(nmeafn, O_RDWR)) < 0) {
     lwsl_err("Unable to open %s\n", nmeafn);
     return 1;
   }
@@ -459,6 +460,12 @@ unsigned int init_airmar(struct lws *wsi, void *user)
   // Airmar is 4800 baud
   cfsetispeed(&tty, B4800);
   cfsetospeed(&tty, B4800);
+
+  char *airmar_init_string = "$PAMTX,0*hh\015\012"; // Disable all transmissions
+  int r;
+  if (r = write(fd, airmar_init_string, strlen(airmar_init_string) < 0)) {
+    lwsl_err("Init string write returned %d\n", r);
+  }
     
   u.filefd = (lws_filefd_type)(long long)fd;
   if (!lws_adopt_descriptor_vhost(lws_get_vhost(wsi),
@@ -487,7 +494,7 @@ process_airmar(struct lws *wsi, void *user)
 
   /* Read and parse a text line from the weather station, tell clients there's data to send */
   // lwsl_user("process_airmar %d\n");
-  if ((n = (int)read(vhd->airmar_fd, buf, sizeof(buf))) < 0) {
+  if ((n = (int)read(vhd->airmar_fd, buf, sizeof(buf))) <= 0) {
     lwsl_err("Reading from %s failed\n", nmeafn);
     return 1;
   }
@@ -811,6 +818,8 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 	lwsl_notice("LWS_CALLBACK_RECEIVE subscribe_tempest_history %d\n", tempest_history->valueint);
 	if (tempest_history->valueint == 1) {
 	  pss->subscriptions |= SUBSCRIBE_TEMPEST_HIST;
+	  pss->needs |= SUBSCRIBE_TEMPEST_HIST;
+	  lws_callback_on_writable(pss->wsi);
 	} else {
 	  pss->subscriptions &= ~SUBSCRIBE_TEMPEST_HIST;
 	}
@@ -835,6 +844,8 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 	lwsl_notice("LWS_CALLBACK_RECEIVE subscribe_airmar_history %d\n", airmar_history->valueint);
 	if (airmar_history->valueint == 1) {
 	  pss->subscriptions |= SUBSCRIBE_AIRMAR_HIST;
+	  pss->needs |= SUBSCRIBE_AIRMAR_HIST;
+	  lws_callback_on_writable(pss->wsi);
 	} else {
 	  pss->subscriptions &= ~SUBSCRIBE_AIRMAR_HIST;
 	}
