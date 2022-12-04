@@ -1550,19 +1550,22 @@ def prep_fonts(region):
         fonts["tspad"] = 2
         fonts["llyoffset"] = 3
         fonts["label"] = ImageFont.truetype(fontfamily, 14)
-        fonts["label_size"] = fonts["label"].getsize("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
+        (left, right, top, bottom) = fonts["label"].getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?") 
+        fonts["label_size"] = (right - left, top - bottom)
     elif h < 1080:
         fonts["POI"] = ImageFont.truetype("times.ttf", 12)
         fonts["tspad"] = 2
         fonts["llyoffset"] = 3
         fonts["label"] = ImageFont.truetype(fontfamily, 18)
-        fonts["label_size"] = fonts["label"].getsize("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
+        (left, right, top, bottom) = fonts["label"].getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?") 
+        fonts["label_size"] = (right - left, top - bottom)
     else:
         fonts["POI"] = ImageFont.truetype(fontfamily, 20)
         fonts["tspad"] = 4
         fonts["llyoffset"] = 4
         fonts["label"] = ImageFont.truetype(fontfamily, 28)
-        fonts["label_size"] = fonts["label"].getsize("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
+        (left, right, top, bottom) = fonts["label"].getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?") 
+        fonts["label_size"] = (right - left, top - bottom)
     
 # Annotate with latitudes on the left and longitudes along the bottom.
 def draw_lonlats(region, canvas, draw):
@@ -1655,7 +1658,10 @@ def annotate(canvas, draw, where, text):
         bg = 0x00
         bgalpha = 0x80
         fg = 0xff
-        w, h = ttfont.getsize(text[i])
+        left, right, top, bottom = ttfont.getbbox(text[i]) 
+        w = right - left
+        h = top - bottom
+
         if (where == "UL"):
             x = 2
             y = 2 + (i * (2*tspad + ttheight))
