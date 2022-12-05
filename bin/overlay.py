@@ -813,8 +813,9 @@ def prepFont(region):
     global ttfont, ttwidth, ttheight
     fontsize = 24 if h > 1000 else 16
     ttfont = ImageFont.truetype("lucon.ttf", fontsize) # lucida console - cour.ttf is ugly
-    # getsize() returns for actual string, so figure out the greatest possible font height
-    ttwidth, ttheight = ttfont.getsize("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
+    # getbbox() returns for actual string, so figure out the greatest possible font height
+    (left, right, top, bottom) = ttfont.getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?") 
+    ttwidth, ttheight = (right - left, top - bottom)
 
 def decorate(img, region, goestime, sfctime):
     r = regions[region]
@@ -838,7 +839,8 @@ def decorate(img, region, goestime, sfctime):
     x = 4
     y = 8
     ypad = 2
-    w, h = ttfont.getsize(tsstring)
+    (left, right, top, bottom) = ttfont.getbbox(tsstring) 
+    w, h = (right - left, top - bottom)
     draw.rectangle((x, y, x+w, y+ttheight+ypad+ypad), fill=(0,0,0,0x80)) # Add some Y padding - X is padded w/ spaces
     draw.text((x, y+ypad), tsstring, fill=(0xff, 0xff, 0xff, 0xff), font=ttfont)
     # print ("x%d y%d w%d h%d ypad%d ttheight%d" % (x, y, w, h, ypad, ttheight))
@@ -849,7 +851,8 @@ def decorate(img, region, goestime, sfctime):
                                                                              ((int(day) == 12) and (int(hour) < 6))))))):
         # GOES-17 was declared operational on the 12th, but NASA didn't say exactly when. 6GMT is about midnight Eastern
         wstring = " GOES-17 Preliminary, Non-Operational Data "
-        w, h = ttfont.getsize(wstring)
+        (left, right, top, bottom) = ttfont.getbbox(wstring) 
+        w, h = (right - left, top - bottom)
         x = img.width - (w + x)
         draw.rectangle((x, y, x+w, y+ttheight+ypad+ypad), fill=(0,0,0,0x80)) # Add some Y padding - X is padded w/ spaces
         draw.text((x, y+ypad), wstring, fill=(0xff, 0xff, 0xff, 0xff), font=ttfont)
@@ -865,7 +868,8 @@ def decorate(img, region, goestime, sfctime):
         x = 4
         y = y+ttheight+ypad+ypad
         tsstring = " NOAA OPC Sfc Analysis %s-%s-%s %s:%sZ " % (year, month, day, hour, minute)
-        w, h = ttfont.getsize(tsstring)
+        (left, right, top, bottom) = ttfont.getbbox(tsstring) 
+        w, h = (right - left, top - bottom)
         draw.rectangle((x, y, x+w, y+ttheight+ypad+ypad), fill=(0,0,0,0x80)) # Add some Y padding - X is padded w/ spaces
         draw.text((x, y+ypad), tsstring, fill=(0xff, 0xff, 0xff, 0xff), font=ttfont)
 
@@ -891,7 +895,8 @@ def decorate(img, region, goestime, sfctime):
         
         # afont = ImageFont.truetype("times.ttf", 24)
         text = " Image Credits "
-        w, h = ttfont.getsize(text)
+        (left, right, top, bottom) = ttfont.getbbox(text) 
+        w, h = (right - left, top - bottom)
         y = img.height - (logoheight + h + logomargin + logospacing + ypad + ypad)
         if logoleft:
             x = logomargin

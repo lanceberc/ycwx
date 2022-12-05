@@ -1592,7 +1592,10 @@ def draw_lonlats(region, canvas, draw):
         (x, y) = lonlat2xy(r["size"], r["area"], lon, lat, 0)
         draw.polygon([(x, y-size), (x-size, y), (x, y+size), (x+size, y)], outline="white", fill="blue")
         label = "%d%s" % (abs(lon), ("E" if (lon >= 0) else "W"))
-        w, h = font.getsize(label)
+
+        (left, right, top, bottom) = font.getbbox(label) 
+        w, h = (right - left, top - bottom)
+
         x += size + pad
         y -= h/2
         w = pad + w + pad
@@ -1604,7 +1607,8 @@ def draw_lonlats(region, canvas, draw):
         (x, y) = lonlat2xy(r["size"], r["area"], lon, lat, 0)
         draw.polygon([(x, y-size), (x-size, y), (x, y+size), (x+size, y)], outline="white", fill="blue")
         label = "%d%s" % (abs(lat), ("N" if (lat >= 0) else "S"))
-        w, h = font.getsize(label)
+        (left, right, top, bottom) = font.getbbox(label) 
+        w, h = (right - left, top - bottom)
         x += size + pad
         y -= h/2
         w = pad + w + pad
@@ -1639,7 +1643,10 @@ def draw_POIs(region, canvas, draw):
             (x, y) = lonlat2xy(r["size"], r["area"], lon, lat, 0)
             draw.polygon([(x, y-size), (x-size, y), (x, y+size), (x+size, y)], outline="white", fill=fill)
 
-            w, h = font.getsize(label)
+            left, right, top, bottom = font.getbbox(label) 
+            w = right - left
+            h = top - bottom
+
             x += size + pad
             y -= h/2
             w = pad + w + pad
