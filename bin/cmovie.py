@@ -158,6 +158,10 @@ if __name__ == '__main__':
 
     o = args.region
     sources = find_sources(o)
+    if len(sources) < 2:
+        logging.warning("Not enough sources (%d) to make movie" % (len(sources)))
+        sys.exit(1)
+        
     (fts, lts) = make_concatfile(o, sources, args.start, args.end, args.hold)
 
     s = "%s-%s-%s_%s%sZ" % (fts[0:4], fts[4:6], fts[6:8], fts[8:10], fts[10:12])
