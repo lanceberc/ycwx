@@ -78,6 +78,10 @@ def make_concatfile(region, fns, start, end, hold):
 
     logging.debug("make_concatfile: fts %s lts %s" % (fts, lts))
     logging.info("make_concatfile: %d + %d frames" % (used, framerate * hold))
+    if (used == 0):
+        logging.warning("No sources found in the time range to make movie");
+        sys.exit(1)
+
     return((fts, lts))
 
 def make_movie(region, size, ofile):
