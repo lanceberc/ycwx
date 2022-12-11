@@ -21,7 +21,16 @@ RUN cd /tmp && git clone https://libwebsockets.org/repo/libwebsockets && cd libw
 # Set this so the ~/bin/sensord can be run
 RUN echo "export LD_LIBRARY_PATH=/usr/local/lib:\$LD_LIBRARY_PATH" >> ~/.bashrc
 
+# Configure nginx
+RUN apt install -y nginx \
+    && echo "# Removed" > /etc/nginx/sites-available/default \
+    #  forward request and error logs to docker log collector, per https://serverfault.com/questions/599103/make-a-docker-application-write-to-stdout
+    && ln -sf /dev/stdout /var/log/nginx/access.log \
+    && ln -sf /dev/stderr /var/log/nginx/error.log
+
+COPY etc/nginx/ /etc/nginx/sites-enabled/
+
 RUN updatedb \
     && ln -s /docker /home/stfyc
 
-CMD ["tail", "-f", "/dev/null"]
+CMD ["/usr/sbin/nginx", "-g", "daemon off;"]

@@ -1,10 +1,17 @@
 # ycwx
 
-Weather web pages for yacht clubs and other interested parties
+Weather web pages for yacht clubs and other interested parties.
 
 ## Installation
 
-Configuring the prerequisites, particularly `gdal`, is very difficult so a Docker container is included.  Simply run `docker-compose up -d`.
+Configuring the prerequisites, particularly `gdal`, is very difficult so a Docker container is included.  Simply run `docker-compose up -d`.  Then in the container, build the `sensord` binary via
+```bash
+cd /home/stfyc/src && make && make install
+```
+
+The following web pages are available:
+* http://localhost:8082/wx.html - Primary app
+* http://localhost:8082/wind.html - Race office wind reading
 
 ## Scripts
 
@@ -12,8 +19,7 @@ These are run periodically via `crontab`:
 
 * `fetch.sh` - populates `/www/html/data` with fetched images
 * `prunedata.sh` - cleans some outdated images from `/www/html/data`
-* `cmovie.py` - ?
-* `nomads.go` - Not found, obsolete?
+* `cmovie.py` - generates timelapse MP4 videos from the images
 
 ## Debugging Python scripts in the Docker container using VSCode
 
