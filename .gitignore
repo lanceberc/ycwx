@@ -50,3 +50,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+www/html/data/*
+!www/html/data/lib
+src/airmard
+src/sensord
+/*-files.txt
