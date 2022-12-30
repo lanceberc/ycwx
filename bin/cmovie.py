@@ -81,6 +81,7 @@ def make_concatfile(region, fns, start, end, hold):
     return((fts, lts))
 
 def make_movie(region, size, ofile):
+    isRPi = False;
     scale = ''
     scales = {
         "HD": "1280x720",
@@ -88,10 +89,27 @@ def make_movie(region, size, ofile):
     }
     if (size in scales):
         scale = '-s %s' % scales[size];
-    #cmd = "%s -r 15 -y -benchmark -f concat -safe 0 -i %s-files.txt %s -c:v libx264 -crf 23 -probesize 20M -preset slow -pix_fmt yuv420p -an -movflags +faststart %s" % (ffmpeg, region, scale, ofile)
-    # Use hardware encoder on Raspberry Pi - set bitrate crazy high
-    cmd = "%s -v info -y -f concat -safe 0 -i %s-files.txt %s -c:v h264_v4l2m2m -r 15 -b:v 10000k -pix_fmt yuv420p -an -movflags +faststart %s" % (ffmpeg, region, scale, ofile)
-    #cmd = "%s -r 15 -y -benchmark -f concat -safe 0 -i %s-files.txt %s -c:v libx264 -crf 23 -probesize 20M -preset slow -pix_fmt yuv420p -an -movflags +faststart %s" % (ffmpeg, region, scale, ofile)
+
+    try:
+        with open('/sys/firmware/devicetree/base/model') as f:
+            try:
+                l = f.read();
+                if (l.find("Raspberry Pi") == 0):
+                    isRPi = True;
+            except:
+                logging.warning("Couldn't read from /sys/firmware/devicetree/base/model");
+    except:
+        logging.warning("Couldn't open /sys/firmware/devicetree/base/model");
+
+    if isRPi:
+        # Use hardware encoder on Raspberry Pi - set bitrate crazy high
+        cmd = "%s -v info -y -f concat -safe 0 -i %s-files.txt %s -c:v h264_v4l2m2m -r 15 -b:v 10000k -pix_fmt yuv420p -an -movflags +faststart %s" % (ffmpeg, region, scale, ofile)
+        logging.debug("Using Raspberry Pi hardware encoder");
+    else:
+        # Use the software encoder
+        cmd = "%s -r 15 -y -benchmark -f concat -safe 0 -i %s-files.txt %s -c:v libx264 -crf 23 -probesize 20M -preset slow -pix_fmt yuv420p -an -movflags +faststart %s" % (ffmpeg, region, scale, ofile)
+        logging.warning("Using libx264 software encoder");
+        
     logging.debug("Running %s" % (cmd))
     try:
         retcode = subprocess.check_call(cmd, shell=True)
