@@ -835,7 +835,7 @@
 	  zones: {},
       }
 
-      // Scrolling uses jQuery because d3 doesn't have the right primatives.
+      // Scrolling uses jQuery because d3 doesn't have the right primitives.
       function nwsScroll(parent) {
 	  const id = "#" + $(parent).attr("id");
 	  const child = $(parent).children().first();
@@ -989,12 +989,8 @@
       function vmin(v) { return Math.min(vh(v), vw(v)); }
       function vmax(v) { return Math.max(vh(v), vw(v)); }
 
-      //const localStation = "St. Francis Yacht Club";
-
-      const localFields = ["temp", "pressure", "wind", "gust", "direction"];
-
       const tempestFieldMap = {
-	  "temp": { "field": "air_temperature", "convert": c2f, "precision": 1 },
+  	  "temp": { "field": "air_temperature", "convert": c2f, "precision": 1 },
 	  "pressure": {"field": "sea_level_pressure", "convert": mb2mb, "precision": 0 },
 	  //"wind": { "field": "wind_avg", "convert": m2kts, "precision": 1 },
 	  //"gust": { "field": "wind_gust", "convert": m2kts, "precision": 0 },
@@ -1011,6 +1007,7 @@
 	      "observations" : {},
 	      "json": "",
 	      "forecast": "",
+	      "lastTime": 0,
 	  },
 	  "Tinsley Island": {
 	      "nickname": "tinsley",
@@ -1020,6 +1017,7 @@
 	      "lon": "-121.49423",
 	      "observations" : {},
 	      "json": "",
+	      "lastTime": 0,
 	  },
       }
 
@@ -1089,14 +1087,16 @@
 		      console.log("fetchTempestCurrent " + station + " response");
 		      if (json.obs.length > 0) {
 			  const obs = json.obs[0];
+			  let ts = new Date(message.obs[0] * 1000)
+			  console.log("Tempest " + station + "observation message dated " + ts);
 			  tempestStations[station].current = obs;
+			  tempestStations[station].lastTime = message.obs[0];
 			  for (const [field, f] of Object.entries(tempestFieldMap)) {
-			      // f = tempestFieldMap[field]
 			      if (f.field in obs) {
 				  let val = f.convert(obs[f.field]).toFixed(f.precision);
 				  d3.selectAll("." + field + "-span-" + tempestStations[station].nickname).html(val);
 				  // Kludge - update the anemometer gust value
-				  /*
+				  /* Wind now cumes from Race Deck anemometer
 				  if (tempestStations[station].nickname == "stfyc" && field == "gust") {
 				      console.log("fetchTempestCurrent " + station + " update gust " + val);
 				      anemometer.update(0, val);
@@ -1484,24 +1484,32 @@
 	  "temp": 7,
       }
       
-      function tempestMessage(json) {
-	  const message = JSON.parse(json.data);
-	  // console.log("tempestMessage type " + message.type + " msg " + json.data);
+      function tempestMessage(raw) {
+	  const message = JSON.parse(raw.data);
+	  // console.log("tempestMessage type " + message.type + " msg " + raw.data);
 	  if (message.type == "obs_st") {
-	      //console.log("tempestMessage type " + message.type + " msg " + json.data);
+	      //console.log("tempestMessage type " + message.type + " msg " + raw.data);
+	      let ts = message.obs[0][0];
 	      let device_id = message.device_id;
 	      let station = tempestStations[tempestDeviceMap[device_id]];
 	      let nickname = station.nickname;
-	      // console.log("tempestMessage (" + nickname + ") type " + message.type + " msg " + json.data);
-	      for (const [f, i] of Object.entries(obs_stMap)) {
-		  const fm = tempestFieldMap[f];
-		  const val = fm.convert(message.obs[0][i]).toFixed(fm.precision);
-		  d3.selectAll("." + f + "-span-" + nickname).html(val);
-		  /*
-		  if (nickname == "stfyc" && f == "gust") { // Kludge
-		      anemometer.update(0, val);
+	      // console.log("tempestMessage (" + nickname + ") type " + message.type + " msg " + raw.data);
+	      station.lastTime = ts;
+	      now = Math.floor(Date.now() / 1000);
+	      if (now < ts + tempestValidTimespan) {
+		  for (const [f, i] of Object.entries(obs_stMap)) {
+		      const fm = tempestFieldMap[f];
+		      const val = fm.convert(message.obs[0][i]).toFixed(fm.precision);
+		      d3.selectAll("." + f + "-span-" + nickname).html(val);
+		      /*
+			if (nickname == "stfyc" && f == "gust") { // Kludge
+			anemometer.update(0, val);
+			}
+		      */
 		  }
-		  */
+	      } else {
+		  nts = new Date(ts * 1000);
+		  console.log("Tempest " + nickname + " stale obs_st message dated " + nts);
 	      }
 	  } else if (message.type == "rapid_wind") {
 	      let device_id = message.device_id;
@@ -1564,7 +1572,7 @@
       
       function stfycWindCallback(json) {
 	  const wind = JSON.parse(json);
-	  console.log("wind update " + wind);
+	  //console.log("wind update " + wind);
 	  if (wind.event == "airmar_update") {
 	      const speed_avg = wind.speed_avg.toFixed(1);
 	      const gust = wind.gust.toFixed(1);
@@ -1656,6 +1664,14 @@
 	  "observations": {}
       }
 
+      // Tempest stations are a bit flakey - if the Tempest is down, use NOAA data
+      tempestValidTimespan = 60 * 60; /* secs a tempest observation is valid - after that use NOAA */
+      backupFields = [
+	  { "stid": "FTPC1", "tempest": "St. Francis Yacht Club", "tempestField": "temp", "localField": "temp", "precision": 1 },
+	  { "stid": "46026", "tempest": "St. Francis Yacht Club", "tempestField": "tempest-baro", "localField": "pressure", "precision": 0 },
+	  { "stid": "CF131", "tempest": "Tinsley Island", "tempestField": "temp", "localField": "temp", "precision": 1  },
+      ];
+
       function handleObs(json) {
 	  let intervalStart = 0;
 	  let lastObservation;
@@ -1725,8 +1741,31 @@
 		  }
 	      }
 	  }
+
+	  // If a Tempest hasn't reported recently use NOAA data
+	  now = Math.floor(Date.now()/1000); // now in seconds
+	  for (const i in backupFields) {
+	      const b = backupFields[i];
+	      const station = b.tempest;
+	      if (tempestStations[station].lastTime < (now - tempestValidTimespan)) {
+		  const stid = b.stid;
+		  const lfield = b.localField;
+		  const tfield = b.tempestField;
+		  let val = localObs["observations"][stid][lfield];
+		  if (Number.isFinite(val)) {
+		      val = val.toFixed(b.precision) + "*";
+		  } else {
+		      val = "*";
+		  }
+		  const nickname = tempestStations[station].nickname;
+		  console.log("handleObs() replace Tempest with NOAA " + station + " -> " + stid + " " + tfield + " -> " + lfield + "(" + val + ")");
+		  const classString = "." + tfield + "-span-" + nickname;
+		  console.log("handleObs() classString " + classString);
+		  d3.selectAll(classString).html(val);
+	      }
+	  }
       }
-      
+
       function fetchObs(c) {
 	  const nonce = Date.now()
 	  if (c["stations"].length == 0) {
@@ -2724,21 +2763,21 @@
 	  </div>
 	</div>
 	<div class="local-number wx-header-1">
-	  &nbsp;&nbsp;StFYC:&nbsp;<span id="stfyc-temp" class="temp-span-stfyc"></span>&#8457;&nbsp;
-	  Wind&nbsp;<span id="stfyc-direction" class="direction-avg-span-stfyc"></span>&#176M&nbsp;
-	  @&nbsp;<span id="stfyc-wind" class="wind-span-stfyc"></span>&nbsp;
-	  G&nbsp;<span id="stfyc-gust" class="gust-span-stfyc"></span>&nbsp;
+	  &nbsp;&nbsp;StFYC:&nbsp;<span class="temp-span-stfyc"></span>&#8457;&nbsp;
+	  Wind&nbsp;<span class="direction-avg-span-stfyc"></span>&#176M&nbsp;
+	  @&nbsp;<span class="wind-span-stfyc"></span>&nbsp;
+	  G&nbsp;<span class="gust-span-stfyc"></span>&nbsp;
 	  <span id="stfyc-tempest-baro" class="tempest-baro-span-stfyc"></span>mb&nbsp;
 	  Tinsley:&nbsp;<span id="tinsley-temp" class="temp-span-tinsley"></span>&#8457;&nbsp;&nbsp;
 	</div>
 	<div class="local-number wx-header-2">
 	  <div>
-	    StFYC:&nbsp;<span id="stfyc-temp" class="temp-span-stfyc"></span>&#8457;&nbsp;
-	    <span id="stfyc-tempest-baro" class="tempest-baro-span-stfyc"></span>mb&nbsp;
-	    Tinsley:&nbsp;<span id="tinsley-temp" class="temp-span-tinsley"></span>&#8457;
+	    StFYC:&nbsp;<span class="temp-span-stfyc"></span>&#8457;&nbsp;
+	    <span class="tempest-baro-span-stfyc"></span>mb&nbsp;
+	    Tinsley:&nbsp;<span class="temp-span-tinsley"></span>&#8457;
 	  </div>
 	  <div>
-	  Wind:&nbsp;<span id="stfyc-direction" class="direction-avg-span-stfyc"></span>&#176M&nbsp;@<span id="stfyc-wind" class="wind-span-stfyc"></span>&nbsp;G&nbsp;<span id="stfyc-gust" class="gust-span-stfyc"></span>
+	  Wind:&nbsp;<span class="direction-avg-span-stfyc"></span>&#176M&nbsp;@<span class="wind-span-stfyc"></span>&nbsp;G&nbsp;<span class="gust-span-stfyc"></span>
 	  </div>
 	</div>
         <div class="burgee-small burgee-right">
