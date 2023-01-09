@@ -14,7 +14,7 @@ reldir = "data/overlay"
 
 regions = {
     "pacific" : {
-        "goes": "17",
+        "goes": "18",
         "prefix": "Pacific",
     },
     "atlantic": {
@@ -22,11 +22,11 @@ regions = {
         "prefix": "Atlantic",
     },
     "westcoast" :{
-        "goes": "17",
+        "goes": "18",
         "prefix": "WestCoast",
     },
     "baydelta": {
-        "goes": "17",
+        "goes": "18",
         "prefix": "BayDelta",
     },
 }
