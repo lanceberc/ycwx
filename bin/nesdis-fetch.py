@@ -25,7 +25,8 @@ maxretries = 4
 sockettimeout = 30 # surface analysis charts aren't very big
 
 # This may screw up multithreading
-# See https://bugs.python.org/issue6056
+# See https://bugs.python.org/issue6056 - original
+# See https://github.com/python/cpython/issues/50306 - updated
 socket.setdefaulttimeout(30.0)
 
 """
@@ -57,15 +58,15 @@ destroot = "%s/www/html/data/GOES" % (rootdir)
 source = "NESDIS"
 regions = {}
 regions["GOES-East"] = {"goes": "16", "dir": "FD", "sector": "FD", "res": "5424x5424"}
-regions["GOES-West"] = {"goes": "17", "dir": "FD", "sector": "FD", "res": "5424x5424"}
-#regions["GOES-West"] = {"goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
+#regions["GOES-West"] = {"goes": "17", "dir": "FD", "sector": "FD", "res": "5424x5424"}
+regions["GOES-West"] = {"goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
 regions["CONUS-East"] = {"goes": "16", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
-regions["CONUS-West"] = {"goes": "17", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+#regions["CONUS-West"] = {"goes": "17", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 #regions["CONUS-West"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "10000x6000"}
-#regions["CONUS-West"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+regions["CONUS-West"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 regions["PSW"] = {"goes": "17", "dir": "SECTOR/psw", "sector": "psw", "res": "2400x2400"}
-regions["West_Coast"] = {"goes": "17", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
-#regions["West_Coast"] = {"goes": "18", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
+#regions["West_Coast"] = {"goes": "17", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
+regions["West_Coast"] = {"goes": "18", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
 
 imageProcess = {}
 imageProcess["CONUS-West"] = [
