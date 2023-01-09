@@ -25,8 +25,7 @@ from matplotlib import pyplot as plt
 import gpxpy
 import numpy as np
 import io
-# Can't do grib overlays until imports are fixed somehow.
-#import pygrib
+import pygrib
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 
 tau = math.pi * 2
@@ -51,7 +50,7 @@ regions["BayDelta"] = {
     "end": "2100-12-21T23:00:00 +0000",
 #    "area": (-125.20, 36.00, -118.50, 39.00), # lat/long of ll, ur (up to Monterey)
     "area": (-125.67, 36.27, -120.00, 39.00), # lat/long of ll, ur
-    "satellite": "GOES-17",
+    "satellite": "GOES-18",
     "satroot": "GOES/NESDIS_CONUS-West",
     "res": "1k",
     "sector": "CONUS",
@@ -59,6 +58,69 @@ regions["BayDelta"] = {
     "gribroot": "NOAA/HRRR/karl",
     "srs": "anti_mercator",
     "wind": "none",
+    "barbreduce": 2,
+    "barblen": 4.0,
+    "alpha": 30.0,
+    "size": FullHD,
+    #"lonlat": "auto",
+    "POIs": [
+        ((-123.7360, 38.9530), "Pt Arena"),
+        ((-123.0239, 37.9951), "Pt Reyes"),
+        ((-122.7125, 38.4382), "Santa Rosa"),
+        #((-122.4535, 37.8083), "Anita Rk"),
+        ((-122.4466, 37.8073), "StFYC", "red"),
+        #((-122.3855, 37.7817), "Pier 40"),
+        #((-122.4935, 37.7247), "Harding Pk"),
+        #((-122.5056, 37.7351), "Zoo"),
+        #((-122.3914, 37.9036), "Richmond"),
+        ((-122.4545, 38.1608), "Sears Pt"),
+        #((-122.4333, 37.9632), "E Brother"),
+        #((-122.2257, 38.0606), "Carquinez Br"),
+        ((-122.1232, 38.0405), "Benicia Br"),
+        #((-122.2578, 37.8720), "Campanile"),
+        #((-122.3306, 37.7971), "Estuary"),
+        ((-122.4994, 37.4923), "Mavericks"),
+        ((-122.3862, 37.6163), "SFO"),
+        #((-122.2133, 37.7124), "OAK"),
+        #((-122.4273, 37.5288), "Montera Mt"),
+        ((-122.1058, 38.3995), "Mt Vaca"),
+        #((-122.5963, 37.9235), "Mt Tam"),
+        ((-121.9141, 37.8815), "Mt Diablo"),
+        ((-121.6427, 37.3419), "Mt Hamilton"),
+        ((-123.0016, 37.6989), "SE Farallon"),
+        #((-122.4830, 37.5026), "Pillar Pt"),
+        #((-121.2932, 37.9548), "Stockton"),
+        ((-121.4941, 38.0370), "Tinsley", "red"),
+        ((-121.4936, 38.5766), "Sacramento"),
+        ((-120.9973, 37.2537), "Gustine"),
+        ((-120.4863, 37.3025), "Merced"),
+        ((-119.7893, 36.7362), "Fresno"),
+        ((-121.5686, 37.0068), "Gilroy"),
+        ((-121.3272, 36.4289), "Soledad"),
+        ((-122.0019, 36.9606), "Santa Cruz"),
+        ((-121.9345, 36.6376), "Pt Pinos"),
+        #((-121.9521, 38.3732), "Vacaville"),
+        #((-119.7605, 39.0105), "North Sails Minden"),
+    ],
+}
+
+regions["BayDeltaWind"] = {
+    "arg": "baydeltawind",
+    "title": "SF Bay/Delta",
+    "tz": "America/Los_Angeles",
+#    "start": "2020-08-25T18:00:00 +0000",
+    "start": "2022-05-29T06:00:00 -0700",
+    "end": "2100-12-21T23:00:00 +0000",
+#    "area": (-125.20, 36.00, -118.50, 39.00), # lat/long of ll, ur (up to Monterey)
+    "area": (-125.67, 36.27, -120.00, 39.00), # lat/long of ll, ur
+    "satellite": "GOES-18",
+    "satroot": "GOES/NESDIS_CONUS-West",
+    "res": "1k",
+    "sector": "CONUS",
+    "model": "HRRR",
+    "gribroot": "NOAA/HRRR/karl",
+    "srs": "anti_mercator",
+    "wind": "barbs",
     "barbreduce": 2,
     "barblen": 4.0,
     "alpha": 30.0,
@@ -114,7 +176,7 @@ regions["WestCoast"] = {
     "end": "2100-12-21T23:00:00 +0000",
     "area": (-152.0, 30.0, -110.0, 50.0), # lat/long of ll, ur corner
     #"area": (-125.20, 36.00, -118.50, 39.00), # lat/long of ll, ur
-    "satellite": "GOES-17",
+    "satellite": "GOES-18",
     "satroot": "GOES/NESDIS_CONUS-West",
     "res": "1k",
     "sector": "CONUS",
@@ -122,6 +184,12 @@ regions["WestCoast"] = {
     "wind": "none",
     "size": FullHD,
     "POIs": [
+        ((-122.3862, 37.6163), "SFO", "red"),
+        ((-119.7741, 39.5057), "RNO"),
+        ((-118.4086, 33.9435), "LAX"),
+        ((-115.1543, 36.0838), "LAS"),
+        ((-122.5939, 45.5850), "PDX"),
+        ((-122.3079, 47.4506), "SEA"),
     ],
 }
 
@@ -131,7 +199,7 @@ regions["PacCup"] = {
     "start": "2020-07-02T18:00:00 +0000",
     "end": "2020-07-12T23:04:00 +0000",
     "area": (-161.00, 19.00, -117.00, 40.00), # lat/long of ll, ur of image
-    "satellite": "GOES-17",
+    "satellite": "GOES-18",
     "satroot": "GOES/NESDIS_GOES-West",
     "res": "2k",
     "sector": "FD",
@@ -163,7 +231,7 @@ regions["Pacific"] = {
     "end": "2050-01-01T00:00:00 +0000",
 #    "area": (-205.0, 16.0, -115.0, 55.0), # lat/long of ur, ll corner of Surface Analysis
     "area": (-200.0, 16.0, -115.0, 55.0), # lat/long of ur, ll corner of Surface Analysis
-    "satellite": "GOES-17",
+    "satellite": "GOES-18",
     "satroot": "GOES/NESDIS_GOES-West",
     "res": "2k",
     "sector": "FD",
@@ -182,7 +250,7 @@ regions["SFBay"] = {
     "start": "2020-07-31T00:00:00 +0000",
     "end": "2021-08-01T00:00:00 +0000",
     "area": (-123.129, 37.60, -121.860, 38.159), # lat/long of ll, ur (up to Monterey)
-    "satellite": "GOES-17",
+    "satellite": "GOES-18",
     "satroot": "GOES/NESDIS_CONUS-West",
     "res": "1k",
     "sector": "CONUS",
@@ -229,7 +297,7 @@ regions["Karl"] = {
     "start": "2020-09-01T00:00:00 +0000",
     "end": "2021-10-01T00:00:00 +0000",
     "area": (-124.50, 36.75, -120.00, 38.75), # lat/long of ll, ur (up to Monterey)
-    "satellite": "GOES-17",
+    "satellite": "GOES-18",
     "satroot": "GOES/NESDIS_CONUS-West",
     "res": "1k",
     "sector": "CONUS",
@@ -353,7 +421,7 @@ regions["Eddy"] = {
     "gribroot": "NOAA/HRRR/eddy",
     "tz": "PDT",
     "model": "HRRR",
-    "satellite": "GOES-17",
+    "satellite": "GOES-18",
     "res": "1k",
     "sector": "CONUS",
     "area": (-121.33, 32.39, -116.50, 34.66),
@@ -479,7 +547,7 @@ regions["California-large"] = {
     #"night_exclude": ("0300", "1400"),
     "area": (-132.00, 31.50, -107.00, 42.50), # lat/long of ll, ur (up to Monterey)
     "adjust": "right", # CONUS side
-    "satellite": "GOES-17",
+    "satellite": "GOES-18",
     "satroot": "GOES/NESDIS_CONUS-West",
     "res": "1k",
     "sector": "CONUS",
@@ -506,7 +574,7 @@ regions["California-small"] = {
     #"night_exclude": ("0300", "1400"),
     "area": (-128.00, 32.00, -109.00, 42.50), # lat/long of ll, ur (up to Monterey)
     "adjust": "right", # CONUS side
-    "satellite": "GOES-17",
+    "satellite": "GOES-18",
     "satroot": "GOES/NESDIS_CONUS-West",
     "res": "1k",
     "sector": "CONUS",
@@ -701,7 +769,7 @@ def find_surface_analyses(region):
 # The EPSG definition of Mercator doesn't allow longitudes that extend 
 # past -180 or 180 which makes working in the Pacific difficult. Define
 # our own, plus one with the centralized on the anti-meridian to allow 
-# working with GOES-17 continuous.
+# working with GOES-18 continuous.
 projections = {}
 projections["mercator"] = "+proj=merc +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +over"
 projections["anti_mercator"] = "+proj=merc +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +over +lon_0=-180"
@@ -758,7 +826,7 @@ satellites["GOES-16"] = { # GOES-16, aka GOES-R, GOES-EAST
     }
 }
 
-satellites["GOES-17"] = { # GOES-17, aka GOES-S, GOES-WEST
+satellites["GOES-18"] = { # GOES-17, aka GOES-S, GOES-WEST
     "p_height": 35786023.0,
     "height": 42164160.0,
     "longitude": -137.0,
@@ -942,7 +1010,12 @@ def prep_sat(region, fn):
     else:
         jpg = (fn[-4:] == ".jpg")
         src = gdal.Open(fn, gdal.GA_ReadOnly)
-    src.SetProjection(r["WKT"])
+    try:
+        # If the image is corrupt SetProjection will fail
+        src.SetProjection(r["WKT"])
+    except:
+        logging.warning("Couldn't SetProjection for %s" % (fn))
+        return None
     src.SetGeoTransform(r["geotransform"])
     r["invGeotransform"] = gdal.InvGeoTransform(src.GetGeoTransform())
 
@@ -1017,7 +1090,11 @@ def prep_sat(region, fn):
     # A side effect of setting dst to None is that the sidecar is emmitted when dst is "closed"
     sidecar = "%s.aux.xml" % (fn)
     if os.path.isfile(sidecar): # Would be neat to figure out how to supress sidecar emission
-        os.unlink(sidecar)
+        try:
+            # If more than one copy is running there are some race conditions where the unlink fails
+            os.unlink(sidecar)
+        except:
+            pass
 
     return(img)
 
@@ -1029,7 +1106,7 @@ grib_aux = None
 
 def prep_grib(region, ts):
     global grib_index, grib_image, grib_aux
-    maxWindScale = 25 # in knots - this is red on the scale
+    maxWindScale = 30 # in knots - this is red on the scale
     r = regions[region]
     if (not "model" in r) or (not "wind" in r) or (r["wind"] == "none") or (grib_index == len(r["gribs"])):
         return(None, None)
@@ -1550,22 +1627,21 @@ def prep_fonts(region):
         fonts["tspad"] = 2
         fonts["llyoffset"] = 3
         fonts["label"] = ImageFont.truetype(fontfamily, 14)
-        (left, right, top, bottom) = fonts["label"].getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?") 
-        fonts["label_size"] = (right - left, top - bottom)
     elif h < 1080:
         fonts["POI"] = ImageFont.truetype("times.ttf", 12)
         fonts["tspad"] = 2
         fonts["llyoffset"] = 3
         fonts["label"] = ImageFont.truetype(fontfamily, 18)
-        (left, right, top, bottom) = fonts["label"].getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?") 
-        fonts["label_size"] = (right - left, top - bottom)
     else:
         fonts["POI"] = ImageFont.truetype(fontfamily, 20)
         fonts["tspad"] = 4
         fonts["llyoffset"] = 4
         fonts["label"] = ImageFont.truetype(fontfamily, 28)
-        (left, right, top, bottom) = fonts["label"].getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?") 
-        fonts["label_size"] = (right - left, top - bottom)
+
+    (bbleft, bbtop, bbright, bbbottom) = fonts["label"].getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
+    fonts["label_size"] = (bbright - bbleft, bbbottom - bbtop)
+    #fonts["label_size"] = (bbright, bbbottom)
+
     
 # Annotate with latitudes on the left and longitudes along the bottom.
 def draw_lonlats(region, canvas, draw):
@@ -1592,25 +1668,30 @@ def draw_lonlats(region, canvas, draw):
         (x, y) = lonlat2xy(r["size"], r["area"], lon, lat, 0)
         draw.polygon([(x, y-size), (x-size, y), (x, y+size), (x+size, y)], outline="white", fill="blue")
         label = "%d%s" % (abs(lon), ("E" if (lon >= 0) else "W"))
-        w, h = font.getsize(label)
+        (bbleft, bbtop, bbright, bbbottom) = font.getbbox(label)
+        w, h = (bbright - bbleft, bbbottom - bbtop)
+        #w, h = (bbright, bbbottom)
         x += size + pad
-        y -= h/2
+        y -= (h/2 + bbtop)
         w = pad + w + pad
         h = pad + h + pad
         draw.rectangle(((x, y), (x+w, y+h)), fill=(bg, bg, bg, bgalpha))
-        draw.text((x+pad, y+pad), label, fill=(fg, fg, fg, 0xff), font = font)
+        draw.text((x+pad, (y+pad) - bbtop), label, fill=(fg, fg, fg, 0xff), font = font)
     lon = left + ((right - left) * 0.05)
     for lat in range(int(bottom), int(top)+1):
         (x, y) = lonlat2xy(r["size"], r["area"], lon, lat, 0)
         draw.polygon([(x, y-size), (x-size, y), (x, y+size), (x+size, y)], outline="white", fill="blue")
         label = "%d%s" % (abs(lat), ("N" if (lat >= 0) else "S"))
-        w, h = font.getsize(label)
+        label = "%d%s" % (abs(lon), ("E" if (lon >= 0) else "W"))
+        (bbleft, bbtop, bbright, bbbottom) = font.getbbox(label)
+        (w, h) = (bbright - bbleft, bbbottom - bbtop)
+        #(w, h) = (bbright, bbbottom)
         x += size + pad
-        y -= h/2
+        y -= (h/2 + bbtop)
         w = pad + w + pad
         h = pad + h + pad
         draw.rectangle(((x, y), (x+w, y+h)), fill=(bg, bg, bg, bgalpha))
-        draw.text((x+pad, y+pad), label, fill=(fg, fg, fg, 0xff), font = font)
+        draw.text((x+pad, (y+pad) - bbtop), label, fill=(fg, fg, fg, 0xff), font = font)
 
 def draw_POIs(region, canvas, draw):
     r = regions[region]
@@ -1621,8 +1702,14 @@ def draw_POIs(region, canvas, draw):
             draw.line([(x1, y1), (x2, y2)], fill="blue", width=2)
     draw_lonlats(region, canvas, draw)
     if "POIs" in r:
-        pad = 1
-        size = 3
+        (w, h) = r["size"]
+        if h < 500:
+            (pad, size) = (1, 3)
+        elif h < 1080:
+            (pad, size) = (2, 4)
+        else:
+            (pad, size) = (3, 5)
+            
         font = fonts["POI"]
         #fw, fh = font.getsize("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
 
@@ -1637,15 +1724,19 @@ def draw_POIs(region, canvas, draw):
             else:
                 ((lon, lat), label, fill) = poi
             (x, y) = lonlat2xy(r["size"], r["area"], lon, lat, 0)
+            # Draw a diamond centered on the (x, y)
             draw.polygon([(x, y-size), (x-size, y), (x, y+size), (x+size, y)], outline="white", fill=fill)
 
-            w, h = font.getsize(label)
+            # Put the label to the right of the symbol, with the text vertically centered 
+            (bbleft, bbtop, bbright, bbbottom) = font.getbbox(label)
+            # Not quite sure why, but the font isn't in the upper left corner of the bbox - it's down a few pix
+            w, h = (bbright - bbleft, bbbottom - bbtop)
             x += size + pad
-            y -= h/2
+            y -= (h/2 + bbtop)
             w = pad + w + pad
             h = pad + h + pad
             draw.rectangle(((x, y), (x+w, y+h)), fill=(bg, bg, bg, bgalpha))
-            draw.text((x+pad, y+pad), label, fill=(fg, fg, fg, 0xff), font = font)
+            draw.text((x+pad, (y+pad) - bbtop), label, fill=(fg, fg, fg, 0xff), font = font)
     
 def annotate(canvas, draw, where, text):
     (cw, ch) = canvas.size
@@ -1658,9 +1749,9 @@ def annotate(canvas, draw, where, text):
         bg = 0x00
         bgalpha = 0x80
         fg = 0xff
-        left, right, top, bottom = ttfont.getbbox(text[i]) 
-        w = right - left
-        h = top - bottom
+        (bbleft, bbtop, bbright, bbbottom) = ttfont.getbbox(text[i]) 
+        #(w, h) = (bbright, bbbottom)
+        (w, h) = (bbright - bbleft, bbbottom - bbtop)
 
         if (where == "UL"):
             x = 2
@@ -1781,6 +1872,8 @@ def process_region(region):
         prep_kenburns(region, sat_ts) # adjusts the "area" (treated as a global) for this image
 
         img = prep_sat(region, sat_fn) # Base image - everything is overlayed onto this
+        if img == None:
+            continue
 
         (sfc_ts, sfc) = prep_surface_analysis_numpy(region, sat_ts)
         if sfc != None:
