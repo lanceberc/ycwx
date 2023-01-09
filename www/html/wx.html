@@ -1620,10 +1620,12 @@
       let localObs = {
 	  "tableId": "sfLocalObservationsTable",
 	  "url": "https://api.synopticdata.com/v2/stations/latest?stid=&units=english,speed|kts,pres|mb&showemptystations=1&token=".replace("token=", "token=" + synopticData_apitoken),
-	  "stations": ["FTPC1", "PXOC1", "46026", "46012", "46013", "CF131", "KSFO", "KOAK", "KSJC", "KHAF"],
+	  "stations": ["FTPC1", "PXOC1", "AISC1", "GGBC1", "46026", "46012", "46013", "CF131", "KSFO", "KOAK", "KSJC", "KHAF"],
 	  "nickNames": {
 	      "FTPC1": "Ft Point",
 	      "PXOC1": "SF Pier 1",
+	      "AISC1": "Pt Blunt",
+	      "GGBC1": "GGBridge Midspan",
 	      "CF131": "I5 near Tinsley Is",
 	      "KSFO": "SFO",
 	      "KOAK": "Oakland Airport",
@@ -1668,6 +1670,7 @@
       tempestValidTimespan = 60 * 60; /* secs a tempest observation is valid - after that use NOAA */
       backupFields = [
 	  { "stid": "FTPC1", "tempest": "St. Francis Yacht Club", "tempestField": "temp", "localField": "temp", "precision": 1 },
+	  // Fort Point and Pier 1 don't have baromoters - there's probably a better choice than the buoy
 	  { "stid": "46026", "tempest": "St. Francis Yacht Club", "tempestField": "tempest-baro", "localField": "pressure", "precision": 0 },
 	  { "stid": "CF131", "tempest": "Tinsley Island", "tempestField": "temp", "localField": "temp", "precision": 1  },
       ];
@@ -1758,9 +1761,9 @@
 		      val = "*";
 		  }
 		  const nickname = tempestStations[station].nickname;
-		  console.log("handleObs() replace Tempest with NOAA " + station + " -> " + stid + " " + tfield + " -> " + lfield + "(" + val + ")");
+		  console.log("handleObs() Use NOAA in place of stale Tempest datum " + station + " -> " + stid + " " + tfield + " -> " + lfield + "(" + val + ")");
 		  const classString = "." + tfield + "-span-" + nickname;
-		  console.log("handleObs() classString " + classString);
+		  // console.log("handleObs() classString " + classString);
 		  d3.selectAll(classString).html(val);
 	      }
 	  }
@@ -2351,8 +2354,8 @@
 		      return;
 		  }
 
-		  let url = src.substring(0, src.lastIndexOf("/")) + "/latest.json";
-		  //console.log("updateVideo fetch src '" + src + "' url " + url);
+		  let url = src.substring(0, src.lastIndexOf("/")) + "/latest.json?" + Date.now();
+		  console.log("updateVideo fetch src '" + src + "' url " + url);
 		  d3.json(url)
 		      .then(
 			  function(json) {
@@ -3016,18 +3019,18 @@
 	      <a href="https://www.wunderground.com/">Weather Underground</a> - Started by Dr Jeff Masters, it was a great grass-roots weather site until it was purchased first by The Weather Channel, then by IBM.<br>
 	      <a href="https://sailflow.com/map#37.831,-122.453,12,1">SailFlow SF Bay</a> - San Francisco site for SailFlow, a part of WeatherFlow. They also do iWindSurf, iKiteSurf, FishWeather, and WindAlert.<br>
 	      <a href="https://sailflow.com/spot/411">Sail Flow Anita Rock</a> - Live data, recent history, and weather forecasts.<br>
-	      <a href="https://ocean.weather.gov/Pac_tab.php">NOAA OPC Pacific</a> - Ocean Prediction Center North Pacific.<br>
-	      <a href="https://www.weather.gov/marine/radiofax_charts">NOAA Radiofax</a> - Old School Radiofax Charts as broadcast over shortwave.<br>
 	      <a href="https://www.weathernerds.org/">Weather Nerds</a> - 'Nuf said.<br>
 	      <a href="https://weather.cod.edu/satrad/">COD Satellite & Radar</a> - College of DuPage Weather Site.<br>
-	      <a href="http://www.wrh.noaa.gov/map/?&zoom=5&scroll_zoom=false&center=40,-97&boundaries=false,false,false,false,false,false,false,false,false,false,false&tab=layers&hazard=true&hazard_type=all&hazard_opacity=60&elements=temp,wind,gust&temp_filter=-80,130&gust_filter=0,150&rh_filter=0,100&elev_filter=-300,14000&precip_filter=0.01,30&obs_popup=false&obs_density=60&obs_provider=ALL&radar=true&radar_min=20&radar_loop=false&radar_opacity=70">NWS US Map</a> - The Continental US (CONUS) w/ radar & warning area overlays.<br>
 	      <h3>NOAA/NWS Weather</h3>
 	      <a href="https://weather.gov">NWS Main Page</a> - The National Weather Service<br>
 	      <a href="https://weather.gov/mtr">NWS Bay Area</a> - The Weather Field Office (WFO) in Monterey<br>
+	      <a href="http://www.wrh.noaa.gov/map/?&zoom=5&scroll_zoom=false&center=40,-97&boundaries=false,false,false,false,false,false,false,false,false,false,false&tab=layers&hazard=true&hazard_type=all&hazard_opacity=60&elements=temp,wind,gust&temp_filter=-80,130&gust_filter=0,150&rh_filter=0,100&elev_filter=-300,14000&precip_filter=0.01,30&obs_popup=false&obs_density=60&obs_provider=ALL&radar=true&radar_min=20&radar_loop=false&radar_opacity=70">NWS US Map</a> - The Continental US (CONUS) w/ radar & warning area overlays.<br>
 	      <a href="https://weather.gov/ncep">NCEP Main Page</a> - The National Center for Environmental Prediction<br>
 	      <a href="https://www.wpc.ncep.noaa.gov">WPC Main Page</a> - The Weather Prediction Center<br>
 	      <a href="https://ocean.weather.gov">OPC Main Page</a> - The Ocean Prediction Center<br>
 	      <a href="https://spc.noaa.gov">SPC Main Page</a> - The Storm Prediction Center<br>
+	      <a href="https://ocean.weather.gov/Pac_tab.php">NOAA OPC Pacific</a> - Ocean Prediction Center North Pacific.<br>
+	      <a href="https://www.weather.gov/marine/radiofax_charts">NOAA Radiofax</a> - Old School Radiofax Charts as broadcast over shortwave.<br>
 	      <a href="https://www.ospo.noaa.gov/Products/ocean/sst/contour/">OSPO SST</a> - Sea Surface Temperature from satellite observations.<br>
 	      <a href="https://www.ospo.noaa.gov/data/sst/contour/californ.c.gif">SST California Coast</a> - Local SST Analysis.<br>
 	      <a href="https://www.ndbc.noaa.gov/">NDBC</a> - The National Data Buoy Center<br>
