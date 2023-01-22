@@ -686,7 +686,7 @@
     <script src="gauge.js"></script>
     <script src="wind.js"></script>
     <script src="NowCOAST.js"  defer=""></script>
-    <script src="currentMap.js"  defer=""></script>
+    <!-- <script src="currentMap.js"  defer=""></script> -->
     <script src="gis.js"  defer=""></script>
 
     <script>
@@ -785,7 +785,7 @@
 	      { "div": "localWind", "label": "Wind", "duration": 30 },
 	      { "div": "sfLocalObservations", "label": "Observations", "duration": 15 },
 	      { "div": "sfTides", "label": "Tide & Current", "duration": 15 },
-	      { "div": "currentMapScene", "label": "SFBay Currents", "duration": 30 },
+	      /* { "div": "currentMapScene", "label": "SFBay Currents", "duration": 30 }, */
 	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 40 },
 	      { "div": "WeatherFlowStFYCScene", "label": "City Forecast", "duration": 30 },
 	      { "div": "WeatherFlowTinsleyScene", "label": "Tinsley Forecast", "duration": 30 },
@@ -803,7 +803,7 @@
 	      { "div": "", "label": "National", "duration": 0 },
 	      { "div": "nationalRadarScene", "label": "National Radar", "duration": 30 },
 	      { "div": "cloudTopsScene", "label": "IR Cloud Tops", "duration": 30 },
-	      { "div": "vesselFinderScene", "label": "Local AIS", "duration": 30 },
+	      /* { "div": "vesselFinderScene", "label": "Local AIS", "duration": 30 }, */
 	      { "div": "linksScene", "label": "Links", "duration": 30 },
 	      { "div": "aboutScene", "label": "About", "duration": 30 },
 	  ],
@@ -2735,7 +2735,7 @@
 	  fetchTidesAndCurrents();
 
 	  // OpenLayers frames
-	  initializeCurrentMap(currentMapConfig);
+	  // initializeCurrentMap(currentMapConfig);
 	  initializeNowCOAST(nationalRadarConfig);
 	  initializeNowCOAST(localRadarConfig);
 
@@ -2806,6 +2806,7 @@
 	
 	<div id="content" class="wx-content">
 
+<!--
 	  <div id="sfLocal" class="wx-scene">
 	    <div class="obs-grid">
 	      <div class="obs-cell">
@@ -2813,7 +2814,8 @@
 	      </div>
 	    </div>
 	  </div>
-
+-->
+	  
 	  <div id="sfbofs" class="wx-scene">
 	    <div class="obs-grid">
 	      <div class="obs-cell">
@@ -2955,19 +2957,21 @@
 	      </video>
 	    </div>
 	  </div>
-	  
+
+<!--
 	  <div id="purpleAir" class="wx-scene">
-	    <!--
 		<div id='PurpleAirWidget_81675_module_AQI_conversion_C0_average_10_layer_standard'>Loading PurpleAir Widget...</div>
 		<script src='https://www.purpleair.com/pa.widget.js?key=BIHHOFMKJ30NI4DB&module=AQI&conversion=C0&average=10&layer=standard&container=PurpleAirWidget_81675_module_AQI_conversion_C0_average_10_layer_standard'></script>
-		-->
 	  </div>
+-->
 
+<!--
 	  <div id="currentMapScene" class="wx-scene">
 	    <div id="currentLabel" class="label"></div>
 	    <div id="currentMap" class="ol-flex-fit" width="1280" height="720"></div>
 	  </div>
-
+-->
+	  
 	  <div id="nationalRadarScene" class="wx-scene">
 	    <div id="nationalRadarLabel" class="label">National RADAR</div>
 	    <div id="nationalRadar" class="ol-flex-fit"></div>
@@ -2987,7 +2991,7 @@
 	  <div id="WeatherFlowTinsleyScene" class="wx-scene" width="1280" height="720" loading="lazy" allow="fullscreen">
 	    <iframe src="https://tempestwx.com/station/42921/" class="wxFlow-frame" title="StFYC WeatherFlow Forecast"></iframe>
 	  </div>
-
+<!--
 	  <div id="vesselFinderScene" class="wx-scene">
 	    <div class="obs-grid">
 	      <div class="obs-cell">
@@ -3007,6 +3011,7 @@
 	      </div>
 	    </div>
 	  </div>
+-->
 
 	  <div id="linksScene" class="wx-scene">
 	    <div id="links" class="text-scene">
