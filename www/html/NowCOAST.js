@@ -113,7 +113,7 @@ function initializeNowCOAST(config) {
 			}
 			*/
 		    } else {
-			console.log(`nowCOAST ${container} ${layer.service} update ${layer.timeStops.length} timeStops ${layer.timeStops[0].format("time")} - ${layer.timeStops[layer.timeStops.length-1].format("time")}`);
+			console.log(`nowCOAST ${container} ${layer.service} update ${layer.timeStops.length} timeStops ${layer.timeStops[0].format("isoTime")} - ${layer.timeStops[layer.timeStops.length-1].format("isoTime")}`);
 		    
 			// this is the source that we use when advancing the time shown
 			if ("timeSource" in layer) {
@@ -160,18 +160,18 @@ function initializeNowCOAST(config) {
 	    
 	    // New display time
 	    timeStop = nowCOAST.c[container].timeStopSource.timeStops[nowCOAST.c[container].timeStopIndex];
-	    // console.log(`nowCOAST ${container} advancing time to ${timeStop.format("time")}`);
+	    // console.log(`nowCOAST ${container} advancing time to ${timeStop.format("isoTime")}`);
 	    
 	    // Loop through all the layers and advance the time to its time stop at or before the current time
 	    nowCOAST.c[container].config.layers.filter(layer => ("timeStops" in layer) && (layer.timeStops.length > 0)).forEach(l => {
 		let ts = l.timeStops[0];
 		l.timeStops.forEach(e => { ts = (e <= timeStop) ? e : ts });
-		// console.log(`nowCOAST ${container} advancing ${l.service} to ${ts.format("time")}`);
+		// console.log(`nowCOAST ${container} advancing ${l.service} to ${ts.format("isoTime")}`);
 		l.source.updateParams({"TIME": ts.toISOString()});
 	    });
 	
 	    document.getElementById(nowCOAST.c[container].config.label).innerHTML =
-		`Watches, Warnings, and Radar ${timeStop.format("day")} @ ${timeStop.format("time")}`;
+		`Watches, Warnings, and Radar ${timeStop.format("dddd")} @ ${timeStop.format("HH:MM")}`;
 	}
     }
 

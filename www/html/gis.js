@@ -136,7 +136,7 @@ class GIS {
 	    const labelDate = new Date();
 	    labelDate.setTime(state.time * 1000);
 	    const label = document.getElementById(state.label);
-	    label.innerHTML = "GOES Composite " + labelDate.format("day") + " @" + labelDate.format("time");
+	    label.innerHTML = "GOES Composite " + labelDate.format("dddd") + " @" + labelDate.format("HH:MM");
 	}
 	
 	// Called periodically when there are unrendered elements to see if they've become visible.
