@@ -82,7 +82,12 @@ int tempest_hist_last_minute;
 int tempest_hist_entry_json_len;
 
 /* Airmar data structures */
-static char nmeafn[] = "/dev/ttyUSB0";
+static char *airmartty[] = {
+  "/dev/ttyUSB0",
+  "/dev/ttyUSB1"
+};
+  
+char *airmarfn;
 
 #define AIRMAR_TRUE 1
 #define AIRMAR_APPARENT 2
@@ -415,7 +420,7 @@ unsigned int init_airmar(struct lws *wsi, void *user)
   struct per_vhost_data__wind *vhd =
     (struct per_vhost_data__wind *) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
 
-  int fd;
+  int fd = -1;
   lws_sock_file_fd_type u;
 
   airmar_wind_msg = &airmar_wind_msgbuf[LWS_PRE];
@@ -433,10 +438,22 @@ unsigned int init_airmar(struct lws *wsi, void *user)
   
   // Should open the file in "cooked" mode to make sure we don't get per-character upcalls
   //if ((fd = lws_open(nmeafn, O_RDONLY)) < 0) {
-  if ((fd = lws_open(nmeafn, O_RDWR)) < 0) {
-    lwsl_err("Unable to open %s\n", nmeafn);
+
+  for (int i = 0; i < sizeof(airmartty)/sizeof(char *); i++) {
+    airmarfn = airmartty[i];
+    lwsl_user("Opening Airmar source[%d] -  %s\n", i, airmarfn);
+    if ((fd = lws_open(airmarfn, O_RDWR)) < 0) {
+      lwsl_err("Unable to open Airmar source %s\n", airmarfn);
+    } else {
+      break;
+    }
+  }
+  if (fd < 0) {
+    lwsl_err("Unable to open any Airmar source\n");
     return 1;
   }
+
+  lwsl_user("Airmar %s fd %d %d", airmarfn, fd, sizeof(airmartty));
   vhd->airmar_fd = fd;
   
   struct termios tty;
@@ -452,14 +469,14 @@ unsigned int init_airmar(struct lws *wsi, void *user)
   tty.c_cflag |= CRTSCTS;
   tty.c_lflag |= ICANON; // Turn on canonical mode - let the driver wait for a <cr> before returning
 
+  // Airmar is 4800 baud
+  cfsetispeed(&tty, B4800);
+  cfsetospeed(&tty, B4800);
+
   if (tcsetattr(fd, TCSANOW, &tty) != 0) {
     lwsl_user("Error %i from tcsetattr: %s\n", errno, strerror(errno));
     return 1;
   }
-
-  // Airmar is 4800 baud
-  cfsetispeed(&tty, B4800);
-  cfsetospeed(&tty, B4800);
 
   char *airmar_init_string = "$PAMTX,0*hh\015\012"; // Disable all transmissions
   int r;
@@ -476,7 +493,7 @@ unsigned int init_airmar(struct lws *wsi, void *user)
     
     return 1;
   }
-  lwsl_user("LWS_CALLBACK_PROTOCOL_INIT: airmar socket fd %d\n", fd);
+  lwsl_user("LWS_CALLBACK_PROTOCOL_INIT: airmar %s socket fd %d\n", airmarfn, fd);
   return 0;
 }
 
@@ -495,7 +512,7 @@ process_airmar(struct lws *wsi, void *user)
   /* Read and parse a text line from the weather station, tell clients there's data to send */
   // lwsl_user("process_airmar %d\n");
   if ((n = (int)read(vhd->airmar_fd, buf, sizeof(buf))) <= 0) {
-    lwsl_err("Reading from %s failed\n", nmeafn);
+    lwsl_err("Reading from %s failed\n", airmarfn);
     return 1;
   }
     
