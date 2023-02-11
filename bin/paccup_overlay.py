@@ -27,10 +27,15 @@ import numpy as np
 import io
 import pygrib
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
+import shutil
 
 tau = math.pi * 2
 
 datastore_prefix = "/home/stfyc/www/html/data"
+web_prefix = "/home/stfyc/www/html/data"
+if os.path.exists("/wx/data"):
+    datastore_prefix = "/wx/data"
+    
 logo_prefix = "%s/%s" % (datastore_prefix, "logos")
 output_prefix = "/overlay"
 
@@ -53,6 +58,69 @@ regions["BayDelta"] = {
     "satellite": "GOES-18",
     "satroot": "GOES/NESDIS_CONUS-West",
     "res": "1k",
+    "sector": "CONUS",
+    "model": "HRRR",
+    "gribroot": "NOAA/HRRR/karl",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "barbreduce": 2,
+    "barblen": 4.0,
+    "alpha": 30.0,
+    "size": FullHD,
+    #"lonlat": "auto",
+    "POIs": [
+        ((-123.7360, 38.9530), "Pt Arena"),
+        ((-123.0239, 37.9951), "Pt Reyes"),
+        ((-122.7125, 38.4382), "Santa Rosa"),
+        #((-122.4535, 37.8083), "Anita Rk"),
+        ((-122.4466, 37.8073), "StFYC", "red"),
+        #((-122.3855, 37.7817), "Pier 40"),
+        #((-122.4935, 37.7247), "Harding Pk"),
+        #((-122.5056, 37.7351), "Zoo"),
+        #((-122.3914, 37.9036), "Richmond"),
+        ((-122.4545, 38.1608), "Sears Pt"),
+        #((-122.4333, 37.9632), "E Brother"),
+        #((-122.2257, 38.0606), "Carquinez Br"),
+        ((-122.1232, 38.0405), "Benicia Br"),
+        #((-122.2578, 37.8720), "Campanile"),
+        #((-122.3306, 37.7971), "Estuary"),
+        ((-122.4994, 37.4923), "Mavericks"),
+        ((-122.3862, 37.6163), "SFO"),
+        #((-122.2133, 37.7124), "OAK"),
+        #((-122.4273, 37.5288), "Montera Mt"),
+        ((-122.1058, 38.3995), "Mt Vaca"),
+        #((-122.5963, 37.9235), "Mt Tam"),
+        ((-121.9141, 37.8815), "Mt Diablo"),
+        ((-121.6427, 37.3419), "Mt Hamilton"),
+        ((-123.0016, 37.6989), "SE Farallon"),
+        #((-122.4830, 37.5026), "Pillar Pt"),
+        #((-121.2932, 37.9548), "Stockton"),
+        ((-121.4941, 38.0370), "Tinsley", "red"),
+        ((-121.4936, 38.5766), "Sacramento"),
+        ((-120.9973, 37.2537), "Gustine"),
+        ((-120.4863, 37.3025), "Merced"),
+        ((-119.7893, 36.7362), "Fresno"),
+        ((-121.5686, 37.0068), "Gilroy"),
+        ((-121.3272, 36.4289), "Soledad"),
+        ((-122.0019, 36.9606), "Santa Cruz"),
+        ((-121.9345, 36.6376), "Pt Pinos"),
+        #((-121.9521, 38.3732), "Vacaville"),
+        #((-119.7605, 39.0105), "North Sails Minden"),
+    ],
+}
+
+regions["BayDelta500m"] = {
+    "arg": "baydelta500m",
+    "title": "SF Bay/Delta",
+    "tz": "America/Los_Angeles",
+#    "start": "2020-08-25T18:00:00 +0000",
+    "start": "2022-05-29T06:00:00 -0700",
+    "end": "2100-12-21T23:00:00 +0000",
+#    "area": (-125.20, 36.00, -118.50, 39.00), # lat/long of ll, ur (up to Monterey)
+    "area": (-125.67, 36.27, -120.00, 39.00), # lat/long of ll, ur
+    "satellite": "GOES-18",
+    "satroot": "GOES/NESDIS_CONUS-West-500m",
+    "res": "500m",
     "sector": "CONUS",
     "model": "HRRR",
     "gribroot": "NOAA/HRRR/karl",
@@ -190,6 +258,67 @@ regions["WestCoast"] = {
         ((-115.1543, 36.0838), "LAS"),
         ((-122.5939, 45.5850), "PDX"),
         ((-122.3079, 47.4506), "SEA"),
+    ],
+}
+
+regions["WestCoastGLM"] = {
+    "arg": "westcoastglm",
+    "title": "West Coast Offshore",
+    "tz": "America/Los_Angeles",
+#    "start": "2020-08-25T18:00:00 +0000",
+    "start": "2023-01-01T00:00:00 -0700",
+    "end": "2100-12-21T23:00:00 +0000",
+    #"area": (-152.0, 30.0, -110.0, 50.0), # lat/long of ll, ur corner
+    #"area": (-161.0, 18.4, -110.0, 50.0), # lat/long of ll, ur corner
+    "area": (-165.0, 18.4, -108.0, 48.0), # lat/long of ll, ur corner
+    #"area": (-125.20, 36.00, -118.50, 39.00), # lat/long of ll, ur
+    "satellite": "GOES-18",
+    "satroot": "GOES/NESDIS_CONUS-West_GLM_1k",
+    "res": "1k",
+    "sector": "CONUS",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "size": FullHD,
+    "POIs": [
+        ((-122.3862, 37.6163), "SFO", "red"),
+        ((-119.7741, 39.5057), "RNO"),
+        ((-118.4086, 33.9435), "LAX"),
+        ((-115.1543, 36.0838), "LAS"),
+        ((-122.5939, 45.5850), "PDX"),
+        ((-122.3079, 47.4506), "SEA"),
+    ],
+}
+
+regions["EastPacificGLM"] = {
+    "arg": "eastpacificglm",
+    "title": "Eastern Pacific",
+    "tz": "America/Los_Angeles",
+#    "start": "2020-08-25T18:00:00 +0000",
+    "start": "2023-01-01T00:00:00 -0700",
+    "end": "2100-12-21T23:00:00 +0000",
+    #"area": (-152.0, 30.0, -110.0, 50.0), # lat/long of ll, ur corner
+    #"area": (-161.0, 18.4, -110.0, 50.0), # lat/long of ll, ur corner
+    #"area": (-170.0, 18.4, -97.0, 51.5), # lat/long of ll, ur corner
+    "area": (-180.0, 18.4, -97.0, 55.0), # lat/long of ll, ur corner
+    #"area": (-125.20, 36.00, -118.50, 39.00), # lat/long of ll, ur
+    "satellite": "GOES-18",
+    "satroot": "GOES/NESDIS_GOES-West_GLM_2k",
+    "res": "2k",
+    "sector": "FD",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "size": FullHD,
+    "POIs": [
+        ((-122.3862, 37.6163), "SFO", "red"),
+        ((-122.3079, 47.4506), "SEA"),
+        ((-122.5939, 45.5850), "PDX"),
+        ((-119.7741, 39.5057), "RNO"),
+        ((-118.4086, 33.9435), "LAX"),
+        ((-115.1543, 36.0838), "LAS"),
+        ((-112.0143, 33.4356), "PHX"),
+        ((-104.6742, 39.8493), "DEN"),
+        ((-111.9869, 40.7886), "SLC"),
+        ((-157.9192, 21.3322), "HNL"),
     ],
 }
 
@@ -835,6 +964,21 @@ satellites["GOES-18"] = { # GOES-17, aka GOES-S, GOES-WEST
     "semi_minor": 6356752.31414,
     "flattening": 298.257222096,
     "eccentricity": 0.0818191910435,
+    "500m": {
+        "resolution": 0.000014,
+        "FD": {
+            "x_offset": -0.151858,
+            "y_offset":  0.151858,
+            "shape": (10848, 10848),
+            "nanPoint": None
+        },
+        "CONUS": {
+            "x_offset": -0.069993,
+            "y_offset":  0.128233,
+            "shape": (10000, 6000),
+            "nanPoint": None
+        }
+    },
     "1k": {
         "resolution": 0.000028,
         "FD": {
@@ -1847,6 +1991,7 @@ def process_region(region):
     find_gpx(region)
 
     skipping = False
+    lastfn = None
     for cur_sat in sat_images:
         (sat_fn, sat_ts) = cur_sat
 
@@ -1871,7 +2016,19 @@ def process_region(region):
         # Create the satellite background image
         prep_kenburns(region, sat_ts) # adjusts the "area" (treated as a global) for this image
 
-        img = prep_sat(region, sat_fn) # Base image - everything is overlayed onto this
+        try:
+            img = prep_sat(region, sat_fn) # Base image - everything is overlayed onto this
+        except:
+            logging.error("prep of %s failed" % (sat_fn))
+            if args.deletebad:
+                try:
+                    os.unlink(sat_fn)
+                except:
+                    logging.error("Couldn't unlink %s" % (sat_fn))
+                else:
+                    logging.info("Unlink %s" % (sat_fn))
+            continue;
+
         if img == None:
             continue
 
@@ -1922,21 +2079,12 @@ def process_region(region):
         img = img.convert("RGB")
         logging.info("Save %s" % (ofn))
         img.save(ofn, "JPEG")
+        lastfn = ofn
         
-        bdir = "%s%s/%s" % (datastore_prefix, output_prefix, region)
-        latest = "%s/%s" % (bdir, "latest.jpg")
-        if os.path.lexists(latest): # lexists returns true if the path is good or the link is broken
-            try:
-                os.unlink(latest)
-            except OSError as err:
-                print("Error unlinking %s: %s (error type %s)" % (latest, err, type(err)))
-        try:
-            os.symlink(ofn, latest)
-        except OSError as err:
-            print("Error linking %s -> %s: %s (error type %s)" % (latest, ofn, err, type(err)))
-
         if args.oneshot == True:
-            return
+            return lastfn
+        
+    return lastfn
 
 args = None
 if __name__ == '__main__':
@@ -1968,6 +2116,7 @@ if __name__ == '__main__':
     parser.add_argument("-start", action='store', help="Start YYYYMMDDHHMM[+zzzz] (Zulu unless optional TZ HHMM offset)")
     parser.add_argument("-end", action='store', help="End YYYYMMDDHHMM[+zzzz] (Zulu unless optional TZ HHMM offset)")
     parser.add_argument("-since", action='store', help="Last Nd (days) or Nh (hours)");
+    parser.add_argument("-deletebad", action='store_true', default=False, help="Delete source jpgs that don't parse correctly")
     parser.add_argument("-log", choices=["debug", "info", "warning", "error", "critical"], default="info", help="Log level")
     args = parser.parse_args()
 
@@ -2021,4 +2170,16 @@ if __name__ == '__main__':
         r["start"] = since.strftime("%Y-%m-%dT%H:%M:00 +0000");
         logging.debug("Start time since: %s" % (r["start"]));
 
-    process_region(choicemap[args.region])
+    fn = process_region(choicemap[args.region])
+
+    if fn != None:
+        bdir = "%s%s/%s" % (web_prefix, output_prefix, choicemap[args.region])
+        if not os.path.exists(bdir):
+            logging.info("Creating directory %s" % (bdir))
+            os.mkdir(bdir);
+        latest = "%s/%s" % (bdir, "latest.jpg")
+        logging.info("Copy last file %s -> %s" % (fn, latest))
+        try:
+            shutil.copyfile(fn, latest)
+        except OSError as err:
+            print("Error copying %s -> %s: %s (error type %s)" % (latest, ofn, err, type(err)))
