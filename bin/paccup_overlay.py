@@ -1158,7 +1158,8 @@ def prep_sat(region, fn):
         # If the image is corrupt SetProjection will fail
         src.SetProjection(r["WKT"])
     except:
-        logging.warning("Couldn't SetProjection for %s" % (fn))
+        logging.warning("Couldn't SetProjection (unlinking) for %s" % (fn))
+        os.unlink(fn)
         return None
     src.SetGeoTransform(r["geotransform"])
     r["invGeotransform"] = gdal.InvGeoTransform(src.GetGeoTransform())
@@ -1670,7 +1671,13 @@ def prep_surface_analysis_numpy(region, ts):
     # Prep a base image if one isn't cached
     if surface_base == None and ts <= valid_end:
         logging.info("prep_surface prep[%d] %s" % (surface_index, fn0))
-        img = Image.open(fn0).crop(sfc["crop"]).convert('RGBA')
+        try:
+            img = Image.open(fn0).crop(sfc["crop"]).convert('RGBA')
+        except:
+            logging.error("Couldn't open %s as image, deleting & continuing" % (fn0))
+            os.unlink(fn0)
+            return(None, None)
+        
         arr = np.array(img)
 
         # There might be a more clever way to do this with less numpy broadcasts
