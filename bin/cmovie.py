@@ -10,6 +10,10 @@ import os.path
 
 ffmpeg = "ffmpeg"
 rootdir = "/home/stfyc/www/html/data/overlay"
+datadir = rootdir
+if os.path.exists("/wx/data"):
+    datadir = "/wx/data/overlay"
+
 reldir = "data/overlay"
 
 regions = {
@@ -29,30 +33,45 @@ regions = {
         "goes": "18",
         "prefix": "BayDelta",
     },
+    "baydelta500m": {
+        "goes": "18",
+        "prefix": "BayDelta500m",
+    },
+    "eastpacificglm": {
+        "goes": "18",
+        "prefix": "EastPacificGLM",
+    },
+    "westcoastglm": {
+        "goes": "18",
+        "prefix": "WestCoastGLM",
+    },
 }
 
 def find_sources(region):
-    sourcedir = "%s/%s" % ((rootdir, regions[region]["prefix"]))
+    sourcedir = "%s/%s" % ((datadir, regions[region]["prefix"]))
     dates = os.listdir(sourcedir)
     dates.sort()
     l = []
+    logging.debug("find_sources() sourcedir %s has %d dates" % (sourcedir, len(dates)))
     for date in dates:
         if os.path.isdir("%s/%s" % (sourcedir, date)):
-            s = os.listdir("%s/%s" % (sourcedir, date))
+            datedir = "%s/%s" % (sourcedir, date)
+            s = os.listdir(datedir)
             s.sort()
             files = [ fn for fn in s if fn.endswith(".png") or fn.endswith(".jpg") ]
+            logging.debug("find_sources() date %s has %d files and %d filtered files" % (datedir, len(s), len(files)))
             for f in files:
                 l.append("%s/%s" % (date, f))
     return(l)
 
 framerate = 15 # frames per second
 def make_concatfile(region, fns, start, end, hold):
-    sd = "%s/%s" % (rootdir, regions[region]["prefix"])
+    sd = "%s/%s" % (datadir, regions[region]["prefix"])
     fts = None
     lts = None
     used = 0
     logging.debug("make_concatfile: start %s end %s" % (start, end))
-    print("Found %d source files" % (len(fns)))
+    logging.info("make_concatfile() with %d source files" % (len(fns)))
     with open("%s-files.txt" % (region), "w") as f:
         for fn in fns:
             # Look for '_' where filenames are YYYYMMDD_HHMM.jpg
@@ -108,7 +127,8 @@ def make_movie(region, size, ofile):
 
     if isRPi:
         # Use hardware encoder on Raspberry Pi - set bitrate crazy high
-        cmd = "%s -v info -y -f concat -safe 0 -i %s-files.txt %s -c:v h264_v4l2m2m -r 15 -b:v 10000k -pix_fmt yuv420p -an -movflags +faststart %s" % (ffmpeg, region, scale, ofile)
+        cmd = "%s -v info -y -f concat -safe 0 -i %s-files.txt %s -c:v h264_v4l2m2m -r 15 -b:v 12000k -pix_fmt yuv420p -an -movflags +faststart %s" % (ffmpeg, region, scale, ofile)
+        #cmd = "%s -v info -y -f concat -safe 0 -i %s-files.txt %s -c:v h264_v4l2m2m -r 15 -b:v 12000k -pix_fmt nv12 -f mpegts -an -movflags +faststart %s" % (ffmpeg, region, scale, ofile)
         logging.debug("Using Raspberry Pi hardware encoder");
     else:
         # Use the software encoder
@@ -120,8 +140,8 @@ def make_movie(region, size, ofile):
         retcode = subprocess.check_call(cmd, shell=True)
     except subprocess.CalledProcessError as e:
         logging.info("Execution failed: %s" % (e))
-    return(0)
-
+        return(-1)
+    return(retcode)
 
 if __name__ == '__main__':
     loglevel = logging.DEBUG
@@ -177,18 +197,25 @@ if __name__ == '__main__':
     else:
         ofile = "%s_%s-%s.mp4" % (regions[o]["prefix"], s, e)
 
-    make_movie(o, args.size, ofile)
+    r = make_movie(o, args.size, ofile)
+    if r != 0:
+        logging.error("make_movie returned %d" % (r))
 
-    if args.withsource:
-        latest = "%s/%s/%s" % (rootdir, regions[args.region]["prefix"], "latest.mp4")
-        if os.path.lexists(latest):
-            os.unlink(latest)
-        os.symlink(ofile, latest)
-        latest = "%s/%s/%s" % (rootdir, regions[args.region]["prefix"], "latest.json")
-        ofile = "%s/%s/%s_%s-%s.mp4" % (reldir, regions[o]["prefix"], regions[o]["prefix"], s, e)
-        with open(latest, "w") as f:
-            f.write("{\n");
-            f.write('    "fn": "%s"\n' % (ofile));
-            f.write("}\n");
+    if (r == 0) and (args.withsource):
+        stinfo = os.stat(ofile)
+        if stinfo.st_size < (1024*1024):
+            logging.error("%s too small (%d) - not symlinking to latest.mp4" % (ofile, stinfo.st_size))
+        else:
+            latest = "%s/%s/%s" % (rootdir, regions[args.region]["prefix"], "latest.mp4")
+            if os.path.lexists(latest):
+                os.unlink(latest)
+            os.symlink(ofile, latest)
+            latest = "%s/%s/%s" % (rootdir, regions[args.region]["prefix"], "latest.json")
+            ofile = "%s/%s/%s_%s-%s.mp4" % (reldir, regions[o]["prefix"], regions[o]["prefix"], s, e)
+            with open(latest, "w") as f:
+                f.write("{\n");
+                f.write('    "fn": "%s"\n' % (ofile));
+                f.write("}\n");
+
     os.remove("%s-files.txt" % (o))
     logging.info("Output in %s" % (ofile))
