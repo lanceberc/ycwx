@@ -113,6 +113,10 @@ char airmar_wind_msgbuf[256];
 char *airmar_wind_msg;
 char airmar_wind_len;
 int airmar_recent_idx = 0;
+int airmar_hist_index = 0;
+unsigned long airmar_last_save = 0; // Minute last saved
+#define AIRMAR_SAVE_FREQ 5 // Save wind history every five minutes in case we restart
+#define AIRMAR_SAVE_FILE "/home/stfyc/www/html/data/airmar_history.txt"
 
 /*#define AIRMAR_HIST_ENTRY_JSON "{\"ts\": %u, \"aws\": %4.1f, \"gust\": %4.1f, \"awa\": %5.1f},"*/
 #define AIRMAR_HIST_ENTRY_JSON "{\"sec\": %u, \"speed\": %4.1f, \"gust\": %4.1f, \"dir\": %5.1f},"
@@ -158,7 +162,7 @@ struct per_vhost_data__wind {
   int tempest_sock; /* Socket for Tempest broadcast UDP packets */
 };
 
-unsigned int init_tempest(struct lws *wsi, void *user)
+unsigned int tempest_init(struct lws *wsi, void *user)
 {
   struct per_session_data__wind *pss = (struct per_session_data__wind *)user;
   struct per_vhost_data__wind *vhd =
@@ -220,7 +224,7 @@ unsigned int init_tempest(struct lws *wsi, void *user)
 }
 
 static unsigned int
-process_tempest(struct lws *wsi, void *user)
+tempest_process(struct lws *wsi, void *user)
 {
   struct per_session_data__wind *pss = (struct per_session_data__wind *)user;
   struct per_vhost_data__wind *vhd =
@@ -238,11 +242,11 @@ process_tempest(struct lws *wsi, void *user)
     return 1;
   }
   jsonbuf[nbytes] = '\0';
-  lwsl_debug("process_tempest received(%d) %s\n", nbytes, jsonbuf);
+  lwsl_debug("tempest_process received(%d) %s\n", nbytes, jsonbuf);
   json = cJSON_ParseWithLength(jsonbuf, nbytes);
 
   lwsl_hexdump_level(LLL_DEBUG, jsonbuf, (unsigned int)nbytes);
-  lwsl_debug("process_tempest read (%d) %s", nbytes, jsonbuf);
+  lwsl_debug("tempest_process read (%d) %s", nbytes, jsonbuf);
   
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -254,7 +258,7 @@ process_tempest(struct lws *wsi, void *user)
   const cJSON *obs = cJSON_GetObjectItemCaseSensitive(json, "obs");
   const cJSON *ob = cJSON_GetObjectItemCaseSensitive(json, "ob");
 
-  lwsl_user("process_tempest msgtype %s\n", msgtype->valuestring);
+  lwsl_user("tempest_process msgtype %s\n", msgtype->valuestring);
 
   double speed = -1.0;
   double dir = -1.0;
@@ -265,7 +269,7 @@ process_tempest(struct lws *wsi, void *user)
     const cJSON *child = ob->child;
     speed = child->next->valuedouble; // meters/second
     dir = child->next->next->valuedouble;
-    lwsl_user("process_tempest rapid_wind: ob ts %d speed %.2f direction %.0f\n", child->valueint, speed, dir);
+    lwsl_user("tempest_process rapid_wind: ob ts %d speed %.2f direction %.0f\n", child->valueint, speed, dir);
     
     tempest_recent_idx = (tempest_recent_idx + 1) % TEMPEST_RECENT_BUF;
     tempest_recent_wind[tempest_recent_idx].sec = this_second;
@@ -299,7 +303,7 @@ process_tempest(struct lws *wsi, void *user)
 
     speed_avg /= samples;
 
-    lwsl_user("process_tempest south %d dir_avg %.1f dir_bias %.2f / %d", south_count, dir_avg, dir_bias, samples);
+    lwsl_user("tempest_process south %d dir_avg %.1f dir_bias %.2f / %d", south_count, dir_avg, dir_bias, samples);
     if (south_count > (samples/2))
       dir_avg /= samples; /* More than half are south-ish */
     else {
@@ -313,7 +317,7 @@ process_tempest(struct lws *wsi, void *user)
     tempest_last_samples.rapid_dir_avg = dir_avg;
     
     sprintf(tempest_wind_msg, "{\"event\": \"tempest_update\", \"speed\": %4.1f, \"speed_avg\": %4.1f, \"gust\": %4.1f, \"dir\": %3.0f, \"dir_avg\": %3.0f}", speed, speed_avg, gust, dir, dir_avg);
-    lwsl_user("process_tempest samples %d source_count %d %s\n", samples, south_count, tempest_wind_msg);
+    lwsl_user("tempest_process samples %d source_count %d %s\n", samples, south_count, tempest_wind_msg);
     tempest_wind_len = strlen(tempest_wind_msg);
     
     new_publication |= SUBSCRIBE_TEMPEST_WIND;
@@ -403,7 +407,7 @@ process_tempest(struct lws *wsi, void *user)
       
     tempest_hist[index].gust = 0;
     tempest_hist_last_minute = this_minute;
-    lwsl_user("process_tempest new minute seconds %u index %d ", tv.tv_sec, index);
+    lwsl_user("tempest_process new minute seconds %u index %d ", tv.tv_sec, index);
 
     unsigned long altm = airmar_last_timestamp / 60;
     if (this_minute > (altm + 1)) {
@@ -422,7 +426,50 @@ process_tempest(struct lws *wsi, void *user)
   return new_publication;
 }
 
-unsigned int init_airmar(struct lws *wsi, void *user)
+unsigned int airmar_save()
+{
+  FILE *fd = fopen(AIRMAR_SAVE_FILE, "w");
+  int count = 0;
+  if (fd == NULL) {
+    lwsl_err("airmar_save() Couldn't open airmar save file %s\n", AIRMAR_SAVE_FILE);
+    return(0);
+  }
+  for (int i = 0; i < HIST_ENTRIES; i++) {
+    int h = (airmar_hist_index + i + 1) % HIST_ENTRIES;
+    if (airmar_hist[h].ts != 0) {
+	  fprintf(fd, "%lu %5.1f %5.1f %3.0f\n", airmar_hist[h].ts, airmar_hist[h].speed, airmar_hist[h].gust, airmar_hist[h].dir);
+	  count++;
+    }
+  }
+  fclose(fd);
+  lwsl_notice("airmar_save() %d entries\n", count);
+  return(0);
+}
+
+unsigned int airmar_restore()
+{
+  int i, count = 0;
+  FILE *fd = fopen(AIRMAR_SAVE_FILE, "r");
+  char rbuf[1024];
+
+  if (fd == NULL) {
+    lwsl_err("airmar_restore() Couldn't open airmar save file %s\n", AIRMAR_SAVE_FILE);
+    return(0);
+  }
+  while (fgets(rbuf, sizeof(rbuf), fd)) {
+      int h = airmar_hist_index;
+      int n = sscanf(rbuf, "%lu %f %f %f", &airmar_hist[h].ts, &airmar_hist[h].speed, &airmar_hist[h].gust, &airmar_hist[h].dir);
+      if (n == 4) {
+	count++;
+	airmar_hist_index = (h + 1) % HIST_ENTRIES;
+      }
+  }
+  fclose(fd);
+  lwsl_notice("airmar_restore() %d entries\n", count);
+  return(0);
+}
+
+unsigned int airmar_init(struct lws *wsi, void *user)
 {
   struct per_session_data__wind *pss = (struct per_session_data__wind *)user;
   struct per_vhost_data__wind *vhd =
@@ -431,6 +478,8 @@ unsigned int init_airmar(struct lws *wsi, void *user)
   int fd = -1;
   lws_sock_file_fd_type u;
 
+  airmar_restore();
+  
   airmar_wind_msg = &airmar_wind_msgbuf[LWS_PRE];
   airmar_hist_msg = &airmar_hist_msgbuf[LWS_PRE];
 
@@ -441,11 +490,6 @@ unsigned int init_airmar(struct lws *wsi, void *user)
 
   airmar_first_timestamp = this_second;
   airmar_last_timestamp = this_second;
-  
-  for (int i = 0; i < HIST_ENTRIES; i++) {
-    int idx = (this_minute - i) % HIST_ENTRIES;
-    airmar_hist[idx].ts = (this_minute - i) * 60;
-  }
   
   for (int i = 0; i < sizeof(airmartty)/sizeof(char *); i++) {
     airmarfn = airmartty[i];
@@ -513,7 +557,7 @@ unsigned int init_airmar(struct lws *wsi, void *user)
 }
 
 unsigned int
-process_airmar(struct lws *wsi, void *user)
+airmar_process(struct lws *wsi, void *user)
 {
   struct per_session_data__wind *pss = (struct per_session_data__wind *)user;
   struct per_vhost_data__wind *vhd =
@@ -525,7 +569,7 @@ process_airmar(struct lws *wsi, void *user)
   int n;
 
   /* Read and parse a text line from the weather station, tell clients there's data to send */
-  // lwsl_user("process_airmar %d\n");
+  // lwsl_user("airmar_process %d\n");
   if ((n = (int)read(vhd->airmar_fd, buf, sizeof(buf))) <= 0) {
     lwsl_err("Reading from %s failed\n", airmarfn);
     return 1;
@@ -546,10 +590,10 @@ process_airmar(struct lws *wsi, void *user)
   airmar_last_timestamp = this_second;
     
   if (airmar_last_timestamp - airmar_first_timestamp < 5) {
-    lwsl_notice("process_airmar read (%d) %s", n, buf);
+    lwsl_notice("airmar_process read (%d) %s", n, buf);
     lwsl_hexdump_level(LLL_NOTICE, buf, (unsigned int)n);
   } else {
-    lwsl_user("process_airmar read (%d) %s", n, buf);
+    lwsl_user("airmar_process read (%d) %s", n, buf);
     lwsl_hexdump_level(LLL_DEBUG, buf, (unsigned int)n);
   }
   
@@ -674,7 +718,6 @@ process_airmar(struct lws *wsi, void *user)
   //lwsl_user("airmar samples %d south_count %d %s\n", sample_count, south_count, airmar_wind_msg);
 
   // Use the data in this bucket before we reassign it to the new minute
-  unsigned int index = (this_minute % HIST_ENTRIES);
   if (this_minute != airmar_hist_last_minute) {
     if (!(this_minute % AIRMAR_HIST_FREQUENCY)) {
       char entry[128];
@@ -694,9 +737,11 @@ process_airmar(struct lws *wsi, void *user)
       strcat(airmar_hist_msg, entry);
       strcat(airmar_hist_msg, ", \"history\": [");
       for (int i = 0; i < HIST_ENTRIES; i++) { // BARF - this is n^2 in HIST_ENTRIES
-	int h = (this_minute + i) % HIST_ENTRIES;
-	sprintf(entry, AIRMAR_HIST_ENTRY_JSON, airmar_hist[h].ts, airmar_hist[h].speed, airmar_hist[h].gust, airmar_hist[h].dir);
-	strcat(airmar_hist_msg, entry);
+	int h = (airmar_hist_index + i + 1) % HIST_ENTRIES;
+	if (airmar_hist[h].ts != 0) {
+	  sprintf(entry, AIRMAR_HIST_ENTRY_JSON, airmar_hist[h].ts, airmar_hist[h].speed, airmar_hist[h].gust, airmar_hist[h].dir);
+	  strcat(airmar_hist_msg, entry);
+	}
       }
       airmar_hist_msg[strlen(airmar_hist_msg) - 1] = 0; // Chomp off the trailing comma
       strcat(airmar_hist_msg, "]");
@@ -705,13 +750,26 @@ process_airmar(struct lws *wsi, void *user)
       //lwsl_user("airmar history %d entries length %d", HIST_ENTRIES, airmar_hist_len);
       //lwsl_user("%s", airmar_hist_msg);
       new_publication |= SUBSCRIBE_AIRMAR_HIST;
+      airmar_hist_index = (airmar_hist_index + 1) % HIST_ENTRIES;
     }
+    
+    int index = airmar_hist_index;
     airmar_hist[index].gust = 0;
     airmar_hist_last_minute = this_minute;
     //lwsl_user("new minute seconds %u index %d ", tv.tv_sec, index);
+
+    if (airmar_last_save == 0) {
+      airmar_last_save = this_minute;
+    }
+
+    if (this_minute >= (airmar_last_save + AIRMAR_SAVE_FREQ)) {
+      airmar_save();
+      airmar_last_save = this_minute;
+    }
   }
 
   if (new_publication & SUBSCRIBE_AIRMAR_WIND) {
+    int index = airmar_hist_index;
     airmar_hist[index].ts = this_minute * 60;
     airmar_hist[index].speed = aws_avg;
     airmar_hist[index].dir = awa_avg;
@@ -744,8 +802,8 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     vhd->protocol = lws_get_protocol(wsi);
     vhd->vhost = lws_get_vhost(wsi);
 
-    if (HAS_TEMPEST) init_tempest(wsi, user);
-    if (HAS_AIRMAR) init_airmar(wsi, user);
+    if (HAS_TEMPEST) tempest_init(wsi, user);
+    if (HAS_AIRMAR) airmar_init(wsi, user);
 
     break;
 
@@ -935,8 +993,8 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 
     //lwsl_user("Select returns %d 0x%x", ret,*p);
 
-    if (FD_ISSET(vhd->tempest_sock, &fds)) new_pubs |= process_tempest(wsi, user);
-    if (FD_ISSET(vhd->airmar_fd, &fds)) new_pubs |= process_airmar(wsi, user);
+    if (FD_ISSET(vhd->tempest_sock, &fds)) new_pubs |= tempest_process(wsi, user);
+    if (FD_ISSET(vhd->airmar_fd, &fds)) new_pubs |= airmar_process(wsi, user);
 
     /* Enable writing on clients subscribed to the new data */
     lws_start_foreach_llp(struct per_session_data__wind **,
