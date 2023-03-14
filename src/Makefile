@@ -1,4 +1,4 @@
-all: airmard sensord
+all: sensord
 
 sensord: sensord.c
 	cc -g -O -o sensord sensord.c -lwebsockets -lcjson

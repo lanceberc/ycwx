@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -115,8 +116,14 @@ char airmar_wind_len;
 int airmar_recent_idx = 0;
 int airmar_hist_index = 0;
 unsigned long airmar_last_save = 0; // Minute last saved
-#define AIRMAR_SAVE_FREQ 5 // Save wind history every five minutes in case we restart
+int airmar_rebooting = 0;
+#define AIRMAR_REBOOT_TIMEOUT 300
+#define AIRMAR_REBOOT_PATH "/home/stfyc/bin/airmar_restart.sh"
+#define AIRMAR_SAVE_FREQ 5
 #define AIRMAR_SAVE_FILE "/home/stfyc/www/html/data/airmar_history.txt"
+float airmar_high_gust = 0.0;
+unsigned long airmar_last_good_sample = 0;
+unsigned long sensord_start = 0;
 
 /*#define AIRMAR_HIST_ENTRY_JSON "{\"ts\": %u, \"aws\": %4.1f, \"gust\": %4.1f, \"awa\": %5.1f},"*/
 #define AIRMAR_HIST_ENTRY_JSON "{\"sec\": %u, \"speed\": %4.1f, \"gust\": %4.1f, \"dir\": %5.1f},"
@@ -430,16 +437,20 @@ unsigned int airmar_save()
 {
   FILE *fd = fopen(AIRMAR_SAVE_FILE, "w");
   int count = 0;
+  int h = (airmar_hist_index + 1) % HIST_ENTRIES;
+  unsigned long lastts = 0;
+  
   if (fd == NULL) {
     lwsl_err("airmar_save() Couldn't open airmar save file %s\n", AIRMAR_SAVE_FILE);
     return(0);
   }
-  for (int i = 0; i < HIST_ENTRIES; i++) {
-    int h = (airmar_hist_index + i + 1) % HIST_ENTRIES;
-    if (airmar_hist[h].ts != 0) {
-	  fprintf(fd, "%lu %5.1f %5.1f %3.0f\n", airmar_hist[h].ts, airmar_hist[h].speed, airmar_hist[h].gust, airmar_hist[h].dir);
-	  count++;
+  while (h != airmar_hist_index) {
+    if ((airmar_hist[h].ts != 0) && (airmar_hist[h].ts > lastts)) {
+      fprintf(fd, "%lu %5.1f %5.1f %3.0f\n", airmar_hist[h].ts, airmar_hist[h].speed, airmar_hist[h].gust, airmar_hist[h].dir);
+      count++;
+      lastts = airmar_hist[h].ts;
     }
+    h = (h + 1) % HIST_ENTRIES;
   }
   fclose(fd);
   lwsl_notice("airmar_save() %d entries\n", count);
@@ -448,7 +459,9 @@ unsigned int airmar_save()
 
 unsigned int airmar_restore()
 {
-  int i, count = 0;
+  int h = 0, count = 0;
+  unsigned int ts, lastts = 0;
+  float speed, gust, dir;
   FILE *fd = fopen(AIRMAR_SAVE_FILE, "r");
   char rbuf[1024];
 
@@ -456,16 +469,60 @@ unsigned int airmar_restore()
     lwsl_err("airmar_restore() Couldn't open airmar save file %s\n", AIRMAR_SAVE_FILE);
     return(0);
   }
+
   while (fgets(rbuf, sizeof(rbuf), fd)) {
-      int h = airmar_hist_index;
-      int n = sscanf(rbuf, "%lu %f %f %f", &airmar_hist[h].ts, &airmar_hist[h].speed, &airmar_hist[h].gust, &airmar_hist[h].dir);
-      if (n == 4) {
-	count++;
-	airmar_hist_index = (h + 1) % HIST_ENTRIES;
-      }
+    int n = sscanf(rbuf, "%lu %f %f %f", &ts, &speed, &gust, &dir);
+    if ((n == 4) && (ts > lastts)) {
+      airmar_hist[h].ts = ts;
+      airmar_hist[h].speed = speed;
+      gust = (gust >= speed) ? gust : speed;
+      airmar_hist[h].gust = gust;
+      airmar_hist[h].dir = dir;
+      count++;
+      h = (h + 1) % HIST_ENTRIES;
+    }
   }
   fclose(fd);
+  airmar_hist_index = (h - 1) % HIST_ENTRIES;
   lwsl_notice("airmar_restore() %d entries\n", count);
+  return(0);
+}
+
+unsigned int airmar_check()
+{
+  int pid;
+  
+  if (airmar_rebooting) return(0);
+  
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned int this_second = tv.tv_sec;
+  unsigned int this_minute = this_second / 60;
+  char *argv[] = {
+		AIRMAR_REBOOT_PATH,
+		NULL
+  };
+  char *envp[] = { NULL };
+
+  int timeout = (this_second >= airmar_last_good_sample + AIRMAR_REBOOT_TIMEOUT);
+  int high_gust = (airmar_high_gust > 60.0);
+
+  if (!(timeout || high_gust)) return(0);
+  lwsl_notice("High gust %d %f (%d)", high_gust, airmar_high_gust, airmar_rebooting);
+  lwsl_notice("Timeout %d %d (%d)", timeout, this_second - airmar_last_good_sample, airmar_rebooting);
+  if (this_second <= sensord_start + AIRMAR_REBOOT_TIMEOUT) {
+    lwsl_notice("Cancelling reboot - haven't run long enough");
+    return(0);
+  }
+
+  pid = fork();
+  if (!pid) {
+    execve(AIRMAR_REBOOT_PATH, argv, envp);
+    lwsl_err("airmar_check() execve() failed %d %s\n", errno, strerror(errno));
+    return(0);
+  }
+  lwsl_notice("airmar_check() rebooting Airmar (%d, %d, %d) and system pid %d\n", timeout, high_gust, airmar_rebooting, pid);
+  airmar_rebooting = 1;
   return(0);
 }
 
@@ -571,7 +628,7 @@ airmar_process(struct lws *wsi, void *user)
   /* Read and parse a text line from the weather station, tell clients there's data to send */
   // lwsl_user("airmar_process %d\n");
   if ((n = (int)read(vhd->airmar_fd, buf, sizeof(buf))) <= 0) {
-    lwsl_err("Reading from %s failed\n", airmarfn);
+    lwsl_err("Reading from %s failed %d: %s\n", airmarfn, errno, strerror(errno));
     return 1;
   }
     
@@ -696,7 +753,7 @@ airmar_process(struct lws *wsi, void *user)
     sample_count++;
     aws_avg += airmar_recent[i].speed;
     gust = (airmar_recent[i].speed > gust) ? airmar_recent[i].speed : gust;
-    
+
     float s = airmar_recent[i].dir;
     awa_avg += s;
     awa_bias += (s + ((s < 180.0) ? 180.0 : -180.0));
@@ -711,6 +768,9 @@ airmar_process(struct lws *wsi, void *user)
     awa_avg = (awa_bias / sample_count) - 180.0; /* More than half are north-ish */
     awa_avg = (awa_avg >= 0.0) ? awa_avg : awa_avg + 360.0;
   }
+
+  airmar_high_gust = (gust > airmar_high_gust) ? gust : airmar_high_gust;
+  airmar_last_good_sample = this_second;
   
   sprintf(airmar_wind_msg, "{\"event\": \"airmar_update\", \"speed\": %4.1f, \"speed_avg\": %4.1f, \"gust\": %4.1f, \"dir\": %3.0f, \"dir_avg\": %3.0f}", speed, aws_avg, gust, dir, awa_avg);
   airmar_wind_len = strlen(airmar_wind_msg);
@@ -791,6 +851,8 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
   lws_sock_file_fd_type u;
   uint8_t buf[128];
   cJSON *json;
+
+  airmar_check(); // Check airmar health as often as possible
 
   switch (reason) {
   case LWS_CALLBACK_PROTOCOL_INIT:
@@ -1039,6 +1101,12 @@ void sigint_handler(int sig)
 
 int main(int argc, const char **argv)
 {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned int this_second = tv.tv_sec;
+  unsigned int this_minute = this_second / 60;
+  sensord_start = this_second;
+
   struct lws_context_creation_info info;
   struct lws_context *context;
   const char *p;
