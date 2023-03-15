@@ -123,6 +123,7 @@ int airmar_rebooting = 0;
 #define AIRMAR_SAVE_FILE "/home/stfyc/www/html/data/airmar_history.txt"
 float airmar_high_gust = 0.0;
 unsigned long airmar_last_good_sample = 0;
+int airmar_bad_read = 0;
 unsigned long sensord_start = 0;
 
 /*#define AIRMAR_HIST_ENTRY_JSON "{\"ts\": %u, \"aws\": %4.1f, \"gust\": %4.1f, \"awa\": %5.1f},"*/
@@ -491,25 +492,23 @@ unsigned int airmar_restore()
 unsigned int airmar_check()
 {
   int pid;
-  
+
+  /* If we're already rebooting, don't bother to check further */
   if (airmar_rebooting) return(0);
   
   struct timeval tv;
   gettimeofday(&tv, NULL);
   unsigned int this_second = tv.tv_sec;
   unsigned int this_minute = this_second / 60;
-  char *argv[] = {
-		AIRMAR_REBOOT_PATH,
-		NULL
-  };
-  char *envp[] = { NULL };
 
-  int timeout = (this_second >= airmar_last_good_sample + AIRMAR_REBOOT_TIMEOUT);
-  int high_gust = (airmar_high_gust > 60.0);
+  int timeout = (this_second >= airmar_last_good_sample + AIRMAR_REBOOT_TIMEOUT); // Haven't heard from it for a while
+  int high_gust = (airmar_high_gust > 90.0); // Once the Airmar sends a 99.9kt gust it tends to hang
+  int read_error = (airmar_bad_read > 255); // Sometimes the Airmar/USB starts returning error 11 - power cycle seems to fix it
 
-  if (!(timeout || high_gust)) return(0);
+  if (!(timeout || high_gust || read_error)) return(0);
   lwsl_notice("High gust %d %f (%d)", high_gust, airmar_high_gust, airmar_rebooting);
   lwsl_notice("Timeout %d %d (%d)", timeout, this_second - airmar_last_good_sample, airmar_rebooting);
+  lwsl_notice("Read Error %d (%d)", airmar_bad_read, airmar_rebooting);
   if (this_second <= sensord_start + AIRMAR_REBOOT_TIMEOUT) {
     lwsl_notice("Cancelling reboot - haven't run long enough");
     return(0);
@@ -517,11 +516,16 @@ unsigned int airmar_check()
 
   pid = fork();
   if (!pid) {
+    char *argv[] = {
+      AIRMAR_REBOOT_PATH,
+      NULL
+    };
+    char *envp[] = { NULL };
     execve(AIRMAR_REBOOT_PATH, argv, envp);
     lwsl_err("airmar_check() execve() failed %d %s\n", errno, strerror(errno));
     return(0);
   }
-  lwsl_notice("airmar_check() rebooting Airmar (%d, %d, %d) and system pid %d\n", timeout, high_gust, airmar_rebooting, pid);
+  lwsl_notice("airmar_check() rebooting Airmar (%d, %d, %d, %d) and system pid %d\n", timeout, high_gust, read_error, airmar_rebooting, pid);
   airmar_rebooting = 1;
   return(0);
 }
@@ -629,6 +633,7 @@ airmar_process(struct lws *wsi, void *user)
   // lwsl_user("airmar_process %d\n");
   if ((n = (int)read(vhd->airmar_fd, buf, sizeof(buf))) <= 0) {
     lwsl_err("Reading from %s failed %d: %s\n", airmarfn, errno, strerror(errno));
+    airmar_bad_read++;
     return 1;
   }
     
