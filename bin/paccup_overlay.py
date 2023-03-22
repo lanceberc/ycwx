@@ -721,6 +721,46 @@ regions["California-small"] = {
 }
 regions["California-small"]["POIs"].extend(FirePOIs)
 
+regions["California-Coast"] = {
+    "arg": "cacoast",
+    "title": "California Coast",
+    "tz": "America/Los_Angeles",
+    "start": "2023-03-21T00:00:00 -0700",
+    "end":   "2023-03-23T00:00:00 -0700",
+    #"night_exclude": ("0300", "1400"),
+    "area": (-134.00, 31.50, -107.00, 41.00), # lat/long of ll, ur
+    "adjust": "right", # CONUS side
+    "satellite": "GOES-18",
+    "satroot": "GOES/NESDIS_CONUS-West_GLM_1k",
+    "res": "1k",
+    "sector": "CONUS",
+    "model": "HRRR",
+    "gribroot": "NOAA/HRRR/cahrrr",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "barbreduce": 20,
+    "barblen": 4.0,
+    "alpha": 30.0,
+    "size": (1920, 1080),
+    #"lonlat": "auto",
+    "POIs": [
+        ((-122.3862, 37.6163), "SFO", "red"),
+        ((-122.3079, 47.4506), "SEA"),
+        ((-122.5939, 45.5850), "PDX"),
+        ((-119.7741, 39.5057), "RNO"),
+        ((-121.8494, 36.5876), "MRY"),
+        ((-121.5899, 38.6927), "SMF"),
+        ((-119.8367, 34.4245), "SBA"),
+        ((-118.4086, 33.9435), "LAX"),
+        ((-117.1973, 32.7333), "SAN"),
+        ((-115.1543, 36.0838), "LAS"),
+        ((-112.0143, 33.4356), "PHX"),
+        ((-104.6742, 39.8493), "DEN"),
+        ((-111.9869, 40.7886), "SLC"),
+        ((-157.9192, 21.3322), "HNL"),
+    ],
+}
+
 # Weather models
 models = {}
 models["GFS"] = {
