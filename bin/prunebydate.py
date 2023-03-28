@@ -10,6 +10,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-days", default=8, type=int, help="Delete directories older than N days in format YYMMDD");
     parser.add_argument("-dir", nargs='+', help="Root of directories to be culled");
+    parser.add_argument("-nodelete", action='store_true', help="Don't delete, just print what would be deleted");
     parser.add_argument("-log", choices=["debug", "info", "warning", "error", "critical"], default="info", help="Log level")
     args = parser.parse_args()
 
@@ -43,6 +44,7 @@ if __name__ == '__main__':
             if isdate:
                 if e < keepts:
                     logging.info("Deleting %s/%s" % (d, e))
-                    shutil.rmtree("%s/%s" % (d, e))
+                    if not args.nodelete:
+                        shutil.rmtree("%s/%s" % (d, e))
                 else:
                     logging.debug("Keeping %s/%s" % (d, e))

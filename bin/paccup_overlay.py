@@ -721,12 +721,12 @@ regions["California-small"] = {
 }
 regions["California-small"]["POIs"].extend(FirePOIs)
 
-regions["California-Coast"] = {
+regions["CaliforniaCoast"] = {
     "arg": "cacoast",
     "title": "California Coast",
     "tz": "America/Los_Angeles",
-    "start": "2023-03-21T00:00:00 -0700",
-    "end":   "2023-03-23T00:00:00 -0700",
+    "start": "2023-03-01T00:00:00 -0700",
+    "end":   "2023-03-01T00:00:00 -0700",
     #"night_exclude": ("0300", "1400"),
     "area": (-134.00, 31.50, -107.00, 41.00), # lat/long of ll, ur
     "adjust": "right", # CONUS side

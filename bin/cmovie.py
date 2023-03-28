@@ -47,7 +47,7 @@ regions = {
     },
     "cacoast": {
         "goes": "18",
-        "prefix": "California-Coast",
+        "prefix": "CaliforniaCoast",
     },
 }
 

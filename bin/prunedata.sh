@@ -8,3 +8,13 @@ sh /home/stfyc/bin/prunemp4.sh
 find /home/stfyc/www/html/data/SFBOFS -ctime +1 | xargs rm
 find /home/stfyc/www/html/data/SFBOFS -ctime +1 -type d -empty | xargs rmdir
 df /
+
+if [ -d /wx ]
+then
+    df /wx
+    for d in /wx/data/GOES/* /wx/data/overlay/*
+    do
+	/home/stfyc/bin/prunebydate.py -days 90 -dir ${d}
+    done
+    df /wx
+fi
