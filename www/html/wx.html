@@ -291,7 +291,7 @@
 	  .wind-grid {
 	      display: grid;
 	      grid-template-rows: 60% 40%;
-	      grid-template-columns: 50% 50%;
+	      grid-template-columns: 100%;
 	      border-collapse: collapse;
 	      width: 100%;
 	      height: 100%;
@@ -326,6 +326,13 @@
 	  min-width: 0px;
 	  margin: 2px;
       }
+      .wind-row {
+	  display: grid;
+	  grid-template-columns: 50% 50%;
+	  border-collapse: collapse;
+	  width: 100%;
+	  height: 100%;
+      }
       .wind-plot {
 	  font-size: 1.25vw;
 	  max-height: 100%;
@@ -333,6 +340,12 @@
 	  max-width: 100%;
 	  min-width: 0px;
 	  background: var(--background2);
+      }
+      .high-wind-label {
+	  /*fill: red;*/
+	  /*stroke: white;*/
+	  color: red;
+	  background: white;
       }
 
       /* Override d3's 10pt default */
@@ -1233,11 +1246,12 @@
 	      windsNeedRender = false;
 	      return;
 	  }
-	  
+
+	  /*
 	  element = "wind-forecast24"
 	  d3.select("." + element).selectAll("*").remove();
 	  d3.select("." + element).remove();
-
+	  
 	  let pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
 	  let cr = d3.select("#" + element).node().getBoundingClientRect();
 	  let labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
@@ -1263,19 +1277,10 @@
 	  console.log(`plotTempestForecast wind24 ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
 
 	  let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
-
+	  
 	  start = new Date(now);
 	  end = new Date(now + (24 * 60 * 60 * 1000));
 
-	  let data = [];
-	  const forecast = tempestStations[station].forecast_json["forecast"]["hourly"];
-	  forecast.map((d, i) => {
-	      ts = d.time * 1000;
-	      if (ts >= now) {
-		  data.push([new Date(ts), d.wind_avg, d.wind_gust]);
-	      }
-	  });
-	  
 	  svg = d3.select("#" + element)
 	      .append("svg")
 	      .classed("wind-plot", true)
@@ -1335,10 +1340,22 @@
 		    .y(function(d) { return y(d[2]) })
 		    .curve(d3.curveBasis)
 		   );
+	  */
 
+	  let data = [];
+	  const forecast = tempestStations[station].forecast_json["forecast"]["hourly"];
+	  forecast.map((d, i) => {
+	      ts = d.time * 1000;
+	      if (ts >= now) {
+		  data.push([new Date(ts), d.wind_avg, d.wind_gust]);
+	      }
+	  });
+	  
 	  element = "wind-forecast120"
-	  d3.select("." + element).selectAll("*").remove();
-	  d3.select("." + element).remove();
+	  //d3.select("." + element).selectAll("*").remove();
+	  //d3.select("." + element).remove();
+	  d3.select("#" + element).selectAll("*").remove();
+	  //d3.select("#" + element).remove();
 
 	  pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
 	  cr = d3.select("#" + element).node().getBoundingClientRect();
@@ -1381,6 +1398,7 @@
 	      .attr("transform",
 		    "translate(" + margin.left + "," + margin.top + ")");
 	  
+	  start = new Date(now);
 	  end = new Date(now + (120 * 60 * 60 * 1000));
 	  
 	  x = d3.scaleTime()
@@ -1444,12 +1462,19 @@
       });
 
       let windRO = new ResizeObserver(elements => {
-	  windPlotHistory("wind-history-recent", windHistory);
+	  windPlotHistory("wind-history-recent", windHistory, (highWindMode == true) ? 45 : 30);
 	  windStartStopHistory(elements[0]);
 	  plotTempestWindForecast("St. Francis Yacht Club");
       });
 
       let anemometer = null;
+      let highWindMode = false;
+      let highWindTime = false;
+      let highWindCurScene = null;
+
+      // defined in local_config.js
+      // let highWindThreshhold = 25;
+      // let highWindDuration = 60 * 1000; // One minute
 
       tempestSocket = null;
       tempestSocketInitializing = false;
@@ -1580,6 +1605,21 @@
 	      const dir_avg = wind.dir_avg.toFixed(0);
 	      anemometer.update(1, speed_avg);
 	      anemometer.update(0, gust);
+	      if (gust > highWindThreshhold) {
+		  if (highWindMode == false) {
+		      highWindCurScene = curScene;
+		      d3.selectAll(".wx-scene").classed("show", false);
+		      d3.selectAll("#localWind").classed("show", true);
+		  }
+		  highWindMode = true;
+		  highWindTime = Date.now();
+	      } else {
+		  if (highWindMode && (Date.now() > highWindTime + highWindDuration)) {
+		      highWindMode = false;
+		      // Resume regular programming
+		      initializeScene(highWindCurScene);
+		  }
+	      }
 	      d3.selectAll(".wind-span-stfyc").html(speed_avg);
 	      d3.selectAll(".gust-span-stfyc").html(gust);
 	      d3.selectAll(".direction-span-stfyc").html(dir);
@@ -1587,7 +1627,7 @@
 	  }
 	  if (wind.event == "airmar_history") {
 	      windHistory = wind.history;
-	      windPlotHistory("wind-history-recent", windHistory);
+	      windPlotHistory("wind-history-recent", windHistory, (highWindMode == true) ? 45 : 30);
 	      d3.selectAll(".baro-span-stfyc").html(wind.baro);
 	      d3.selectAll(".temperature-span-stfyc").html(wind.temp);
 	  }
@@ -2523,8 +2563,15 @@
 	  if (time < (curSceneTime + scenes[curScene].duration)) {
 	      return;
 	  }
-	  
+
 	  curScene = (curScene + 1) % scenes.length;
+
+	  if (highWindMode) {
+	      // squirrel away curScene - is this needed? can resume from curScene?
+	      highWindCurScene = curScene;
+	      return;
+	  }
+	  
 	  initializeScene(curScene);
       }
 
@@ -2667,6 +2714,9 @@
 
 	  let href = window.location.href;
 
+	  d3.select(".highWindThreshhold").html(highWindThreshhold);
+	  d3.select(".highWindDuration").html(Math.floor(highWindDuration/1000));
+
 	  if (href.indexOf("?kiosk") == -1) {
 	      console.log("interactive mode");
 	      schedule = interactiveSchedule;
@@ -2710,7 +2760,7 @@
 	      classRoot: "anemometer-stfyc",
 	      maxValue: 30, // in knots
 	      arcColorFn: d3.interpolateHslLong("#613CFF", "#FB4B39"), // nice blue & red hues, gradient centers on green
-	      arcSegments: 256, // make dial a smooth rainbow
+	      arcSegments: 512, // make dial a smooth rainbow
 	      arcMajorTicks: 5,
 	      arcLabelFormat: d3.format('d'),
 	      pointers: [
@@ -2869,24 +2919,23 @@
 	  <div id="localWind" class="wx-scene localWind">
 	    <div class="wind-grid">
 	      <div class="wind-cell">
-		<div id="anemometer-stfyc-label" class="label">Current StFYC Race Office Wind</div>
+		<div id="anemometer-stfyc-label" class="label">StFYC Race Office Wind</div>
 		<div id="anemometer-stfyc" class="anemometer-cell"></div>
 		<div id="anemometer-stfyc-plot-label" class="anemometer-stfyc-plot-label anemometer-cell horizontal-center">
 		    Wind <span class="direction-avg-span-stfyc"></span>&#176M @<span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span>&nbsp;kts
 		</div>
 	      </div>
 	      <div class="wind-cell">
-		<div id="wind-history-recent-label" class="label">Recent Wind History</div>
-		<div id="wind-history-recent" class="wind-plot">
+		<div class="wind-row">
+		  <div>
+		    <div id="wind-history-recent-label" class="label">Race Office 6hr Wind History</div>
+		    <div id="wind-history-recent" class="wind-plot"></div>
+		  </div>
+		  <div>
+		    <div id="wind-forecast120-label" class="label">WeatherFlow 5-Day Wind Forecast</div>
+		    <div id="wind-forecast120" class="wind-plot"></div>
+		  </div>
 		</div>
-	      </div>
-	      <div class="wind-cell">
-		<div id="wind-forecast24-label" class="label">24-Hour Wind Forecast</div>
-		<div id="wind-forecast24" class="wind-plot"></div>
-	      </div>
-	      <div class="wind-cell">
-		<div id="wind-forecast120-label" class="label">WeatherFlow 5-Day Area Wind Forecast</div>
-		<div id="wind-forecast120" class="wind-plot"></div>
 	      </div>
 	    </div>
 	  </div>
@@ -3095,6 +3144,10 @@
 		last two minutes and gusts are the highest 1-second reading in the past two minutes.
 	      </p>
 	      <p>
+		If a gust has been over <span class="highWindThreshhold"></span>kts in the last <span class="highWindDuration"></span> seconds
+		the display will switch to the wind display and the wind history graph's Y-axis increases to 45kts.
+	      </p>
+	      <p>
 		As of this writing the Airmar wind strength seems to be fairly accurate when the wind is above ~5kts while the Tempest
 		always reads low. Neither give accurate wind direction. Inaccuracies are probably due to sensor location and may be
 		addressed in the future by putting the Airmar on a taller mast.
@@ -3177,7 +3230,7 @@
 	      <hr>
 	      <span class="about-h3">National Radar & Warnings, Cloud Tops</span>
 	      <p>
-		NOAA has made a push to make its various data and forecast products available on
+		NOAA has made an effort  to make its various data and forecast products available on
 		the Internet in many forms. The National Radar map overlays recent NEXRAD radar mosaics on top of current hazard,
 		watch, and warning areas. More information is available from NOAA's
 		<a href="https://nowcoast.noaa.gov/mariner.html">NowCOAST</a> and
