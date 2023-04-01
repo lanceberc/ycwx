@@ -1,5 +1,6 @@
 // Gauge for anemometer
-let Gauges = {};
+
+let Gauges = {}; // Used with visibility event to redraw - could store object in DOM instead
 
 function Gauge(container, configuration) {
     this.container = container;
@@ -10,7 +11,7 @@ function Gauge(container, configuration) {
 	arcSegments: 0, // # of color segments in dial - defaults to # of ticks
 	arcColorFn: d3.interpolateHsl(d3.rgb('#e8e2ca'), d3.rgb('#3e6c0a')),
 
-	      // If using multiple pointers all values must be specified when configuring
+	// If using multiple pointers all values must be specified when configuring
 	pointers: [
 	    {
 		pointerWidth: 10,
@@ -57,16 +58,7 @@ function Gauge(container, configuration) {
 
     console.log(`Gauge ${container} initialized`);
 }
-	  
-Gauge.prototype.changeHandler = function(e) {
-    eid = e.id;
-    fields = eid.split("-");
-    id = eid.slice(0, eid.indexOf("-value"));
-    if (e != undefined) {
-	console.log("Gauge change " + e.target.id + ": " + e.target.value);
-    }
-}
-	  
+
 Gauge.prototype.render = function() {
     function deg2rad(deg) {
 	return deg * Math.PI / 180;
@@ -89,7 +81,7 @@ Gauge.prototype.render = function() {
     const cr = d3.select(id).node().getBoundingClientRect();
     const labelcr = d3.select(id + "-label").node().getBoundingClientRect();
     const plotlabelcr = d3.select(id + "-plot-label").node().getBoundingClientRect();
-    console.log(`gauge cr ${cr.width} x ${cr.height}`);
+    //console.log(`gauge cr ${cr.width} x ${cr.height}`);
 
     if ((cr.width == 0) && (cr.height == 0)) {
 	return;
@@ -103,13 +95,17 @@ Gauge.prototype.render = function() {
 
     this.pcr = pcr;
 
+    let ar = 16.0 / 9.0; // Aspect ratio
     let width = cr.width;
     let height = pcr.height - (labelcr.height + plotlabelcr.height);
-    let aheight = width * (9.0 / 16.0);
+    let aheight = width / ar;
     //let aheight = width * (3.0 / 4.0);
     if ((aheight < height) || (pcr.height == (labelcr.height + plotlabelcr.height))) {
 	height = aheight;
     }
+
+    // Make bounding box narrower so it can be centered in div
+    width = (width <= height * ar) ? width : height * ar;
 
     d3.select(id).selectAll("*").remove();
     const svg = d3.select(id)
@@ -124,12 +120,11 @@ Gauge.prototype.render = function() {
 
     this.radius = radius;
 		  
-    console.log(`gauge pcr ${pcr.width} x ${pcr.height}`);
-    console.log(`gauge label ${labelcr.width} x ${labelcr.height}`);
-    console.log(`gauge plotlabel ${plotlabelcr.width} x ${plotlabelcr.height}`);
-    console.log(`gauge aheight ${aheight}`);
-    console.log(`gauge viewBox ${width} x ${height}`);
-    console.log(`gauge radius ${radius}`);
+    //console.log(`gauge pcr ${pcr.width} x ${pcr.height}`);
+    //console.log(`gauge label ${labelcr.width} x ${labelcr.height}`);
+    //console.log(`gauge plotlabel ${plotlabelcr.width} x ${plotlabelcr.height}`);
+    //console.log(`gauge aheight ${aheight}`);
+    console.log(`gauge render viewBox ${width} x ${height} radius ${radius}`);
 	      
     let centerTx = 'translate('+ radius +','+ radius +')';
     const range = this.range;
@@ -207,19 +202,6 @@ Gauge.prototype.render = function() {
 
 	//console.log(`gauge render pointer ${i} val ${p.val}`);
     }
-	      
-    // Hidden input
-    for (i in this.config.pointers) {
-	let classId = `${config.classRoot}-value-${i}`;
-	let inputId = `${config.id}-value-${i}`;
-	form = d3.select(id).append("form")
-	    .append("input")
-	    .attr("type", "hidden")
-	    .attr("value", 0.0)
-	    .attr("id", inputId)
-	    .classed(classId, true)
-	    .on('change', this.changeHandler);
-    }
 }
 
 Gauge.prototype.update = function(pointer, newValue) {
@@ -256,5 +238,3 @@ Gauge.prototype.update = function(pointer, newValue) {
 	.attr('transform', 'rotate(' + newAngle +')');
     //console.log("anemometer rotated to " + newAngle);
 }
-
-
