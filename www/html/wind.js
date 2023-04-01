@@ -91,9 +91,9 @@ function windInitialize(callback) {
 
 let windRect = { width: 0, height: 0 };
 
-function windPlotHistory(e, history) {
+function windPlotHistory(e, history, maxRange) {
     let svg, x, y, start, end;
-    let data;
+    let data, id;
 
     if (history == null) {
 	console.log("windPlotHistory: null history");
@@ -103,12 +103,14 @@ function windPlotHistory(e, history) {
     start = new Date(history[0].sec * 1000);
     end = new Date(history[history.length-1].sec * 1000);
 
-    d3.select("." + e).selectAll("*").remove();
-    d3.select("." + e).remove();
+    id = "#" + e;
 
-    let pcr = d3.select("#" + e).node().parentNode.getBoundingClientRect();
-    let cr = d3.select("#" + e).node().getBoundingClientRect();
-    let labelcr = d3.select("#" + e + "-label").node().getBoundingClientRect();
+    d3.select(id).selectAll("*").remove();
+    //d3.select("." + e).remove();
+
+    let pcr = d3.select(id).node().parentNode.getBoundingClientRect();
+    let cr = d3.select(id).node().getBoundingClientRect();
+    let labelcr = d3.select(id + "-label").node().getBoundingClientRect();
     if ((cr.width == 0) && (cr.height == 0)) {
 	return;
     }
@@ -128,11 +130,11 @@ function windPlotHistory(e, history) {
 	windRect.width = width;
 	windRect.height = height;
     }
-    console.log(`windPlotHistory ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
+    console.log(`windPlotHistory ${id} ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
 
     let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
 
-    svg = d3.select("#" + e)
+    svg = d3.select(id)
 	.append("svg")
 	.classed("wind-plot", true)
 	.classed(e, true)
@@ -151,7 +153,7 @@ function windPlotHistory(e, history) {
 	.range([0, width]);
 
     y = d3.scaleLinear()
-	.domain([0, 30])
+	.domain([0, maxRange])
 	.range([height, 0]);
 
     // x-axis
@@ -163,6 +165,7 @@ function windPlotHistory(e, history) {
     // y-axis
     svg.append("g")
 	.classed("label", true)
+	.classed("high-wind-label", (maxRange > 30) ? true : false)
 	.call(d3.axisLeft(y)
 	      .tickArguments([5]));
 
@@ -206,26 +209,26 @@ function windStartStopHistory(e) {
 	console.log(`windStartStopHistory websocket not ready (${windSocket.readyState})`);
 	return;
     }
-    console.log(`wind element ${e.id} new size: ${cr.width} x ${cr.height}`);
+    console.log(`windStartStopHistory target.id ${e.target.id} new size: ${cr.width} x ${cr.height}`);
     if ((cr.width == 0) || (cr.height == 0)) {
 	windSocket.send(JSON.stringify({"subscribe_airmar_history": false}));
-	console.log("windStartStopHistory: stop");
+	console.log("windStartStopHistory: airmar stop");
     } else {
 	windSocket.send(JSON.stringify({"subscribe_airmar_history": true}));
-	console.log("windStartStopHistory: start");
+	console.log("windStartStopHistory: airmar start");
     }
 
-    console.log("windStartStopHistory localTempest " + typeof localTempest);
+    //console.log("windStartStopHistory localTempest " + typeof localTempest);
 
     if (typeof localTempest !== 'undefined') {
 	if ((cr.width == 0) || (cr.height == 0)) {
 	    windSocket.send(JSON.stringify({"subscribe_tempest_wind": false}));
 	    windSocket.send(JSON.stringify({"subscribe_tempest_history": false}));
-	    console.log("windStartStopHistory: stop");
+	    console.log("windStartStopHistory: tempest stop");
 	} else {
 	    windSocket.send(JSON.stringify({"subscribe_tempest_wind": true}));
 	    windSocket.send(JSON.stringify({"subscribe_tempest_history": true}));
-	    console.log("windStartStopHistory: start");
+	    console.log("windStartStopHistory: tempest start");
 	}
     }
 }
