@@ -65,6 +65,15 @@ Gauge.prototype.render = function() {
     }
 
     config = this.config;
+
+    if (typeof this.rendering === 'undefined') {
+	this.rendering = false;
+    }
+
+    if (this.rendering) {
+	return;
+    }
+    this.rendering = true;
 	  
     // a linear scale that maps domain values to a percent from 0..1
     const scale = d3.scaleLinear()
@@ -77,43 +86,70 @@ Gauge.prototype.render = function() {
 
     const id = '#' + this.container;
 
-    const pcr = d3.select(id).node().parentNode.getBoundingClientRect();
-    const cr = d3.select(id).node().getBoundingClientRect();
+    const node = d3.select(id).node();
+    const parentNode = node.parentNode;
+    const parent2Node = parentNode.parentNode;
+    const parent3Node = parent2Node.parentNode;
+    const cr = node.getBoundingClientRect();
+    const pcr = parentNode.getBoundingClientRect();
+    const p3cr = parent3Node.getBoundingClientRect();
     const labelcr = d3.select(id + "-label").node().getBoundingClientRect();
     const plotlabelcr = d3.select(id + "-plot-label").node().getBoundingClientRect();
     //console.log(`gauge cr ${cr.width} x ${cr.height}`);
 
     if ((cr.width == 0) && (cr.height == 0)) {
+	this.rendering = false;
 	return;
     }
     
     if ((typeof this.pcr !== 'undefined') &&
 	(Math.round(this.pcr.width) == Math.round(pcr.width)) &&
 	(Math.round(this.pcr.height) == Math.round(pcr.height))) {
+	this.rendering = false;
 	return;
     }
 
     this.pcr = pcr;
 
+    //let width = cr.width;
+    //let height = pcr.height - (labelcr.height + plotlabelcr.height);
+    let labelHeight = labelcr.bottom - labelcr.top;
+    let plotlabelHeight = plotlabelcr.bottom - plotlabelcr.top;
+    console.log(`gauge render labelcr     ${labelcr.top} ${labelcr.bottom} ${labelHeight}`);
+    console.log(`gauge render pcr         ${pcr.top} ${pcr.bottom} ${pcr.bottom - pcr.top}`);
+    console.log(`gauge render plotlabelcr ${plotlabelcr.top} ${plotlabelcr.bottom} ${plotlabelHeight}`);
+    console.log(`gauge render p3cr ${p3cr.width} x ${p3cr.height}`);
+    
+    //let width = (cr.width) ? cr.width : pcr.right - pcr.left;
+    //let height = (cr.height) ? cr.height : (pcr.bottom - pcr.top) - (labelHeight + plotlabelcr.height);
+    let width = pcr.right - pcr.left;
+    let height = (pcr.bottom - pcr.top) - (labelHeight + plotlabelcr.height);
     let ar = 16.0 / 9.0; // Aspect ratio
-    let width = cr.width;
-    let height = pcr.height - (labelcr.height + plotlabelcr.height);
-    let aheight = width / ar;
-    //let aheight = width * (3.0 / 4.0);
-    if ((aheight < height) || (pcr.height == (labelcr.height + plotlabelcr.height))) {
-	height = aheight;
+    console.log(`gauge render parent ${width} x ${height}`);
+    if (width / height > ar) {
+	width = height * ar;
+	console.log(`gauge render adjust width ${width}`);
+    } else {
+	height = width / ar;
+	console.log(`gauge render adjust height ${height}`);
     }
 
-    // Make bounding box narrower so it can be centered in div
-    width = (width <= height * ar) ? width : height * ar;
+    let margin;
+    if (p3cr.height < p3cr.width) {
+	// Landscape
+	margin = { left: vw(0.00), top: vh(0.00), right: vw(0.00), bottom: vh(0.0) };
+    } else {
+	// Portrait
+	margin = { left: vw(1.50), top: vh(1.50), right: vw(1.50), bottom: vh(0.0) };
+    }
 
     d3.select(id).selectAll("*").remove();
     const svg = d3.select(id)
 	  .append('svg')
 	  .classed(config.classRoot + "-gauge", true)
-	  .attr('width', width)
-	  .attr('height', height)
-	  .attr("viewBox", "0 0 " + width + " " + height);
+	  .attr("width", width).attr("height", height)
+	  .attr("viewBox", -margin.left + " " + -margin.top + " " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
+    ;
 
     let radius = width / 2;
     radius = (radius < height) ? radius : height;
@@ -202,6 +238,7 @@ Gauge.prototype.render = function() {
 
 	//console.log(`gauge render pointer ${i} val ${p.val}`);
     }
+    this.rendering = false;
 }
 
 Gauge.prototype.update = function(pointer, newValue) {
@@ -212,9 +249,14 @@ Gauge.prototype.update = function(pointer, newValue) {
 	    const ratio = this.scale(p.val);
 	    const newAngle = this.config.minAngle + (ratio * this.range);
 	    p.pointer.transition()
+		.duration(0)
+		.attr('transform', 'rotate(' + newAngle +')');
+	    /*
+	    p.pointer.transition()
 		.duration(p.transitionMs)
 		.ease(d3.easeElastic)
 		.attr('transform', 'rotate(' + newAngle +')');
+	    */
 	}
 	return;
     }
@@ -232,9 +274,14 @@ Gauge.prototype.update = function(pointer, newValue) {
 	      
     const ratio = this.scale(newValue);
     const newAngle = this.config.minAngle + (ratio * this.range);
+    /*
     this.config.pointers[pointer].pointer.transition()
 	.duration(config.pointers[pointer].transitionMs)
 	.ease(d3.easeElastic)
+	.attr('transform', 'rotate(' + newAngle +')');
+    */
+    this.config.pointers[pointer].pointer.transition()
+	.duration(0)
 	.attr('transform', 'rotate(' + newAngle +')');
     //console.log("anemometer rotated to " + newAngle);
 }
