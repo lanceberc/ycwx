@@ -89,7 +89,7 @@ function windInitialize(callback) {
     });
 }
 
-let windRect = { width: 0, height: 0 };
+let windHistoryRect = { width: 0, height: 0 };
 
 function windPlotHistory(e, history, maxRange) {
     let svg, x, y, start, end;
@@ -108,43 +108,52 @@ function windPlotHistory(e, history, maxRange) {
     d3.select(id).selectAll("*").remove();
     //d3.select("." + e).remove();
 
-    let pcr = d3.select(id).node().parentNode.getBoundingClientRect();
-    let cr = d3.select(id).node().getBoundingClientRect();
+    let node = d3.select(id).node();
+    let parentNode = node.parentNode;
+    let parent2Node = parentNode.parentNode;
+    let cr = node.getBoundingClientRect();
+    let pcr = parentNode.getBoundingClientRect();
+    let p2cr = parent2Node.getBoundingClientRect();
     let labelcr = d3.select(id + "-label").node().getBoundingClientRect();
     if ((cr.width == 0) && (cr.height == 0)) {
 	return;
     }
 
-    let width = windRect.width;
-    let height = windRect.height;
-    if (cr.width == windRect.width) {
-	console.log(`windPlotHistory width (${windRect.width} x ${windRect.height}) unchanged`);
+    console.log(`windPlotHistory ${id} node ${node.clientWidth} x ${node.clientHeight}`);
+    console.log(`windPlotHistory ${id} pcr ${pcr.width} x ${pcr.height}`);
+
+    //let newWidth = pcr.width;
+    //let newHeight = pcr.height;
+    let newWidth, newHeight;
+    newWidth = (cr.width != 0) ? cr.width : pcr.right - pcr.left;
+    newHeight = (cr.height != 0) ? cr.height : (pcr.bottom - pcr.top) - (labelcr.bottom - labelcr.top);
+
+    let width = windHistoryRect.width;
+    let height = windHistoryRect.height;
+    if ((newWidth == width) && (newHeight == height)) {
+	console.log(`windPlotHistory width (${windHistoryRect.width} x ${windHistoryRect.height}) unchanged`);
     } else {
-	width = cr.width;
-	height = cr.height;
-	height = pcr.height - labelcr.height;
-	let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
-	if ((aheight < height) || (pcr.height == labelcr.height)) {
-	    height = aheight;
-	}
-	windRect.width = width;
-	windRect.height = height;
+	width = newWidth;
+	height = newHeight;
+	windHistoryRect.width = width;
+	windHistoryRect.height = height;
     }
     console.log(`windPlotHistory ${id} ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
 
-    let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
+    let margin;
+    if (p2cr.height < p2cr.width) { // Portrait vs Landscape margins
+	margin = { left: vw(1.25), top: vh(0.5), right: vw(0.0), bottom: vh(3.50) };
+    } else {
+	margin = { left: vw(3.00), top: vh(0.5), right: vw(0.0), bottom: vh(3.50) };
+    }
 
     svg = d3.select(id)
 	.append("svg")
 	.classed("wind-plot", true)
 	.classed(e, true)
-	.attr("viewBox",
-	      -margin.left + " " +
-	      -margin.top + " " +
-	      (width + margin.left + margin.right) + " " +
-	      (height + margin.top + margin.bottom))
+	.attr("viewBox", -margin.left + " " + -margin.top + " " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
 	.attr("preserveAspectRatio", "none")
-	.attr("width", width).attr("height", height)
+	.attr("width", width - (margin.left + margin.right)).attr("height", height - (margin.top + margin.bottom))
 	.append("g")
 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     

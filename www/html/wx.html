@@ -287,11 +287,54 @@
       .text-scene a:link {
 	  color: var(--white);
       }
+      .local-wind-grid {
+	  display: grid;
+	  grid-template-rows: minmax(10px, 60%) minmax(10px, 40%);
+	  row-gap: 4px;
+	  /*grid-template-columns: 100%;*/
+	  width: 100%;
+	  height: 100%;
+	  justify-items: center;
+      }
+      .local-wind-row1 {
+	  display: grid;
+	  grid-template-areas: "anemometer";
+	  grid-template-columns: 100%;
+	  column-gap: 4px;
+	  width: 100%;
+	  height: 100%;
+	  justify-items: center;
+      }
+      .local-wind-row2 {
+	  display: grid;
+	  grid-template-areas: "history forecast";
+	  grid-template-columns: minmax(10px, 50%) minmax(10px,  50%);
+	  width: 100%;
+	  height: 100%;
+	  justify-items: center;
+      }
+      .local-wind-cell {
+	  margin: 4px;
+	  max-height: 100%;
+	  min-height: 0px;
+	  max-width: 100%;
+	  min-height: 0px;
+	  width: 100%;
+	  height: 100%;
+      }
+      .wind-history-cell {
+	  margin-left: 0px;
+	  grid-area: history;
+      }
+      .wind-forecast-cell {
+	  margin-right: 0px;
+	  grid-area: forecast;
+      }
       @media (min-aspect-ratio: 4/3) {
 	  .wind-grid {
 	      display: grid;
 	      grid-template-rows: 60% 40%;
-	      grid-template-columns: 100%;
+	      grid-template-columns: 100% 100%;
 	      border-collapse: collapse;
 	      width: 100%;
 	      height: 100%;
@@ -340,6 +383,7 @@
 	  max-width: 100%;
 	  min-width: 0px;
 	  background: var(--background2);
+	  margin: 4px;
       }
       .high-wind-label {
 	  /*fill: red;*/
@@ -563,13 +607,6 @@
 	  height: 100%;
       }
       @media (max-aspect-ratio: 4/3) {
-	  .wind-grid {
-	      display: grid;
-	      grid-template-columns: 100%;
-	      border-collapse: collapse;
-	      width: 100%;
-	      height: auto;
-	  }
 	  .tides-grid {
 	      display: grid;
 	      /*grid-template-rows: 100%;
@@ -660,19 +697,45 @@
 	  }
       }
       @media (max-aspect-ratio: 1/1) {
+	  .local-wind-grid {
+	      grid-template-rows: auto;
+	      height: auto;
+	  }
+	  .local-wind-row1 {
+	      height: auto;
+	  }
+	  .local-wind-row2 {
+	      display: grid;
+	      grid-template-columns: 100%;
+	      grid-template-areas: "history" "forecast";
+	      grid-template-rows: minmax(10px, 50%);
+	      border-collapse: collapse;
+	      width: 100%;
+	      height: auto;
+	  }
+	  .wind-history-cell {
+	      margin-right: 0px;
+	      height: 50vh;
+	  }
+	  .wind-forecast-cell {
+	      margin-left: 0px;
+	      height: 50vh;
+	  }
 	  .label {
-	      font-size: 2.5vw;
+	      font-size: 2.0vh;
+	      text-align: left;
 	  }
 	  .anemometer-stfyc-gauge-label {
-	      font-size: 5.00vw;
+	      font-size: 2.50vh;
 	  }
 	  .anemometer-stfyc-plot-label {
-	      font-size: 5.00vw;
+	      font-size: 3.00vh;
 	  }
       }
       @media (min-aspect-ratio: 1/1) {
 	  .label {
 	      font-size: 1.25vw;
+	      text-align: left;
 	  }
       }
     </style>
@@ -1247,101 +1310,6 @@
 	      return;
 	  }
 
-	  /*
-	  element = "wind-forecast24"
-	  d3.select("." + element).selectAll("*").remove();
-	  d3.select("." + element).remove();
-	  
-	  let pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
-	  let cr = d3.select("#" + element).node().getBoundingClientRect();
-	  let labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
-	  if ((cr.width == 0) && (cr.height == 0)) {
-	      return;
-	  }
-
-	  let width = wind24Rect.width;
-	  let height = wind24Rect.height;
-	  if (cr.width == currentRect.width) {
-	      console.log(`plotTempestForecast wind24 width (${currentRect.width} x ${currentRect.height}) unchanged`);
-	  } else {
-	      width = cr.width;
-	      height = cr.height;
-	      height = pcr.height - labelcr.height;
-	      let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
-	      if ((aheight < height) || (pcr.height == labelcr.height)) {
-		  height = aheight;
-	      }
-	      wind24Rect.width = width;
-	      wind24Rect.height = height;
-	  }
-	  console.log(`plotTempestForecast wind24 ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
-
-	  let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
-	  
-	  start = new Date(now);
-	  end = new Date(now + (24 * 60 * 60 * 1000));
-
-	  svg = d3.select("#" + element)
-	      .append("svg")
-	      .classed("wind-plot", true)
-	      .classed(element, true)
-	      .attr("viewBox", -margin.left + " " + -margin.top + " " + (width + margin.left + margin.right) +" " + (height + margin.top + margin.bottom))
-	      .attr("preserveAspectRatio", "none")
-	      .attr("width", width).attr("height", height)
-	      .append("g")
-	      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-	  
-	  x = d3.scaleTime()
-	      .domain([start, end])
-	      .range([0, width]);
-	  
-	  y = d3.scaleLinear()
-	      .domain([0, 30])
-	      .range([height, 0]);
-
-	  // x-axis
-	  svg.append("g")
-	      .attr("transform", "translate(0," + height + ")")
-	      .classed("label", true)
-	      .call(d3.axisBottom(x));
-
-	  // y-axis
-	  svg.append("g")
-	      .classed("label", true)
-	      .call(d3.axisLeft(y)
-		    .tickArguments([5]));
-
-	  // y-axis gridlines
-	  svg.append("g")			
-	      .attr("class", "grid")
-	      .call(d3.axisLeft(y)
-		    .ticks([5])
-		    .tickSize(-width)
-		    .tickFormat("")
-		   );
-	  
-	  // wind_avg
-	  svg.append("path")
-	      .datum(data)
-	      .classed("wind-plot-wind-avg", true)
-	      .attr("d", d3.area()
-		    .x(function(d) { return x(d[0]) })
-		    .y1(function(d) { return y(d[1]) })
-		    .y0(function(d) { return y(0) })
-		    .curve(d3.curveBasis)
-		   );
-	  
-	  // wind_gust
-	  svg.append("path")
-	      .datum(data)
-	      .classed("wind-plot-wind-gust", true)
-	      .attr("d", d3.line()
-		    .x(function(d) { return x(d[0]) })
-		    .y(function(d) { return y(d[2]) })
-		    .curve(d3.curveBasis)
-		   );
-	  */
-
 	  let data = [];
 	  const forecast = tempestStations[station].forecast_json["forecast"]["hourly"];
 	  forecast.map((d, i) => {
@@ -1351,52 +1319,53 @@
 	      }
 	  });
 	  
-	  element = "wind-forecast120"
-	  //d3.select("." + element).selectAll("*").remove();
-	  //d3.select("." + element).remove();
-	  d3.select("#" + element).selectAll("*").remove();
-	  //d3.select("#" + element).remove();
+	  let element = "wind-forecast120"
+	  let id = "#" + element;
+	  d3.select(id).selectAll("*").remove();
 
-	  pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
-	  cr = d3.select("#" + element).node().getBoundingClientRect();
-	  labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
+	  const node = d3.select(id).node();
+	  const parentNode = node.parentNode;
+	  const parent2Node = parentNode.parentNode;
+	  const cr = node.getBoundingClientRect();
+	  const pcr = parentNode.getBoundingClientRect();
+	  const p2cr = parent2Node.getBoundingClientRect();
+	  const labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
 	  if ((cr.width == 0) && (cr.height == 0)) {
 	      return;
 	  }
 
-	  width = wind120Rect.width;
-	  height = wind120Rect.height;
-	  if (cr.width == currentRect.width) {
-	      console.log(`plotTempestForecast wind120 width (${currentRect.width} x ${currentRect.height}) unchanged`);
+	  let newWidth, newHeight;
+	  newWidth = (cr.width != 0) ? cr.width : pcr.right - pcr.left;
+	  newHeight = (cr.height != 0) ? cr.height : (pcr.bottom - pcr.top) - (labelcr.bottom - labelcr.top);
+	  
+	  let width = wind120Rect.width;
+	  let height = wind120Rect.height;
+	  if ((newWidth == width) && (newHeight == height)) {
+	      console.log(`plotTempestForecast wind120 width (${width} x ${height}) unchanged`);
 	  } else {
-	      width = cr.width;
-	      height = cr.height;
-	      height = pcr.height - labelcr.height;
-	      let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
-	      if ((aheight < height) || (pcr.height == labelcr.height)) {
-		  height = aheight;
-	      }
+	      width = newWidth;
+	      height = newHeight;
 	      wind120Rect.width = width;
 	      wind120Rect.height = height;
 	  }
 	  console.log(`plotTempestForecast wind120 ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
 
-	  margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
+	  let margin;
+	  if (p2cr.height < p2cr.width) {
+	      margin = { left: vw(1.25), top: vh(0.5), right: vw(0.0), bottom: vh(3.50) };
+	  } else {
+	      margin = { left: vw(3.00), top: vh(0.5), right: vw(0.0), bottom: vh(3.50) };
+	  }
 
-	  // Take these from above
-	  //margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(2.75) };
-	  //width = 640;
-	  //height = 360;
       	  svg = d3.select("#wind-forecast120")
 	      .append("svg")
 	      .classed("wind-plot", true)
 	      .classed("wind-forecast120", true)
-	      .attr("viewBox", -margin.left + " " + -margin.top + " " + (width + margin.left + margin.right) +" " + (height + margin.top + margin.bottom))
+	      .attr("viewBox", -margin.left + " " + -margin.top + " " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
 	      .attr("preserveAspectRatio", "none")
-	      .attr("width", width).attr("height", height)
+	      .attr("width", width - (margin.left + margin.right)).attr("height", height - (margin.top + margin.bottom))
 	      .append("g")
-	      .attr("transform",
-		    "translate(" + margin.left + "," + margin.top + ")");
+	      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 	  
 	  start = new Date(now);
 	  end = new Date(now + (120 * 60 * 60 * 1000));
@@ -1462,7 +1431,7 @@
       });
 
       let windRO = new ResizeObserver(elements => {
-	  windPlotHistory("wind-history-recent", windHistory, (highWindMode == true) ? 45 : 30);
+	  windPlotHistory("wind-history-recent", windHistory, (highWindMode == true) ? 50 : 30);
 	  windStartStopHistory(elements[0]);
 	  plotTempestWindForecast("St. Francis Yacht Club");
       });
@@ -1627,7 +1596,7 @@
 	  }
 	  if (wind.event == "airmar_history") {
 	      windHistory = wind.history;
-	      windPlotHistory("wind-history-recent", windHistory, (highWindMode == true) ? 45 : 30);
+	      windPlotHistory("wind-history-recent", windHistory, (highWindMode == true) ? 50 : 30);
 	      d3.selectAll(".baro-span-stfyc").html(wind.baro);
 	      d3.selectAll(".temperature-span-stfyc").html(wind.temp);
 	  }
@@ -2917,24 +2886,24 @@
 	  </div>
 
 	  <div id="localWind" class="wx-scene localWind">
-	    <div class="wind-grid">
-	      <div class="wind-cell">
-		<div id="anemometer-stfyc-label" class="label">StFYC Race Office Wind</div>
-		<div id="anemometer-stfyc" class="anemometer-cell"></div>
-		<div id="anemometer-stfyc-plot-label" class="anemometer-stfyc-plot-label anemometer-cell horizontal-center">
+	    <div class="local-wind-grid">
+	      <div class="local-wind-row1">
+		<div class="local-wind-cell" style="grid-area: anemometer">
+		  <div id="anemometer-stfyc-label" class="label">StFYC Race Office Wind</div>
+		  <div id="anemometer-stfyc" class="anemometer-cell"></div>
+		  <div id="anemometer-stfyc-plot-label" class="anemometer-stfyc-plot-label anemometer-cell horizontal-center">
 		    Wind <span class="direction-avg-span-stfyc"></span>&#176M @<span class="wind-span-stfyc"></span> Gust <span class="gust-span-stfyc"></span>&nbsp;kts
+		  </div>
 		</div>
 	      </div>
-	      <div class="wind-cell">
-		<div class="wind-row">
-		  <div>
-		    <div id="wind-history-recent-label" class="label">Race Office 6hr Wind History</div>
-		    <div id="wind-history-recent" class="wind-plot"></div>
-		  </div>
-		  <div>
-		    <div id="wind-forecast120-label" class="label">WeatherFlow 5-Day Wind Forecast</div>
-		    <div id="wind-forecast120" class="wind-plot"></div>
-		  </div>
+	      <div class="local-wind-row2">
+		<div id="wind-history-recent-cell" class="local-wind-cell wind-history-cell">
+		  <div id="wind-history-recent-label" class="label">Race Office 6hr Wind History</div>
+		  <div id="wind-history-recent" class="wind-plot"></div>
+		</div>
+		<div id="wind-forecast120-cell" class="local-wind-cell wind-forecast-cell">
+		  <div id="wind-forecast120-label" class="label">WeatherFlow 5-Day Wind Forecast</div>
+		  <div id="wind-forecast120" class="wind-plot"></div>
 		</div>
 	      </div>
 	    </div>
