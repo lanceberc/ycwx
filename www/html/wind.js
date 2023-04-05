@@ -168,12 +168,12 @@ function windPlotHistory(e, history, maxRange) {
     // x-axis
     svg.append("g")
 	.attr("transform", "translate(0," + height + ")")
-	.classed("label", true)
+	.classed("wind-graph-label", true)
 	.call(d3.axisBottom(x));
 
     // y-axis
     svg.append("g")
-	.classed("label", true)
+	.classed("wind-graph-label", true)
 	.classed("high-wind-label", (maxRange > 30) ? true : false)
 	.call(d3.axisLeft(y)
 	      .tickArguments([5]));
