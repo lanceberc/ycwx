@@ -331,6 +331,9 @@
 	  margin-right: 0px;
 	  grid-area: forecast;
       }
+      .wind-graph-label {
+	  font-size: 1.25vw;
+      }
       @media (min-aspect-ratio: 4/3) {
 	  .tides-grid {
 	      display: grid;
@@ -715,7 +718,11 @@
 	      height: 50vh;
 	  }
 	  .label {
-	      font-size: 2.0vh;
+	      font-size: 2.0vw;
+	      text-align: left;
+	  }
+	  .events-text {
+	      font-size: 2.0vw;
 	      text-align: left;
 	  }
 	  .anemometer-stfyc-gauge-label {
@@ -727,9 +734,14 @@
       }
       @media (min-aspect-ratio: 1/1) {
 	  .label {
+	      font-size: 1.65vw;
+	      text-align: left;
+	  }
+	  .events-text {
 	      font-size: 1.25vw;
 	      text-align: left;
 	  }
+
       }
     </style>
     
@@ -757,6 +769,9 @@
     <script src="NowCOAST.js"  defer=""></script>
     <!-- <script src="currentMap.js"  defer=""></script> -->
     <script src="gis.js"  defer=""></script>
+
+    <link rel="stylesheet" href="wfforecast.css">
+    <script src="wfforecast.js"></script>
 
     <script>
 
@@ -1058,6 +1073,10 @@
       function vmin(v) { return Math.min(vh(v), vw(v)); }
       function vmax(v) { return Math.max(vh(v), vw(v)); }
 
+      // Tempest forecasts are implemented at objects
+      let wfstfyc;
+      let wftinsley;
+      
       const tempestFieldMap = {
   	  "temp": { "field": "air_temperature", "convert": c2f, "precision": 1 },
 	  "pressure": {"field": "sea_level_pressure", "convert": mb2mb, "precision": 0 },
@@ -1374,12 +1393,12 @@
 	  // x-axis
 	  svg.append("g")
 	      .attr("transform", "translate(0," + height + ")")
-	      .classed("label", true)
+	      .classed("wind-graph-label", true)
 	      .call(d3.axisBottom(x));
 
 	  // y-axis
 	  svg.append("g")
-	      .classed("label", true)
+	      .classed("wind-graph-label", true)
 	      .call(d3.axisLeft(y)
 		    .tickArguments([5]));
 
@@ -1956,13 +1975,13 @@
 	      .append("g")
 	      .attr("opacity", 1)
 	      .classed("tide-plot-label", true)
-	      .classed("label", true)
+	      .classed("events-label", true)
 	      .attr("transform", function(d, i) {
 		  return("translate(" + x(d[0]) + ", " + y(labelClamp(d[1])) + ")")
 	      })
 	      .append('text')
 	      .classed("tide-plot-label-item", true)
-	      .classed("label", true)
+	      .classed("events-text", true)
 	      .attr("text-anchor", "middle")
 	      .attr("dx", 0)
 	      .attr("dy", function(d, i) { return(d[3] == "H" ? "-0.45em" : "1.3em") } )
@@ -2041,7 +2060,7 @@
 	      let table = d3.select("#current-events-content-" + noaaCurrentStation).append("div")
 		  .classed("current-events-table", true)
 		  .classed("current-events-table-" + noaaCurrentStation, true)
-		  .classed("label", true);
+		  .classed("events-text", true);
 
 	      let header = table.append("div")
 		  .classed("current-events-table-header", true)
@@ -2209,13 +2228,13 @@
 	      .append("g")
 	      .attr("opacity", 1)
 	      .classed("tide-plot-label", true)
-	      .classed("label", true)
+	      .classed("events-text", true)
 	      .attr("transform", function(d, i) {
 		  return("translate(" + x(d[0]) + ", " + y(d[1]) + ")")
 	      })
 	      .append('text')
 	      .classed("current-plot-label-item", true)
-	      .classed("label", true)
+	      .classed("events-text", true)
 	      .attr("text-anchor", "middle")
 	      .attr("dx", 0)
 	      .attr("dy", function(d, i) { return(d[3] == "Max Flood" ? "-0.45em" : "1.3em") } )
@@ -2470,7 +2489,13 @@
 	      // Doesn't happen very often
 	      fetchNWS();
 	  }
-	  
+
+	  // Adding one minute 
+	  if (!((minute+9) % 10)) {
+	      wfstfyc.fetch();
+	      wftinsley.fetch();
+	  }
+
 	  if (minute > 30) {
 	      // Change current chart once per hour after half-past.
 	      /*
@@ -2674,6 +2699,7 @@
 	  }
       }
 
+      let kioskMode = false;
       function initialize() {
 	  console.log("Initializing wx page");
 	  initializeLocalObs();
@@ -2695,6 +2721,7 @@
 	      rotateScene();
 	  } else {
 	      console.log("Kiosk mode");
+	      kioskMode = true;
 	      schedule = productionSchedule;
 	      initializeProgram(0);
 	      setCarouselMode("Carousel");
@@ -2742,6 +2769,13 @@
 	  fetchTempestForecast("St. Francis Yacht Club");
 
 	  initializeTempestStreams();
+
+	  wfstfyc = new WFForecast("wf-stfyc", "74155", "stfyc");
+	  wftinsley = new WFForecast("wf-tinsley", "42921", "tinsley");
+
+	  // Initial fetch
+	  wfstfyc.fetch();
+	  wftinsley.fetch();
 
 	  if (typeof local_windURL !== 'undefined') {
 	      windURL = local_windURL;
@@ -3000,12 +3034,24 @@
 	  </div>
 
 	  <div id="WeatherFlowStFYCScene" class="wx-scene">
+	    <div class="label">WeatherFlow 48 Hour Forecast</div>
+	    <div id="wf-stfyc"></div>
+	  </div>
+
+	  <div id="WeatherFlowTinsleyScene" class="wx-scene">
+	    <div class="label">WeatherFlow 48 Hour Forecast</div>
+	    <div id="wf-tinsley"></div>
+	  </div>
+	  
+<!--
+	  <div id="WeatherFlowStFYCScene" class="wx-scene">
 	    <iframe src="https://tempestwx.com/station/74155/" class="wxFlow-frame" title="StFYC WeatherFlow Forecast" loading="lazy" allow="fullscreen"></iframe>
 	  </div>
 
 	  <div id="WeatherFlowTinsleyScene" class="wx-scene" width="1280" height="720" loading="lazy" allow="fullscreen">
 	    <iframe src="https://tempestwx.com/station/42921/" class="wxFlow-frame" title="StFYC WeatherFlow Forecast"></iframe>
 	  </div>
+-->
 <!--
 	  <div id="vesselFinderScene" class="wx-scene">
 	    <div class="obs-grid">
@@ -3162,6 +3208,7 @@
 		Monterey which develops and runs some of the Navy's weather models.
 	      </p>
 	      <hr>
+	      <div><img src="/images/forecast.jpg" class="about-image"></div>
 	      <span class="about-h3">WeatherFlow Forecasts</span>
 	      <p>
 		<a href="https://weatherflow.com/">WeatherFlow</a> combines the data it gathers from customer weather stations with NOAA
@@ -3169,7 +3216,9 @@
 		run the popular sports weather web sites and apps
 		<a href="https://sailflow.com/">SailFlow</a>,
 		<a href="https://wx.iwindsurf.com/">iWindSurf</a>, and
-		<a href="https://wx.ikitesurf.com/">iKiteSurf</a>.
+		<a href="https://wx.ikitesurf.com/">iKiteSurf</a>. WeatherFlow uses the data from the Tempest weather stations at the
+		<a href="https://tempestwx.com/station/74155/">City clubsite</a> and
+		<a href="https://tempestwx.com/station/42921/">Tinsley Island</a> as input for the custom local forcasts.
 	      </p>
 	      <hr>
 	      <div><img src="/images/sfc_analysis.jpg" class="about-image"></div>
