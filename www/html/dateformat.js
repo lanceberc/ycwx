@@ -44,11 +44,14 @@ Date.prototype.format = function(f) {
     let date = (this.getDate() < 10 ? "0" : "") + this.getDate().toString();
     let hour = (this.getHours() < 10 ? "0" : "") + this.getHours().toString(); 
     let minute = (this.getMinutes() < 10 ? "0" : "") + this.getMinutes().toString();
+    let second = (this.getSeconds() < 10 ? "0" : "") + this.getSeconds().toString();
     let day = shortDays[this.getDay()];
     let mon = shortMonths[this.getMonth()];
 
     if (f == "time") {
 	return(`${hour}:${minute}`);
+    } else if (f == "longtime") {
+	return(`${hour}:${minute}:${second}`);
     } else if (f == "short") {
 	return(`${day}, ${mon} ${date} ${hour}:${minute}`);
     } else if (f == "year") {
@@ -61,6 +64,8 @@ Date.prototype.format = function(f) {
 	return(hour);
     } else if (f == "minute") {
 	return(minute);
+    } else if (f == "second") {
+	return(second);
     } else if (f == "day") {
 	return(day);
     } else if (f == "ymd") {
