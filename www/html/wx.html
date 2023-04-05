@@ -2490,12 +2490,6 @@
 	      fetchNWS();
 	  }
 
-	  // Adding one minute 
-	  if (!((minute+9) % 10)) {
-	      wfstfyc.fetch();
-	      wftinsley.fetch();
-	  }
-
 	  if (minute > 30) {
 	      // Change current chart once per hour after half-past.
 	      /*
@@ -2773,10 +2767,6 @@
 	  wfstfyc = new WFForecast("wf-stfyc", "74155", "stfyc");
 	  wftinsley = new WFForecast("wf-tinsley", "42921", "tinsley");
 
-	  // Initial fetch
-	  wfstfyc.fetch();
-	  wftinsley.fetch();
-
 	  if (typeof local_windURL !== 'undefined') {
 	      windURL = local_windURL;
 	  }
@@ -3034,12 +3024,12 @@
 	  </div>
 
 	  <div id="WeatherFlowStFYCScene" class="wx-scene">
-	    <div class="label">WeatherFlow 48 Hour Forecast</div>
+	    <div class="label">WeatherFlow 72 Hour Forecast</div>
 	    <div id="wf-stfyc"></div>
 	  </div>
 
 	  <div id="WeatherFlowTinsleyScene" class="wx-scene">
-	    <div class="label">WeatherFlow 48 Hour Forecast</div>
+	    <div class="label">WeatherFlow 72 Hour Forecast</div>
 	    <div id="wf-tinsley"></div>
 	  </div>
 	  

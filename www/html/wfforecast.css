@@ -1,158 +1,155 @@
-<style>
-  .wf {
-      display: block;
-      font-family: Courier;
-  }
-  .wf-current-conditions-old {
-      display: grid;
-      grid-template-columns: auto auto;
-      grid-template-areas:
-	  "station time"
-	  "sunrise sunset"
-	  "temp icon"
-	  "feels_like conditions"
-	  "humidity wind"
-	  "pressure sun";
-      justify-items: center;
-      font-family: Arial;
-      background: var(--foreground2);
-      margin: 0.25vw;
-      padding: 0.25vw;
-      font-size: 2.2vw;
-  }
-  .wf-current-conditions {
-      display: grid;
-      grid-template-columns: auto auto;
-      grid-template-areas:
-	  "station time"
-	  "sunrise sunset"
-	  "sun .";
-      justify-items: center;
-      font-family: Arial;
-      background: var(--foreground2);
-      margin: 0.25vw;
-      padding: 0.25vw;
-      font-size: 2.2vw;
-  }
-  .wf-cc-station {
-      grid-area: station;
-  }
-  .wf-cc-time {
-      grid-area: time;
-  }
-  .wf-cc-sunrise {
-      grid-area: sunrise;
-  }
-  .wf-cc-sunset {
-      grid-area: sunset;
-  }
-  .wf-cc-temp {
-      font-size: 10vw;
-      grid-area: temp;
-  }
-  .wf-cc-icon {
-      grid-area: icon;
-      width: 10vw;
-      height: 10vw;
-      background-repeat: no-repeat;
-      background-position: 50% 0;
-      background-size: 100%;
-  }
-  .wf-cc-feels-like {
-      grid-area: feels_like;
-  }
-  .wf-cc-conditions {
-      grid-area: conditions;
-  }
-  .wf-cc-humidity {
-      grid-area: humidity;
-  }
-  .wf-cc-wind {
-      grid-area: wind;
-  }
-  .wf-cc-pressure {
-      grid-area: pressure;
-  }
-  .wf-cc-sun {
-      grid-area: sun;
-  }
-  .wf-hourly-forecast {
-      display: grid;
-      grid-template-columns: auto repeat(24, minmax(0, 1fr));
-      grid-template-areas:
-	  "day"
-	  "date"
-	  "time"
-	  "conditions"
-	  "icon"
-	  "temp"
-	  "pop"
-	  "precip_icon"
-	  "wind_avg"
-	  "wind_gust"
-	  "wind_direction"
-	  "wind_direction_cardinal";
-      column-gap: 0.1vw;
-      row-gap: 0.1vw;
-      background: var(--foreground3);
-      color: black;
-      margin: 0.25vw;
-      padding: 0.25vw;
-      text-align: center;
-      font-size: 1.4vw;
-  }
-  .wf-hourly-day {
-      grid-area: day;
-  }
-  .wf-hourly-date {
-      grid-area: date;
-  }
-  .wf-hourly-time {
-      grid-area: time;
-  }
-  .wf-hourly-conditions {
-      grid-area: conditions;
-  }
-  .wf-hourly-icon {
-      grid-area: icon;
-      width: 2.5vw;
-      height: 2.5vw;
-      background-repeat: no-repeat;
-      background-position: 50% 0;
-      background-size: 100%;
-      justify-self: center;
-  }
-  .wf-hourly-temp {
-      grid-area: temp;
-  }
-  .wf-hourly-pop {
-      grid-area: pop;
-  }
-  .wf-hourly-pop {
-      grid-area: pop;
-  }
-  .wf-hourly-precip-icon {
-      grid-area: precip_icon;
-  }
-  .wf-hourly-wind-avg {
-      grid-area: wind_avg;
-  }
-  .wf-hourly-wind-gust {
-      grid-area: wind_gust;
-  }
-  .wf-hourly-wind-direction {
-      grid-area: wind_direction;
-  }
-  .wf-hourly-wind-direction-cardinal {
-      grid-area: wind_direction_cardinal;
-      font-size: 1.2vw;
-  }
-  .wf-footer {
-      font-family: Arial;
-      background: var(--foreground2);
-      margin: 0.25vw;
-      padding: 0.25vw;
-      font-size: 1.8vw;
-      text-align: end;
-  }
-</style>
+.wf {
+    display: block;
+    font-family: Courier;
+}
+.wf-current-conditions-old {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas:
+	"station time"
+	"sunrise sunset"
+	"temp icon"
+	"feels_like conditions"
+	"humidity wind"
+	"pressure sun";
+    justify-items: center;
+    font-family: Arial;
+    background: var(--foreground2);
+    margin: 0.25vw;
+    padding: 0.25vw;
+    font-size: 2.2vw;
+}
+.wf-current-conditions {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas:
+	"station . time"
+	"sunrise sun sunset";
+    justify-items: center;
+    font-family: Arial;
+    background: var(--foreground2);
+    margin: 0.25vw;
+    padding: 0.25vw;
+    font-size: 2.0vw;
+}
+.wf-cc-station {
+    grid-area: station;
+}
+.wf-cc-time {
+    grid-area: time;
+}
+.wf-cc-sunrise {
+    grid-area: sunrise;
+}
+.wf-cc-sunset {
+    grid-area: sunset;
+}
+.wf-cc-temp {
+    grid-area: temp;
+    font-size: 10vw;
+}
+.wf-cc-icon {
+    grid-area: icon;
+    width: 10vw;
+    height: 10vw;
+    background-repeat: no-repeat;
+    background-position: 50% 0;
+    background-size: 100%;
+}
+.wf-cc-feels-like {
+    grid-area: feels_like;
+}
+.wf-cc-conditions {
+    grid-area: conditions;
+}
+.wf-cc-humidity {
+    grid-area: humidity;
+}
+.wf-cc-wind {
+    grid-area: wind;
+}
+.wf-cc-pressure {
+    grid-area: pressure;
+}
+.wf-cc-sun {
+    grid-area: sun;
+}
+.wf-hourly-forecast {
+    display: grid;
+    grid-template-columns: auto repeat(24, minmax(0, 1fr));
+    grid-template-areas:
+	"day"
+	"date"
+	"time"
+	"conditions"
+	"icon"
+	"pop"
+	"temp"
+	"precip_icon"
+	"wind_avg"
+	"wind_gust"
+	"wind_direction"
+	"wind_direction_cardinal";
+    column-gap: 0.05vw;
+    row-gap: 0.05vw;
+    background: var(--foreground3);
+    color: black;
+    margin: 0.25vw;
+    padding: 0.25vw;
+    text-align: center;
+    font-size: 1.2vw;
+}
+.wf-hourly-day {
+    grid-area: day;
+}
+.wf-hourly-date {
+    grid-area: date;
+}
+.wf-hourly-time {
+    grid-area: time;
+}
+.wf-hourly-conditions {
+    grid-area: conditions;
+}
+.wf-hourly-icon {
+    grid-area: icon;
+    width: 2.4vw;
+    height: 2.4vw;
+    background-repeat: no-repeat;
+    background-position: 50% 0;
+    background-size: 100%;
+    justify-self: center;
+}
+.wf-hourly-temp {
+    grid-area: temp;
+}
+.wf-hourly-pop {
+    grid-area: pop;
+}
+.wf-hourly-pop {
+    grid-area: pop;
+}
+.wf-hourly-precip-icon {
+    grid-area: precip_icon;
+}
+.wf-hourly-wind-avg {
+    grid-area: wind_avg;
+}
+.wf-hourly-wind-gust {
+    grid-area: wind_gust;
+}
+.wf-hourly-wind-direction {
+    grid-area: wind_direction;
+}
+.wf-hourly-wind-direction-cardinal {
+    grid-area: wind_direction_cardinal;
+    font-size: 1.0vw;
+}
+.wf-footer {
+    font-family: Arial;
+    background: var(--foreground2);
+    margin: 0.25vw;
+    padding: 0.25vw;
+    font-size: 1.4vw;
+    text-align: right;
+}
