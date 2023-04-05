@@ -142,27 +142,41 @@ WFForecast.prototype.render = function() {
 	const h = div.append("div").classed("wf-hourly-forecast", true);
 
 	// Header column
-	h.append("div").classed("wf-hourly-time", true)
+	h.append("div")
+	    .classed("wf-hourly-time", true)
+	    .classed("wf-hourly-header", true)
 	    .style('grid-area', "time / 1 / time / 1")
 	    .html("Hour");
 	//h.append("div").classed("wf-hourly-conditions", true).html("Sky").style('grid-area', "icon / 1 / icon / 1");
-	h.append("div").classed("wf-hourly-temp", true)
+	h.append("div")
+	    .classed("wf-hourly-temp", true)
+	    .classed("wf-hourly-header", true)
 	    .style('grid-area', "temp / 1 / temp / 1")
 	    .html("Temp (&#176;F)");
-	h.append("div").classed("wf-hourly-pop", true)
+	h.append("div")
+	    .classed("wf-hourly-pop", true)
+	    .classed("wf-hourly-header", true)
 	    .style('grid-area', "pop / 1 / pop / 1")
 	    .html("Precip %");
 	//h.append("div").classed("wf-hourly-precip_icon", true).html("");
-	h.append("div").classed("wf-hourly-wind-avg", true)
+	h.append("div")
+	    .classed("wf-hourly-wind-avg", true)
+	    .classed("wf-hourly-header", true)
 	    .style('grid-area', "wind_avg / 1 / wind_avg / 1")
 	    .html("Wind (" + d.units_display.units_wind + ")");
-	h.append("div").classed("wf-hourly-wind-gust", true)
+	h.append("div")
+	    .classed("wf-hourly-wind-gust", true)
+	    .classed("wf-hourly-header", true)
 	    .style('grid-area', "wind_gust / 1 / wind_gust / 1")
 	    .html("Gusts");
-	h.append("div").classed("wf-hourly-wind-direction", true)
+	h.append("div")
+	    .classed("wf-hourly-wind-direction", true)
+	    .classed("wf-hourly-header", true)
 	    .style('grid-area', "wind_direction / 1 / wind_direction / 1")
 	    .html("Dir (&#176;T)");
-	h.append("div").classed("wf-hourly-wind-direction-cardinal", true)
+	h.append("div")
+	    .classed("wf-hourly-wind-direction-cardinal", true)
+	    .classed("wf-hourly-header", true)
 	    .style('grid-area', "wind_direction_cardinal / 1 / wind_direction_cardinal / 1")
 	    .html("");
 

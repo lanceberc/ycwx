@@ -99,6 +99,11 @@
     text-align: center;
     font-size: 1.2vw;
 }
+.wf-hourly-header {
+    /*font-family: Arial;*/
+    text-align: right;
+    margin-right: 0.4vw;
+}
 .wf-hourly-day {
     grid-area: day;
 }
