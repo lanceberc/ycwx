@@ -76,10 +76,10 @@ WFForecast.prototype.fetch = function() {
     const now = new Date();
 
     if ((this.lastFetch != null) && (now - this.lastFetch < WFupdateFrequency)) {
-	//console.log("WFForecast fetch too soon " + this.id + " now " + now.format("longtime") + " last " + this.lastFetch.format("longtime"));
+	//console.log("WFForecast fetch too soon " + this.id + " now " + now.format("HH:MM") + " last " + this.lastFetch.format("HH:MM"));
 	return;
     }
-    console.log("WFForecast fetch " + this.id + " " + now.format("longtime"));
+    console.log("WFForecast fetch " + this.id + " " + now.format("HH:MM:ss"));
     this.lastFetch = now;
     
     let url = WxFlowForecastURL.replace("station_id=", "station_id=" + this.stationID)
@@ -129,9 +129,9 @@ WFForecast.prototype.render = function() {
     // current conditions
     const ccdiv = div.append("div").classed("wf-current-conditions", true);
     ccdiv.append("div").classed("wf-cc-station", true).html(d.location_name);
-    ccdiv.append("div").classed("wf-cc-time", true).html("As of " + forecasttime.format("short"));
-    ccdiv.append("div").classed("wf-cc-sunrise", true).html("Sunrise " + sunrise.format("time"));
-    ccdiv.append("div").classed("wf-cc-sunset", true).html("Sunset " + sunset.format("time"));
+    ccdiv.append("div").classed("wf-cc-time", true).html("As of " + forecasttime.format("HH:MM"));
+    ccdiv.append("div").classed("wf-cc-sunrise", true).html("Sunrise " + sunrise.format("HH:MM"));
+    ccdiv.append("div").classed("wf-cc-sunset", true).html("Sunset " + sunset.format("HH:MM"));
     ccdiv.append("div").classed("wf-cc-sun", true).html("Solar - " +
 							" " + cc.solar_radiation + d.units_display.units_solar_radiation +
 							" " + cc.brightness + d.units_display.units_brightness +
@@ -188,9 +188,9 @@ WFForecast.prototype.render = function() {
 	    if ((i == 0) || (hour.local_hour == 0)) {
 		const dd = new Date(hour.time * 1000);
 		h.append("div").classed("wf-hourly-day", true)
-		    .html(dd.format("day"))
+		    .html(dd.format("ddd"))
 		    .style('grid-area', "day / " + col + " / day / " + col);
-		//const dateString = dd.format("month") + "/" + dd.format("date");
+		//const dateString = dd.format("m/d");
 		//h.append("div").classed("wf-hourly-date", true).html(dateString).style('grid-area', "date / " + col + " / date / " + col);
 	    }
 	    
@@ -268,9 +268,9 @@ WFForecast.prototype.render1 = function() {
     // current conditions
     const ccdiv = div.append("div").classed("wf-current-conditions", true);
     ccdiv.append("div").classed("wf-cc-station", true).html(d.location_name);
-    ccdiv.append("div").classed("wf-cc-time", true).html("As of " + forecasttime.format("short"));
-    ccdiv.append("div").classed("wf-cc-sunrise", true).html("Sunrise " + sunrise.format("time"));
-    ccdiv.append("div").classed("wf-cc-sunset", true).html("Sunset " + sunset.format("time"));
+    ccdiv.append("div").classed("wf-cc-time", true).html("As of " + forecasttime.format("HH:MM"));
+    ccdiv.append("div").classed("wf-cc-sunrise", true).html("Sunrise " + sunrise.format("HH:MM"));
+    ccdiv.append("div").classed("wf-cc-sunset", true).html("Sunset " + sunset.format("HH:MM"));
     ccdiv.append("div").classed("wf-cc-temp", true).html(cc.air_temperature+"&#176;");
     ccdiv.append("div").classed("wf-cc-icon", true).html("").style('background-image', 'url("' + iconURL(cc.icon.slice(3)) + '")');
     ccdiv.append("div").classed("wf-cc-feels-like", true).html("Feels like "+cc.feels_like+"&#176;");
