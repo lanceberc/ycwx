@@ -750,7 +750,7 @@
     </style>
     
     <script src="local_config.js"></script>
-    <script src="dateformat.js"></script>
+    <script src="data/lib/date.format.js"></script>
       
     <script src="data/lib/d3.v7.js"></script>
     <script src="data/lib/jquery-3.6.0.min.js" defer=""></script>
@@ -770,7 +770,7 @@
 
     <script src="gauge.js"></script>
     <script src="wind.js"></script>
-    <script src="NowCOAST.js"  defer=""></script>
+    <!-- <script src="NowCOAST.js"  defer=""></script> -->
     <!-- <script src="currentMap.js"  defer=""></script> -->
     <script src="gis.js"  defer=""></script>
 
@@ -2464,7 +2464,7 @@
 	  l = now.toTimeString();
 	  ts = l.slice(0, 5);
 	  tz = l.slice(l.indexOf("(") + 1, l.indexOf(")") - 2);
-	  d3.select("#time-local").html( ts + (l.includes("Daylight") ? "PDT" : "PST")); // Kludgey
+	  d3.select("#time-local").html( ts + (l.includes("Daylight") ? "PDT" : "PST")); // Kludgey - assumes we're in Pacific Time Zone
 
 	  if (mode == "Carousel") {
 	      rotateProgram();
@@ -2724,6 +2724,7 @@
 	      initializeProgram(0);
 	      setCarouselMode("Carousel");
 	      curScene = scenes.length - 1;
+	      d3.select("#site-url").style("display", "block");
 	      rotateScene();
 	  }
 
@@ -2780,13 +2781,17 @@
 
 	  // OpenLayers frames
 	  // initializeCurrentMap(currentMapConfig);
+	  /*
 	  initializeNowCOAST(nationalRadarConfig);
 	  initializeNowCOAST(localRadarConfig);
+	  */
 
 	  d3.interval(dispatch, 1 * 1000);
 	  document.addEventListener("visibilitychange", visibilityChange);
 
 	  const cloudTops = new GIS(cloudTopsConfig);
+	  const nationalRadar = new GIS(nationalRadarConfig);
+	  const localRadar = new GIS(localRadarConfig);
 
 	  initializeVideoLazyLoad();
 
@@ -2840,6 +2845,9 @@
 	  </div>
 	  <div class="vertical-spacer-outer">
 	    <div class="vertical-spacer-inner"> </div>
+	  </div>
+	  <div id="site-url" style="display: none; font-family: Courier">
+	    wx.stfyc-wx.com
 	  </div>
 	  <div style="display: block">
 	    <div id="mode-button" class="wx-button">Auto</div>
