@@ -90,7 +90,7 @@ class GIS {
 	    const start = now;
 	    const end = now;
 	    
-	    if (state.lastFrameRelease != null) {
+	    if ((typeof state.lastFrameRelease !== 'undefined') && (state.lastFrameRelease != null)) {
 		if (Date.now() < state.lastFrameRelease) {
 		    // console.log(`gis ${container} hold`);
 		    return;
@@ -171,6 +171,7 @@ class GIS {
 	function update(state) {
 	    state.config.layers.forEach(l => {
 		if ("update" in l) {
+		    console.log(`gis Update ${l.url}`);
 		    l.layer.getSource().refresh();
 		}
 	    });
@@ -185,7 +186,7 @@ class GIS {
 	const layers = [];
 	config.layers.forEach(l => {
 	    let source = null;
-	    console.log("cloudTops adding layer " + JSON.stringify(l));
+	    console.log("gis adding layer " + JSON.stringify(l));
 	    if (l.type == "XYZ") {
 		let options = {
 		    attributions: l.attributions,
