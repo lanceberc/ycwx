@@ -84,7 +84,7 @@ function windInitialize(callback) {
 	if (typeof localTempest !== 'undefined') {
 	    windSocket.send(JSON.stringify({"subscribe_tempest_wind": true}));
 	    windSocket.send(JSON.stringify({"subscribe_tempest_history": true}));
-	    console.log("windStartStopHistory: start");
+	    console.log("windInitialize localTempest start");
 	}
     });
 }
@@ -210,7 +210,7 @@ function windPlotHistory(e, history, maxRange) {
 }
 
 function windStartStopHistory(e) {
-    const cr = e.contentRect;
+    const cr = e.target.getBoundingClientRect();;
     if (windSocket == null) {
 	return;
     }

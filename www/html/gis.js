@@ -11,8 +11,9 @@ class GIS {
 	function startStop(container) {
 	    const visible = (document.visibilityState === 'visible');
 	    const c = document.querySelector("#" + container);
-	    const w = c.width;
-	    const h = c.height;
+	    const bb = c.getBoundingClientRect();
+	    const w = bb.width;
+	    const h = bb.height;
 	    
 	    const state = gisContainerMap[container];
 	    if ((state.animationId != null) && (!visible || (w == 0) || (h == 0))) {
@@ -39,6 +40,7 @@ class GIS {
 		const w = window.innerWidth;
 		const h = window.innerHeight;
 
+		// Kludge for 4k displays
 		let newZoom = state.config.zoom;
 		if (w > 3000) {
 		    newZoom = state.config.zoom + 1;
@@ -56,6 +58,22 @@ class GIS {
 		}
 		
 		window.dispatchEvent(new Event('resize'));
+	    }
+
+	    if (!visible || (w == 0) || (h == 0)) {
+		// console.log(`gis startStop ${container} invisible ${visible} ${w} x ${h} update ${state.updateId}`);
+		if (state.updateId != null) {
+		    clearInterval(state.updateId);
+		    state.updateId = null;
+		    console.log(`gis startStop ${container} stop update timer`);
+		}
+	    } else {
+		// console.log(`gis startStop ${container} visible ${visible} ${w} x ${h} update ${state.updateId}`);
+		if (state.updateId == null) {
+		    state.updateId = setInterval(update, config.updateFrequency, state);
+		    console.log(`gis startStop ${container} update timer ${state.updateId}`);
+		}
+		update(state);
 	    }
 	}
 
