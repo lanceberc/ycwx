@@ -4,10 +4,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <sys/wait.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <errno.h>
+#include <time.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -117,7 +119,8 @@ int airmar_recent_idx = 0;
 int airmar_hist_index = 0;
 unsigned long airmar_last_save = 0; // Minute last saved
 int airmar_rebooting = 0;
-#define AIRMAR_REBOOT_TIMEOUT 300
+int airmar_reboot_timeout = 300;
+#define AIRMAR_POWER_PATH "/home/stfyc/bin/airmar_power.py"
 #define AIRMAR_REBOOT_PATH "/home/stfyc/bin/airmar_restart.sh"
 #define AIRMAR_SAVE_FREQ 5
 #define AIRMAR_SAVE_FILE "/home/stfyc/www/html/data/airmar_history.txt"
@@ -419,7 +422,7 @@ tempest_process(struct lws *wsi, void *user)
 
     unsigned long altm = airmar_last_timestamp / 60;
     if (this_minute > (altm + 1)) {
-      lwsl_warn("no airmar date for %d minutes", this_minute - altm);
+      lwsl_warn("no airmar data for %d minutes", this_minute - altm);
     }
   }
 
@@ -458,9 +461,23 @@ unsigned int airmar_save()
   return(0);
 }
 
+unsigned int secs2iso(char *buf, int len, unsigned long ts) {
+    struct timeval tv;
+    tv.tv_sec = ts;
+    tv.tv_usec = 0;
+    strftime(buf, len, "%Y-%m-%d %H:%M:%S", localtime((const time_t *) &tv));
+}
+
+unsigned int secs2shortduration(char *buf, int len, unsigned long ts) {
+    unsigned long hours = ts / (60*60);
+    unsigned minutes = (ts / 60) % 60;
+    unsigned seconds = ts % 60;
+    sprintf(buf, "%lu:%02u:%02u", hours, minutes, seconds);
+}
+
 unsigned int airmar_restore()
 {
-  int h = 0, count = 0;
+  int h = -1, count = 0;
   unsigned int ts, lastts = 0;
   float speed, gust, dir;
   FILE *fd = fopen(AIRMAR_SAVE_FILE, "r");
@@ -474,19 +491,56 @@ unsigned int airmar_restore()
   while (fgets(rbuf, sizeof(rbuf), fd)) {
     int n = sscanf(rbuf, "%lu %f %f %f", &ts, &speed, &gust, &dir);
     if ((n == 4) && (ts > lastts)) {
+      h = (h + 1) % HIST_ENTRIES;
       airmar_hist[h].ts = ts;
       airmar_hist[h].speed = speed;
       gust = (gust >= speed) ? gust : speed;
       airmar_hist[h].gust = gust;
       airmar_hist[h].dir = dir;
       count++;
-      h = (h + 1) % HIST_ENTRIES;
     }
   }
   fclose(fd);
-  airmar_hist_index = (h - 1) % HIST_ENTRIES;
   lwsl_notice("airmar_restore() %d entries\n", count);
+  airmar_hist_index = (h < 0) ? 0: h;
+  if (count > 0) {
+    char tbuf[20];
+    airmar_last_good_sample = ts;
+    secs2iso(tbuf, sizeof(tbuf), ts);
+    lwsl_notice("airmar_restore() last sample %s\n", tbuf);
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    unsigned int this_second = now.tv_sec;
+    unsigned int diff = this_second - ts;
+    if (diff > (60 * 60)) airmar_reboot_timeout = (15 * 60);
+    if (diff > (2 * 60 * 60)) airmar_reboot_timeout = (60 * 60);
+    if (diff > (6 * 60 * 60)) airmar_reboot_timeout = (6 * 60 * 60);
+    if (diff > (24 * 60)) airmar_reboot_timeout = (24 * 60 * 60);
+    char since[32], timeout[32];
+    secs2shortduration(since, sizeof(32), diff);
+    secs2shortduration(timeout, sizeof(32), airmar_reboot_timeout);
+    lwsl_notice("airmar_restore no sample for %s - setting reboot timeout to %s", since, timeout);
+  }
   return(0);
+}
+
+unsigned int airmar_power(char *onoff) {
+  int pid = fork();
+  if (!pid) {
+    char *argv[] = {
+      AIRMAR_POWER_PATH,
+      onoff,
+      NULL
+    };
+    char *envp[] = { NULL };
+    execve(AIRMAR_POWER_PATH, argv, envp);
+    lwsl_err("airmar_power() execve() failed %d %s\n", errno, strerror(errno));
+    exit(-1);
+  }
+  lwsl_notice("airmar_power() powering airmar %s\n", onoff);
+  int status;
+  waitpid(pid, &status, 0);
+  lwsl_notice("airmar_power() status %d\n", status);
 }
 
 unsigned int airmar_check()
@@ -501,15 +555,23 @@ unsigned int airmar_check()
   unsigned int this_second = tv.tv_sec;
   unsigned int this_minute = this_second / 60;
 
-  int timeout = (this_second >= airmar_last_good_sample + AIRMAR_REBOOT_TIMEOUT); // Haven't heard from it for a while
+  int timeout = (this_second >= airmar_last_good_sample + airmar_reboot_timeout); // Haven't heard from it for a while
   int high_gust = (airmar_high_gust > 90.0); // Once the Airmar sends a 99.9kt gust it tends to hang
   int read_error = (airmar_bad_read > 255); // Sometimes the Airmar/USB starts returning error 11 - power cycle seems to fix it
 
   if (!(timeout || high_gust || read_error)) return(0);
-  lwsl_notice("High gust %d %f (%d)", high_gust, airmar_high_gust, airmar_rebooting);
-  lwsl_notice("Timeout %d %d (%d)", timeout, this_second - airmar_last_good_sample, airmar_rebooting);
-  lwsl_notice("Read Error %d (%d)", airmar_bad_read, airmar_rebooting);
-  if (this_second <= sensord_start + AIRMAR_REBOOT_TIMEOUT) {
+  if (high_gust) lwsl_notice("airmar_check High gust %d %f (%d)", high_gust, airmar_high_gust, airmar_rebooting);
+  if (timeout) {
+    char buf[20], buf2[20];
+
+    secs2iso(buf, sizeof(buf), this_second);
+    secs2iso(buf2, sizeof(buf2), airmar_last_good_sample);
+    lwsl_notice("airmar_check now %s last good %s", buf, buf2);
+    secs2shortduration(buf, sizeof(buf), this_second - airmar_last_good_sample);
+    lwsl_notice("airmar_check Timeout %d  not for %s (%d)", timeout, buf, airmar_rebooting);
+  }
+  if (read_error) lwsl_notice("airmar_check Read Error Count %d (%d)", airmar_bad_read, airmar_rebooting);
+  if (this_second <= sensord_start + airmar_reboot_timeout) {
     lwsl_notice("Cancelling reboot - haven't run long enough");
     return(0);
   }
@@ -523,7 +585,7 @@ unsigned int airmar_check()
     char *envp[] = { NULL };
     execve(AIRMAR_REBOOT_PATH, argv, envp);
     lwsl_err("airmar_check() execve() failed %d %s\n", errno, strerror(errno));
-    return(0);
+    exit(-1);
   }
   lwsl_notice("airmar_check() rebooting Airmar (%d, %d, %d, %d) and system pid %d\n", timeout, high_gust, read_error, airmar_rebooting, pid);
   airmar_rebooting = 1;
@@ -538,6 +600,8 @@ unsigned int airmar_init(struct lws *wsi, void *user)
 
   int fd = -1;
   lws_sock_file_fd_type u;
+
+  int i = airmar_power("on");
 
   airmar_restore();
   
@@ -591,10 +655,10 @@ unsigned int airmar_init(struct lws *wsi, void *user)
     return 1;
   }
 
-  //char *airmar_init_string = "$PAMTX,0*hh\015\012"; // Disable all transmissions
+  //char *airmar_init_string = "$PAMTX,0\015\012"; // Disable all transmissions
   char *airmar_init_strings[] = {
-			       "$PAMTC,RESET*hh\015\012", // Enable all transmissions
-			       "$PAMTX,1*hh\015\012", // Enable all transmissions
+			       "$PAMTC,RESET\015\012", // Enable all transmissions
+			       "$PAMTX,1\015\012", // Enable all transmissions
   };
   
   for (int i = 0; i < sizeof(airmar_init_strings) / sizeof(char *); i++) {
