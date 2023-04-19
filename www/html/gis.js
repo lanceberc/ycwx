@@ -188,9 +188,18 @@ class GIS {
 
 	function update(state) {
 	    state.config.layers.forEach(l => {
-		if ("update" in l) {
+		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
 		    console.log(`gis Update ${l.url}`);
-		    l.layer.getSource().refresh();
+		    let source = l.layer.getSource();
+		    if ("type" in source && source.type == "TileWMS") {
+			let params = source.getParams();
+			params.t = Math.floor(Date.now() / l.updateFrequency) * l.updateFrequency;
+			console.log(`gis TileWMS Update t ${params.t} ${l.url}`);
+			source.updateParams(params);
+			//source.tileCache.expireCache({});
+			//source.tileCache.clear();
+		    }
+		    source.refresh();
 		}
 	    });
 	}
@@ -215,9 +224,9 @@ class GIS {
 		if ("layers" in l) {
 		    options.layers = l.layers;
 		};
-		if ("update" in l && l.update) {
+		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
 		    // In order to avoid the browser cache we make the URL unique by adding a time field
-		    // that increases every 10 minutes. To do so we stash the base URL in the source object
+		    // that changes periodically. To do so we stash the base URL in the source object
 		    // and replace the object's tileUrlFunction. There has to be a better way.
 
 		    // the tileUrlFunction is called only when this.url and this.urls aren't set
@@ -231,7 +240,7 @@ class GIS {
 			path = path.replace('{z}', z);
 			path = path.replace('{x}', x);
 			path = path.replace('{y}', y);
-			path += '?t=' + Math.floor(Date.now() / (10 * 60 * 1000)); // Every 10 minutes
+			path += '?t=' + Math.floor(Date.now() / l.updateFrequency); // Every 10 minutes
 			// console.log("New XYZ path: " + path);
 			return path;
 		    }
@@ -241,11 +250,17 @@ class GIS {
 		source = new ol.source.XYZ(options);
 		source.baseUrl = l.url + "/tile/{z}/{y}/{x}";
 	    } else if (l.type == "WMS") {
+		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
+		    l.params.t = Math.floor(Date.now() / l.updateFrequency) * l.updateFrequency;
+		}
 		source = new ol.source.TileWMS({
 		    url: l.url,
 		    attributions: l.attributions,
 		    params: l.params,
 		});
+		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
+		    source.type = "TileWMS";
+		}
 	    } else if (l.type == "ArcGISRest") {
 		source = new ol.source.ImageArcGISRest({
 		    url: l.url,
