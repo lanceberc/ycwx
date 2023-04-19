@@ -337,3 +337,53 @@ class GIS {
 	}
     }
 }
+
+GIS.prototype.initializeFeatures = function(spec) {
+    var style = new ol.style.Style({
+	text: new ol.style.Text({
+	    /*
+            font: '15px Calibri,sans-serif',
+            fill: new ol.style.Fill({ color: '#000' }),
+            stroke: new ol.style.Stroke({
+		color: '#fff', width: 2
+            }),
+            offsetY: 0,
+	    */
+            //font: '1.4vw "Courier New", Courier, monospace, bold',
+            font: '1.4vw/.9 Calibri, sans-serif',
+            fill: new ol.style.Fill({ color: '#008' }),
+            stroke: new ol.style.Stroke({
+		color: '#fff', width: 4
+            }),
+            offsetY: 0,
+	})
+    });
+    var vectorLayer = new ol.layer.Vector({
+	target: "points",
+	source: new ol.source.Vector(),
+	style: function (feature) {
+            style.getText().setText(feature.get('text'));
+            return style;
+	}
+    });
+
+    function addFeature(lat, lng, txt, cssClass) {
+	var source = vectorLayer.getSource();
+	var pointFeature = new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.transform([parseFloat(lng), parseFloat(lat)], 'EPSG:4326', 'EPSG:3857')),
+            text: txt,
+	    className: cssClass,
+	});
+	source.addFeature(pointFeature);
+	return pointFeature;
+    }
+
+    const features = {};
+    for (let i in spec.points) {
+	const p = spec.points[i];
+	features[p.id] = addFeature(p.lat, p.lon, p.txt, spec.cssClass + "-" + p.id);
+    }
+
+    this.map.addLayer(vectorLayer);
+    return(features);
+}

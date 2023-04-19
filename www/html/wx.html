@@ -756,8 +756,12 @@
     <script src="data/lib/jquery-3.6.0.min.js" defer=""></script>
 
     <!-- Open Layers -->
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
+    <!--
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.css">
     <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.js"  defer=""></script>
+    -->
     <!--
     <link rel="stylesheet" href="data/lib/ol.css">
     <script src="data/lib/ol.js"></script>
@@ -768,7 +772,8 @@
 	<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.14.1/build/ol.js"></script>
     -->
 
-    <script src="gauge.js"></script>
+
+<script src="gauge.js"></script>
     <script src="wind.js"></script>
     <!-- <script src="NowCOAST.js"  defer=""></script> -->
     <!-- <script src="currentMap.js"  defer=""></script> -->
@@ -828,8 +833,8 @@
       const programs = {
 	  "Local": [ // 5:00
 	      { "div": "", "label": "Local", "duration": 0 },
-	      { "div": "localWind", "label": "Wind", "duration": 30 },
-	      { "div": "sfLocalObservations", "label": "Observations", "duration": 30 },
+	      //{ "div": "localWind", "label": "Wind", "duration": 30 },
+	      { "div": "localObservationRadarScene", "label": "Observations", "duration": 30 },
 	      { "div": "sfTides", "label": "Tides & Currents", "duration": 30 },
 	      { "div": "WeatherFlowStFYCScene", "label": "City Forecast", "duration": 30 },
 	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 60 },
@@ -842,8 +847,8 @@
 	  ],
 	  "Images": [ // 5:00
 	      { "div": "", "label": "Local", "duration": 0 },
-	      { "div": "localWind", "label": "Wind", "duration": 20 },
-	      { "div": "sfLocalObservations", "label": "Observations", "duration": 20 },
+	      //{ "div": "localWind", "label": "Wind", "duration": 20 },
+	      { "div": "localObservationRadarScene", "label": "Observations", "duration": 20 },
 	      { "div": "sfTides", "label": "Tide & Current", "duration": 30 },
 	      { "div": "WeatherFlowStFYCScene", "label": "City Forecast", "duration": 30 },
 	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 60 },
@@ -859,8 +864,8 @@
 	  ],
 	  "Time Lapse": [ // 5:00
 	      { "div": "", "label": "Local", "duration": 0 },
-	      { "div": "localWind", "label": "Wind", "duration": 30 },
-	      { "div": "sfLocalObservations", "label": "Observations", "duration": 30 },
+	      //{ "div": "localWind", "label": "Wind", "duration": 30 },
+	      { "div": "localObservationRadarScene", "label": "Observations", "duration": 30 },
 	      { "div": "sfTides", "label": "Tide & Current", "duration": 30 },
 	      { "div": "WeatherFlowStFYCScene", "label": "City Forecast", "duration": 30 },
 	      { "div": "", "label": "Time Lapse", "duration": 0 },
@@ -872,6 +877,7 @@
 	      { "div": "", "label": "Local", "duration": 0 },
 	      { "div": "localWind", "label": "Wind", "duration": 30 },
 	      { "div": "sfLocalObservations", "label": "Observations", "duration": 15 },
+	      { "div": "localObservationRadarScene", "label": "Observations", "duration": 15 },
 	      { "div": "sfTides", "label": "Tide & Current", "duration": 15 },
 	      /* { "div": "currentMapScene", "label": "SFBay Currents", "duration": 30 }, */
 	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 40 },
@@ -906,6 +912,7 @@
       const allScenes = [
 	  { "div": "sfRadar", "label": "Radar", "duration": 60 },
 	  { "div": "sfLocalObservations", "label": "Local Obs", "duration": 15 },
+	  { "div": "localObservationRadarScene", "label": "Observations", "duration": 15 },
 	  { "div": "sfTides", "label": "Tide & Current", "duration": 15 },
 	  { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 40 },
 	  { "div": "goes-PACUS", "label": "GOES PACUS", "duration": 10 },
@@ -1645,21 +1652,7 @@
       let localObs = {
 	  "tableId": "sfLocalObservationsTable",
 	  "url": "https://api.synopticdata.com/v2/stations/latest?stid=&units=english,speed|kts,pres|mb&showemptystations=1&token=".replace("token=", "token=" + synopticData_apitoken),
-	  "stations": ["FTPC1", "GGBC1", "AISC1", "PXOC1", "46026", "46012", "46013", "KSFO", "KOAK", "KSJC", "KHAF", "CF131"],
-	  "nickNames": {
-	      "FTPC1": "Ft Point",
-	      "PXOC1": "SF Pier 1",
-	      "AISC1": "Pt Blunt",
-	      "GGBC1": "GGBridge Midspan",
-	      "CF131": "I5 near Tinsley Is",
-	      "KSFO": "SFO",
-	      "KOAK": "Oakland Airport",
-	      "KSJC": "San Jose Airport",
-	      "KHAF": "Half Moon Bay",
-	      "46026": "46026 SF Buoy",
-	      "46012": "46012 HMB Buoy",
-	      "46013": "46013 Bodega Bay",
-	  },
+	  "stations": ["FTPC1", "GGBC1", "AISC1", "PXOC1", "PPXC1", "46026", "46012", "46013", "KSFO", "KOAK", "KSJC", "KHAF", "CF131"],
 	  "fieldMap": {
 	      "temp": "air_temp_value_1",
 	      "pressure": "pressure_value_1",
@@ -1678,18 +1671,35 @@
 	      { "field": "id", "label": "Station", "style": "obs-meta" },
 	      { "field": "name", "label": "Name", "style": "obs-meta" },
 	      { "field": "time", "label": "Time", "style": "obs-data" },
-	      { "field": "temp", "label": "Temp<br>(&#176;F)", "style": "obs-data", "precision": 1 },
-	      { "field": "pressure", "label": "Press<br>(mb)", "style": "obs-data" },
-	      { "field": "seaLevelPressure", "label": "MSLP<br>(mb)", "style": "obs-data" },
-	      { "field": "wind", "label": "Wind<br>(Kts)", "style": "obs-data", "precision": 1 },
-	      { "field": "gust", "label": "Gust<br>(Kts)", "style": "obs-data", "precision": 1 },
-	      { "field": "direction", "label": "Dir<br>(&#176;T)", "style": "obs-data", "precision": 0 },
-	      { "field": "waterTemp", "label": "WTemp<br>(&#176;F)", "style": "obs-data", "precision": 1 },
-	      { "field": "waveHeight", "label": "Wave<br>Height", "style": "obs-data", "precision": 1 },
-	      { "field": "wavePeriod", "label": "Wave<br>Period", "style": "obs-data" },
+	      { "field": "temp", "label": "Temp<br>(&#176;F)", "style": "obs-data", "precision": 1, "units": "\xB0F" },
+	      { "field": "pressure", "label": "Press<br>(mb)", "style": "obs-data", "units": "mb" },
+	      { "field": "seaLevelPressure", "label": "MSLP<br>(mb)", "style": "obs-data", "units": "mb" },
+	      { "field": "wind", "label": "Wind<br>(Kts)", "style": "obs-data", "precision": 1, "units": "Kts" },
+	      { "field": "gust", "label": "Gust<br>(Kts)", "style": "obs-data", "precision": 1, "units": "Kts" },
+	      { "field": "direction", "label": "Dir<br>(&#176;T)", "style": "obs-data", "precision": 0, "units": "\xB0T" },
+	      { "field": "waterTemp", "label": "WTemp<br>(&#176;F)", "style": "obs-data", "precision": 1, "units": "\xB0F" },
+	      { "field": "waveHeight", "label": "Wave<br>Height", "style": "obs-data", "precision": 1, "units": "Ft" },
+	      { "field": "wavePeriod", "label": "Wave<br>Period", "style": "obs-data", "units": "Sec" },
 	  ],
+	  "stationInfo": {
+	      "FTPC1": { "nickName": "Ft Point",           "lat": 37.80669, "lon": -122.46, "realLat": 37.80669, "realLon": -122.46500},
+	      "PXOC1": { "nickName": "SF Pier 1",          "lat": 37.79800 , "lon": -122.40, "realLat": 37.79800 , "realLon": -122.39297},
+	      "AISC1": { "nickName": "Pt Blunt",           "lat": 37.85312, "lon": -122.421, "realLat": 37.85312, "realLon": -122.41912},
+	      "GGBC1": { "nickName": "GGBridge Midspan",   "lat": 37.821, "lon": -122.51, "realLat": 37.81975, "realLon": -122.47904},
+	      "PPXC1": { "nickName": "Pt Potrero",         "lat": 37.906, "lon": -122.36503, "realLat": 37.90581, "realLon": -122.36503},
+	      "CF131": { "nickName": "I5 near Tinsley",    "lat": 37.906, "lon": -122.24, "realLat": 38.04637, "realLon": -121.36868},
+	      "KSFO": { "nickName": "SFO",                 "lat": 37.725, "lon": -122.37, "realLat": 37.61961, "realLon": -122.36558},
+	      "KOAK": { "nickName": "OAK",                 "lat": 37.725, "lon": -122.24, "realLat": 37.7178, "realLon": -122.23294},
+	      "KSJC": { "nickName": "San Jose Airport",    "lat": 37.725, "lon": -122.30, "realLat": 37.35917, "realLon": -121.92417},
+	      "KHAF": { "nickName": "HMB Airport",         "lat": 37.725, "lon": -122.50, "realLat": 37.5136, "realLon": -122.4996},
+	      "46013": { "nickName": "46013 Bodega Bay",   "lat": 37.88, "lon": -122.60, "realLat": 38.20000, "realLon": -123.30000},
+	      "46026": { "nickName": "46026 SF Buoy",      "lat": 37.80, "lon": -122.60, "realLat": 37.80000, "realLon": -122.80000},
+	      "46012": { "nickName": "46012 HMB Buoy",     "lat": 37.75, "lon": -122.60, "realLat": 37.356, "realLon": -122.881},
+	  },
 	  "observations": {}
       }
+
+      let localObsRadarStations = {};
 
       // Tempest stations are a bit flakey - if the Tempest is down, use NOAA data
       tempestValidTimespan = 60 * 60; /* secs a tempest observation is valid - after that use NOAA */
@@ -1734,11 +1744,11 @@
 	  //console.log("Interval starts at " + tt.toUTCString())
 	  
 	  for (let station =  0; station < json["STATION"].length; station++) {
-	      lastObservation = 0
-	      STID = json["STATION"][station]["STID"];
+	      let lastObservation = 0
+	      const STID = json["STATION"][station]["STID"];
 
 	      localObs["observations"][STID] = {}
-	      let name = (STID in localObs["nickNames"]) ? localObs["nickNames"][STID] : json["STATION"][station]["NAME"];
+	      let name = (STID in localObs.stationInfo) ? localObs.stationInfo[STID].nickName : json["STATION"][station]["NAME"];
 	      localObs["observations"][STID]["name"] = name;
 	      for (let k in localObs["fieldMap"]) {
 		  localObs["observations"][STID][k] = checkObs(station, localObs["fieldMap"][k])
@@ -1774,6 +1784,25 @@
 	      }
 	  }
 
+	  for (let station =  0; station < json["STATION"].length; station++) {
+	      const id = json["STATION"][station]["STID"];
+	      if (id in localObsRadarStations) {
+		  let text = localObs.stationInfo[id].nickName;
+		  for (let f = 0; f < localObs["displayFields"].length; f++ ) {
+		      const field = localObs["displayFields"][f]["field"];
+		      if (field != "id") {
+			  let val = localObs["observations"][id][field];
+			  if (typeof val === 'number' && typeof localObs["displayFields"][f]["precision"] === 'number') {
+			      val = val.toFixed(localObs["displayFields"][f]["precision"]);
+			      const units = ("units" in localObs["displayFields"][f]) ? localObs["displayFields"][f].units : "";
+			      text = text + "\n" + val + units;
+			  }
+		      }
+		  }
+		  localObsRadarStations[id].set('text', text);
+	      }
+	  }
+	  
 	  // If a Tempest hasn't reported recently use NOAA data
 	  now = Math.floor(Date.now()/1000); // now in seconds
 	  for (const i in backupFields) {
@@ -2792,6 +2821,19 @@
 	  const cloudTops = new GIS(cloudTopsConfig);
 	  const nationalRadar = new GIS(nationalRadarConfig);
 	  const localRadar = new GIS(localRadarConfig);
+	  const localObsRadar = new GIS(localObservationConfig);
+	  const spec = {};
+	  spec.cssClass = "localObs";
+	  spec.points = [];
+	  for (let i in localObs.stations) {
+	      const id = localObs.stations[i];
+	      spec.points.push({"id": id, "lat": localObs.stationInfo[id].lat, "lon": localObs.stationInfo[id].lon, "txt": id});
+	  }
+	  localObsRadarStations = localObsRadar.initializeFeatures(spec);
+
+	  const f = localObsRadarStations["46026"];
+
+	  localObsRadarStations["46026"].set('text', "46026\nTesting");
 
 	  initializeVideoLazyLoad();
 
@@ -2892,6 +2934,12 @@
 		  </div>
 		</div>
 	      </div>
+	    </div>
+	  </div>
+
+	  <div id="localObservationRadarScene" class="wx-scene">
+	    <div id="localObservationRadar" class="ol-flex-fit">
+	      <div id="localObservationRadarLabel" class="ol-label">NOAA Observations</div>
 	    </div>
 	  </div>
 
