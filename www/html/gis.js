@@ -353,10 +353,9 @@ GIS.prototype.initializeFeatures = function(spec) {
             }),
             offsetY: 0,
 	    */
-            font: '1.2vw "Courier New", Courier, monospace, bold',
-            font: '1.2vw "Lucida Console", "Courier New", Courier, monospace, bold',
-            //font: '1.4vw/.9 Calibri, sans-serif'
-            //font: '1.4vw Calibri, sans-serif',
+            //font: '1.2vw "Courier New", Courier, monospace, bold',
+	    // Using a px font allows the image to be panned & zoomed on phones w/o the text shrinking
+            font: '22px "Lucida Console", "Courier New", Courier, monospace, bold',
 	    textAlign: 'left',
             fill: new ol.style.Fill({ color: '#008' }),
             stroke: new ol.style.Stroke({
