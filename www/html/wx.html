@@ -834,7 +834,7 @@
 	  "Local": [ // 5:00
 	      { "div": "", "label": "Local", "duration": 0 },
 	      //{ "div": "localWind", "label": "Wind", "duration": 30 },
-	      { "div": "localObservationRadarScene", "label": "Observations", "duration": 30 },
+	      { "div": "NOAAObservationsScene", "label": "Observations", "duration": 30 },
 	      { "div": "sfTides", "label": "Tides & Currents", "duration": 30 },
 	      { "div": "WeatherFlowStFYCScene", "label": "City Forecast", "duration": 30 },
 	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 60 },
@@ -848,7 +848,7 @@
 	  "Images": [ // 5:00
 	      { "div": "", "label": "Local", "duration": 0 },
 	      //{ "div": "localWind", "label": "Wind", "duration": 20 },
-	      { "div": "localObservationRadarScene", "label": "Observations", "duration": 20 },
+	      { "div": "NOAAObservationsScene", "label": "Observations", "duration": 20 },
 	      { "div": "sfTides", "label": "Tide & Current", "duration": 30 },
 	      { "div": "WeatherFlowStFYCScene", "label": "City Forecast", "duration": 30 },
 	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 60 },
@@ -865,7 +865,7 @@
 	  "Time Lapse": [ // 5:00
 	      { "div": "", "label": "Local", "duration": 0 },
 	      //{ "div": "localWind", "label": "Wind", "duration": 30 },
-	      { "div": "localObservationRadarScene", "label": "Observations", "duration": 30 },
+	      { "div": "NOAAObservationsScene", "label": "Observations", "duration": 30 },
 	      { "div": "sfTides", "label": "Tide & Current", "duration": 30 },
 	      { "div": "WeatherFlowStFYCScene", "label": "City Forecast", "duration": 30 },
 	      { "div": "", "label": "Time Lapse", "duration": 0 },
@@ -877,7 +877,7 @@
 	      { "div": "", "label": "Local", "duration": 0 },
 	      { "div": "localWind", "label": "Wind", "duration": 30 },
 	      { "div": "sfLocalObservations", "label": "Observations", "duration": 15 },
-	      { "div": "localObservationRadarScene", "label": "Observations", "duration": 15 },
+	      { "div": "NOAAObservationsScene", "label": "Observations", "duration": 15 },
 	      { "div": "sfTides", "label": "Tide & Current", "duration": 15 },
 	      /* { "div": "currentMapScene", "label": "SFBay Currents", "duration": 30 }, */
 	      { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 40 },
@@ -912,7 +912,7 @@
       const allScenes = [
 	  { "div": "sfRadar", "label": "Radar", "duration": 60 },
 	  { "div": "sfLocalObservations", "label": "Local Obs", "duration": 15 },
-	  { "div": "localObservationRadarScene", "label": "Observations", "duration": 15 },
+	  { "div": "NOAAObservationsScene", "label": "Observations", "duration": 15 },
 	  { "div": "sfTides", "label": "Tide & Current", "duration": 15 },
 	  { "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 40 },
 	  { "div": "goes-PACUS", "label": "GOES PACUS", "duration": 10 },
@@ -1186,10 +1186,10 @@
 		      console.log("fetchTempestCurrent " + station + " response");
 		      if (json.obs.length > 0) {
 			  const obs = json.obs[0];
-			  let ts = new Date(message.obs[0] * 1000)
-			  console.log("Tempest " + station + "observation message dated " + ts);
+			  let ts = new Date(obs.timestamp * 1000)
+			  console.log("Tempest " + station + " observation message dated " + ts);
 			  tempestStations[station].current = obs;
-			  tempestStations[station].lastTime = message.obs[0];
+			  tempestStations[station].lastTime = obs.timestamp;
 			  for (const [field, f] of Object.entries(tempestFieldMap)) {
 			      if (f.field in obs) {
 				  let val = f.convert(obs[f.field]).toFixed(f.precision);
@@ -1671,30 +1671,30 @@
 	      { "field": "id", "label": "Station", "style": "obs-meta" },
 	      { "field": "name", "label": "Name", "style": "obs-meta" },
 	      { "field": "time", "label": "Time", "style": "obs-data" },
-	      { "field": "temp", "label": "Temp<br>(&#176;F)", "style": "obs-data", "precision": 1, "units": "\xB0F" },
-	      { "field": "pressure", "label": "Press<br>(mb)", "style": "obs-data", "units": "mb" },
-	      { "field": "seaLevelPressure", "label": "MSLP<br>(mb)", "style": "obs-data", "units": "mb" },
-	      { "field": "wind", "label": "Wind<br>(Kts)", "style": "obs-data", "precision": 1, "units": "Kts" },
-	      { "field": "gust", "label": "Gust<br>(Kts)", "style": "obs-data", "precision": 1, "units": "Kts" },
-	      { "field": "direction", "label": "Dir<br>(&#176;T)", "style": "obs-data", "precision": 0, "units": "\xB0T" },
-	      { "field": "waterTemp", "label": "WTemp<br>(&#176;F)", "style": "obs-data", "precision": 1, "units": "\xB0F" },
-	      { "field": "waveHeight", "label": "Wave<br>Height", "style": "obs-data", "precision": 1, "units": "Ft" },
-	      { "field": "wavePeriod", "label": "Wave<br>Period", "style": "obs-data", "units": "Sec" },
+	      { "field": "temp", "fname": "Temp ", "label": "Temp<br>(&#176;F)", "style": "obs-data", "precision": 1, "units": "\xB0F" },
+	      { "field": "pressure", "fname": "Press", "label": "Press<br>(mb)", "style": "obs-data", "precision": 0, "units": "mb" },
+	      { "field": "seaLevelPressure", "fname": "Press", "label": "MSLP<br>(mb)", "style": "obs-data", "precision": 0, "units": "mb" },
+	      { "field": "wind", "fname": "Wind ", "label": "Wind<br>(Kts)", "style": "obs-data", "precision": 1, "units": "kts" },
+	      { "field": "gust", "fname": "Gust ", "label": "Gust<br>(Kts)", "style": "obs-data", "precision": 1, "units": "kts" },
+	      { "field": "direction", "fname": "Dir  ", "label": "Dir<br>(&#176;T)", "style": "obs-data", "precision": 0, "units": "\xB0T" },
+	      { "field": "waterTemp", "fname": "WTemp", "label": "WTemp<br>(&#176;F)", "style": "obs-data", "precision": 1, "units": "\xB0F" },
+	      { "field": "waveHeight", "fname": "WaveH", "label": "Wave<br>Height", "style": "obs-data", "precision": 1, "units": "ft" },
+	      { "field": "wavePeriod", "fname": "WaveP", "label": "Wave<br>Period", "style": "obs-data", "precision": 0, "units": "secs" },
 	  ],
 	  "stationInfo": {
-	      "FTPC1": { "nickName": "Ft Point",           "lat": 37.80669, "lon": -122.46, "realLat": 37.80669, "realLon": -122.46500},
-	      "PXOC1": { "nickName": "SF Pier 1",          "lat": 37.79800 , "lon": -122.40, "realLat": 37.79800 , "realLon": -122.39297},
-	      "AISC1": { "nickName": "Pt Blunt",           "lat": 37.85312, "lon": -122.421, "realLat": 37.85312, "realLon": -122.41912},
-	      "GGBC1": { "nickName": "GGBridge Midspan",   "lat": 37.821, "lon": -122.51, "realLat": 37.81975, "realLon": -122.47904},
-	      "PPXC1": { "nickName": "Pt Potrero",         "lat": 37.906, "lon": -122.36503, "realLat": 37.90581, "realLon": -122.36503},
-	      "CF131": { "nickName": "I5 near Tinsley",    "lat": 37.906, "lon": -122.24, "realLat": 38.04637, "realLon": -121.36868},
-	      "KSFO": { "nickName": "SFO",                 "lat": 37.725, "lon": -122.37, "realLat": 37.61961, "realLon": -122.36558},
-	      "KOAK": { "nickName": "OAK",                 "lat": 37.725, "lon": -122.24, "realLat": 37.7178, "realLon": -122.23294},
-	      "KSJC": { "nickName": "San Jose Airport",    "lat": 37.725, "lon": -122.30, "realLat": 37.35917, "realLon": -121.92417},
-	      "KHAF": { "nickName": "HMB Airport",         "lat": 37.725, "lon": -122.50, "realLat": 37.5136, "realLon": -122.4996},
-	      "46013": { "nickName": "46013 Bodega Bay",   "lat": 37.88, "lon": -122.60, "realLat": 38.20000, "realLon": -123.30000},
-	      "46026": { "nickName": "46026 SF Buoy",      "lat": 37.80, "lon": -122.60, "realLat": 37.80000, "realLon": -122.80000},
-	      "46012": { "nickName": "46012 HMB Buoy",     "lat": 37.75, "lon": -122.60, "realLat": 37.356, "realLon": -122.881},
+	      "FTPC1": { "nickName": "Ft Point",           "lat": 37.807, "lon": -122.495, "realLat": 37.80669, "realLon": -122.46500},
+	      "PXOC1": { "nickName": "SF Pier 1",          "lat": 37.800, "lon": -122.420, "realLat": 37.79800 , "realLon": -122.39297},
+	      "AISC1": { "nickName": "Pt Blunt",           "lat": 37.860, "lon": -122.440, "realLat": 37.85312, "realLon": -122.41912},
+	      "GGBC1": { "nickName": "Midspan",            "lat": 37.830, "lon": -122.555, "realLat": 37.81975, "realLon": -122.47904},
+	      "PPXC1": { "nickName": "Pt Potrero",         "lat": 37.906, "lon": -122.365, "realLat": 37.90581, "realLon": -122.36503},
+	      "CF131": { "nickName": "I5 near Tinsley",    "lat": 37.906, "lon": -122.240, "realLat": 38.04637, "realLon": -121.36868},
+	      "KOAK":  { "nickName": "OAK",                "lat": 37.730, "lon": -122.240, "realLat": 37.7178, "realLon": -122.23294},
+	      "KSJC":  { "nickName": "San Jose Airport",   "lat": 37.730, "lon": -122.330, "realLat": 37.35917, "realLon": -121.92417},
+	      "KSFO":  { "nickName": "SFO",                "lat": 37.730, "lon": -122.420, "realLat": 37.61961, "realLon": -122.36558},
+	      "KHAF":  { "nickName": "HMB Airport",        "lat": 37.730, "lon": -122.500, "realLat": 37.5136, "realLon": -122.4996},
+	      "46013": { "nickName": "46013 Bodega Bay",   "lat": 37.880, "lon": -122.650, "realLat": 38.20000, "realLon": -123.30000},
+	      "46026": { "nickName": "46026 SF Buoy",      "lat": 37.800, "lon": -122.650, "realLat": 37.80000, "realLon": -122.80000},
+	      "46012": { "nickName": "46012 HMB Buoy",     "lat": 37.750, "lon": -122.650, "realLat": 37.356, "realLon": -122.881},
 	  },
 	  "observations": {}
       }
@@ -1792,10 +1792,11 @@
 		      const field = localObs["displayFields"][f]["field"];
 		      if (field != "id") {
 			  let val = localObs["observations"][id][field];
+			  let fname = localObs["displayFields"][f].fname;
 			  if (typeof val === 'number' && typeof localObs["displayFields"][f]["precision"] === 'number') {
 			      val = val.toFixed(localObs["displayFields"][f]["precision"]);
 			      const units = ("units" in localObs["displayFields"][f]) ? localObs["displayFields"][f].units : "";
-			      text = text + "\n" + val + units;
+			      text = text + "\n" + fname + " " + val + units;
 			  }
 		      }
 		  }
@@ -2821,9 +2822,8 @@
 	  const cloudTops = new GIS(cloudTopsConfig);
 	  const nationalRadar = new GIS(nationalRadarConfig);
 	  const localRadar = new GIS(localRadarConfig);
-	  const localObsRadar = new GIS(localObservationConfig);
+	  const localObsRadar = new GIS(NOAAObservationsConfig);
 	  const spec = {};
-	  spec.cssClass = "localObs";
 	  spec.points = [];
 	  for (let i in localObs.stations) {
 	      const id = localObs.stations[i];
@@ -2937,9 +2937,9 @@
 	    </div>
 	  </div>
 
-	  <div id="localObservationRadarScene" class="wx-scene">
-	    <div id="localObservationRadar" class="ol-flex-fit">
-	      <div id="localObservationRadarLabel" class="ol-label">NOAA Observations</div>
+	  <div id="NOAAObservationsScene" class="wx-scene">
+	    <div id="NOAAObservations" class="ol-flex-fit">
+	      <div id="NOAAObservationsLabel" class="ol-label">NOAA Observations</div>
 	    </div>
 	  </div>
 
@@ -3072,8 +3072,9 @@
 -->
 	  
 	  <div id="nationalRadarScene" class="wx-scene">
-	    <div id="nationalRadarLabel" class="label">National RADAR</div>
-	    <div id="nationalRadar" class="ol-flex-fit"></div>
+	    <div id="nationalRadar" class="ol-flex-fit">
+	      <div id="nationalRadarLabel" class="ol-label">National Radar</div>
+	    </div>
 	  </div>
 
 	  <div id="cloudTopsScene" class="wx-scene">
