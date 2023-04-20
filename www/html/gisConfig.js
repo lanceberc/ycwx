@@ -13,9 +13,9 @@ const NOAAObservationsConfig = {
     classRoot: "localObservation",
     layers: [
 	{
-	    type: 'ArcGISRest',
+	    //type: 'ArcGISRest',
+	    type: 'XYZ',
 	    url: 'https://server.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer',
-	    //url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer',
 	},
     ],
 }
@@ -47,27 +47,69 @@ const nationalRadar2Config = {
     updateFrequency: 1 * 60 * 1000, // GIS class hardcodes updates every 10 minutes but we'll poll once a minute
     layers: [
 	{
-	    type: 'ArcGISRest',
+	    type: "ArcGISRest",
 	    url: 'https://server.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer',
+	    params: {
+		'CRS': '3857',
+	    },
 	},
 	{
 	    type: "ArcGISRest",
 	    url: 'https://carto.nationalmap.gov/arcgis/rest/services/govunits/MapServer',
 	    params: {
 		'layers': 'show:21',
+		'CRS': '3857',
 	    },
 	},
 	{
 	    type: 'ArcGISRest',
 	    url: 'https://mapservices.weather.noaa.gov/eventdriven/rest/services/WWA/watch_warn_adv/MapServer',
 	    updateFrequency: 30 * 60 * 1000,
+	    params: {
+		'CRS': '3857',
+	    },
 	    cssClass: "ol-semi-transparent",
 	},
 	{
 	    type: 'ArcGISRest',
 	    url: 'https://mapservices.weather.noaa.gov/eventdriven/rest/services/radar/radar_base_reflectivity_time/ImageServer',
+	    params: {
+		'CRS': '3857',
+	    },
 	    updateFrequency: 5 * 60 * 1000,
 	},
+	/*
+	{
+	    type: 'ArcGISRest',
+	    url: 'https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer',
+	    params: {
+		'TOKEN': esri_apikey,
+	    }
+	},
+	*/
+	/*
+	{
+	    type: 'WMS',
+	    url: 'https://nowcoast.noaa.gov/geoserver/alerts/wms',
+	    updateFrequency: 5 * 60 * 1000,
+	    params: {
+		'LAYERS': 'watches_warnings_advisories',
+		'FORMAT': 'image/png',
+		//'CRS': 'EPSG:3857',
+	    },
+	    cssClass: "ol-semi-transparent",
+	},
+	{
+	    type: 'WMS',
+	    url: 'https://nowcoast.noaa.gov/geoserver/weather_radar/wms',
+	    updateFrequency: 5 * 60 * 1000,
+	    params: {
+		'LAYERS': 'base_reflectivity_mosaic',
+		'FORMAT': 'image/png',
+		'CRS': '3857',
+	    },
+	},
+	*/
     ],
 }
 
