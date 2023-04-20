@@ -538,7 +538,6 @@
 	  min-height: 0;
 	  object-fit: contain;
       }
-
       .horizontal-center {
 	  margin-left: auto;
 	  margin-right: auto;
@@ -597,7 +596,8 @@
 	  min-height: 0;
       }
       .ol-semi-transparent {
-	  filter: opacity(50%);
+	  /* Has to be opaque enough to show pink offshore warnings on blue ocean background */
+	  filter: opacity(40%);
       }
       .wxFlow-frame {
 	  width: 100%;
@@ -777,7 +777,8 @@
     <script src="wind.js"></script>
     <!-- <script src="NowCOAST.js"  defer=""></script> -->
     <!-- <script src="currentMap.js"  defer=""></script> -->
-    <script src="gis.js"  defer=""></script>
+    <script src="gis.js" defer=""></script>
+    <script src="gisConfig.js" defer=""></script>
 
     <link rel="stylesheet" href="wfforecast.css">
     <script src="wfforecast.js"></script>
@@ -896,6 +897,7 @@
 	      // { "div": "purpleAir", "label": "StFYC Air Quality", "duration": 30 },
 	      { "div": "", "label": "National", "duration": 0 },
 	      { "div": "nationalRadarScene", "label": "National Radar", "duration": 30 },
+	      { "div": "nationalRadar2Scene", "label": "National Radar", "duration": 30 },
 	      { "div": "cloudTopsScene", "label": "IR Cloud Tops", "duration": 30 },
 	      /* { "div": "vesselFinderScene", "label": "Local AIS", "duration": 30 }, */
 	      { "div": "linksScene", "label": "Links", "duration": 30 },
@@ -2821,6 +2823,7 @@
 
 	  const cloudTops = new GIS(cloudTopsConfig);
 	  const nationalRadar = new GIS(nationalRadarConfig);
+	  const nationalRadar2 = new GIS(nationalRadar2Config);
 	  const localRadar = new GIS(localRadarConfig);
 	  const localObsRadar = new GIS(NOAAObservationsConfig);
 	  const spec = {};
@@ -2830,10 +2833,6 @@
 	      spec.points.push({"id": id, "lat": localObs.stationInfo[id].lat, "lon": localObs.stationInfo[id].lon, "txt": id});
 	  }
 	  localObsRadarStations = localObsRadar.initializeFeatures(spec);
-
-	  const f = localObsRadarStations["46026"];
-
-	  localObsRadarStations["46026"].set('text', "46026\nTesting");
 
 	  initializeVideoLazyLoad();
 
@@ -3074,6 +3073,12 @@
 	  <div id="nationalRadarScene" class="wx-scene">
 	    <div id="nationalRadar" class="ol-flex-fit">
 	      <div id="nationalRadarLabel" class="ol-label">National Radar</div>
+	    </div>
+	  </div>
+
+	  <div id="nationalRadar2Scene" class="wx-scene">
+	    <div id="nationalRadar2" class="ol-flex-fit">
+	      <div id="nationalRadar2Label" class="ol-label">National Radar, Warnings, Watches, Advisories</div>
 	    </div>
 	  </div>
 
