@@ -189,15 +189,16 @@ class GIS {
 	function update(state) {
 	    state.config.layers.forEach(l => {
 		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
-		    console.log(`gis Update ${l.url}`);
-		    let source = l.layer.getSource();
-		    if ("type" in source && source.type == "TileWMS") {
+		    const source = l.layer.getSource();
+		    if (("type" in source) && ((source.type == "TileWMS") || (source.type == "ArcGISRest"))) {
 			let params = source.getParams();
 			params.t = Math.floor(Date.now() / l.updateFrequency) * l.updateFrequency;
-			console.log(`gis TileWMS Update t ${params.t} ${l.url}`);
+			console.log(`gis ${source.type} Update t ${params.t} ${l.url}`);
 			source.updateParams(params);
 			//source.tileCache.expireCache({});
 			//source.tileCache.clear();
+		    } else {
+			console.log(`gis (${source.type}) Update ${l.url}`);
 		    }
 		    source.refresh();
 		}
@@ -267,6 +268,9 @@ class GIS {
 		    attributions: l.attributions,
 		    params: l.params,
 		});
+		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
+		    source.type = "ArcGISRest";
+		}
 	    } else if (l.type == "Stamen") {
 		source = new ol.source.Stamen({ layer: l.layer });
 	    }
@@ -349,12 +353,20 @@ GIS.prototype.initializeFeatures = function(spec) {
             }),
             offsetY: 0,
 	    */
-            //font: '1.4vw "Courier New", Courier, monospace, bold',
-            font: '1.4vw/.9 Calibri, sans-serif',
+            font: '1.2vw "Courier New", Courier, monospace, bold',
+            font: '1.2vw "Lucida Console", "Courier New", Courier, monospace, bold',
+            //font: '1.4vw/.9 Calibri, sans-serif'
+            //font: '1.4vw Calibri, sans-serif',
+	    textAlign: 'left',
             fill: new ol.style.Fill({ color: '#008' }),
             stroke: new ol.style.Stroke({
-		color: '#fff', width: 4
+		color: [255, 255, 255, 1],
+		width: 4,
             }),
+	    backgroundFill: new ol.style.Fill({
+		color: [255, 255, 255, 0.25],
+	    }),
+	    padding: [2, 2, 2, 2],
             offsetY: 0,
 	})
     });
