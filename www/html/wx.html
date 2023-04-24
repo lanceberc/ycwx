@@ -899,7 +899,13 @@
 	      { "div": "nationalRadarScene", "label": "National Radar", "duration": 30 },
 	      { "div": "nationalRadar2Scene", "label": "National Radar", "duration": 30 },
 	      { "div": "cloudTopsScene", "label": "IR Cloud Tops", "duration": 30 },
+	      { "div": "", "label": "North Pacific", "duration": 0 },
+	      { "div": "SSTScene", "label": "SST", "duration": 30 },
+	      { "div": "SSTanomalyScene", "label": "SST Anomaly", "duration": 30 },
+	      { "div": "GlobalWindScene", "label": "Wind", "duration": 30 },
+	      { "div": "GlobalWaveScene", "label": "Waves", "duration": 30 },
 	      /* { "div": "vesselFinderScene", "label": "Local AIS", "duration": 30 }, */
+	      { "div": "", "label": "Meta", "duration": 0 },
 	      { "div": "linksScene", "label": "Links", "duration": 30 },
 	      { "div": "aboutScene", "label": "About", "duration": 30 },
 	  ],
@@ -2826,6 +2832,10 @@
 	  const nationalRadar2 = new GIS(nationalRadar2Config);
 	  const localRadar = new GIS(localRadarConfig);
 	  const localObsRadar = new GIS(NOAAObservationsConfig);
+	  const sst = new GIS(SSTConfig);
+	  const sstanomaly = new GIS(SSTanomalyConfig);
+	  const globalwind = new GIS(GlobalWindConfig);
+	  const globalwave = new GIS(GlobalWaveConfig);
 	  const spec = {};
 	  spec.points = [];
 	  for (let i in localObs.stations) {
@@ -3082,6 +3092,30 @@
 	    </div>
 	  </div>
 
+	  <div id="SSTScene" class="wx-scene">
+	    <div id="SST" class="ol-flex-fit">
+	      <div id="SSTLabel" class="ol-label">Sea Surface Temperature</div>
+	    </div>
+	  </div>
+
+	  <div id="SSTanomalyScene" class="wx-scene">
+	    <div id="SSTanomaly" class="ol-flex-fit">
+	      <div id="SSTanomalyLabel" class="ol-label">Sea Surface Temperature Anomaly</div>
+	    </div>
+	  </div>
+
+	  <div id="GlobalWindScene" class="wx-scene">
+	    <div id="GlobalWind" class="ol-flex-fit">
+	      <div id="GlobalWindLabel" class="ol-label">3-Day Composite ASCAT Windspeed</div>
+	    </div>
+	  </div>
+
+	  <div id="GlobalWaveScene" class="wx-scene">
+	    <div id="GlobalWave" class="ol-flex-fit">
+	      <div id="GlobalWaveLabel" class="ol-label">WaveWatch3 (WW3) Significant Wave Height</div>
+	    </div>
+	  </div>
+
 	  <div id="cloudTopsScene" class="wx-scene">
 	    <div id="cloudTops" class="ol-flex-fit" width="1280" height="720">
 	      <div id="cloudTopsLabel" class="ol-label">
@@ -3172,6 +3206,9 @@
 	      <h3>Satellite Images</h3>
 	      <a href="https://www.star.nesdis.noaa.gov/goes/conus.php?sat=G17">GOES West PACUS</a> - NOAA's repository at NESDIS STAR<br>
 	      <a href="https://rammb-slider.cira.colostate.edu/?sat=goes-17&sec=conus&x=7269&y=3770&z=4&angle=0&im=12&ts=1&st=0&et=0&speed=130&motion=loop&maps%5Bborders%5D=white&lat=0&p%5B0%5D=geocolor&opacity%5B0%5D=1&pause=20220527120617&slider=-1&hide_controls=0&mouse_draw=0&follow_feature=0&follow_hide=0&s=rammb-slider&draw_color=FFD700&draw_width=6">GeoColor GOES West image of Bay Area</a> - From RAMMB / CIRA at Colorado St University<br>
+	      
+	      <h3>Data Sources</h3>
+	      <a href="https://coastwatch.pfeg.noaa.gov/erddap/index.html"></a>NOAA Oceanographic Data - A meta-server fronting many NOAA live and historical data sets<br>
 	      <a href=""></a> - <br>
 	    </div>
 	  </div>
