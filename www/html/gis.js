@@ -188,11 +188,11 @@ class GIS {
 
 	function update(state) {
 	    state.config.layers.forEach(l => {
-		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
+		if ("cache_defeat" in l && (l.cache_defeat != 0)) {
 		    const source = l.layer.getSource();
 		    if (("type" in source) && ((source.type == "TileWMS") || (source.type == "ArcGISRest"))) {
 			let params = source.getParams();
-			params.t = Math.floor(Date.now() / l.updateFrequency) * l.updateFrequency;
+			params.t = Math.floor((Date.now()/1000) / l.cache_defeat) * l.cache_defeat;
 			console.log(`gis ${source.type} Update t ${params.t} ${l.url}`);
 			source.updateParams(params);
 			//source.tileCache.expireCache({});
@@ -216,59 +216,84 @@ class GIS {
 	    let source = null;
 	    console.log("gis adding layer " + JSON.stringify(l));
 	    if (l.type == "XYZ") {
-		let options = {
-		    attributions: l.attributions,
-		};
-		if ("params" in l) {
-		    options.params = l.params;
-		};
-		if ("layers" in l) {
-		    options.layers = l.layers;
-		};
-		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
-		    // In order to avoid the browser cache we make the URL unique by adding a time field
-		    // that changes periodically. To do so we stash the base URL in the source object
-		    // and replace the object's tileUrlFunction. There has to be a better way.
-
-		    // the tileUrlFunction is called only when this.url and this.urls aren't set
+		const options = {};
+		// XYZ() doesn't take a 'params' argument so if there are parameters like the token
+		// for ESRI basemaps or t=??? to defeat the cache we use a custom fetch function.
+		// There has to be a better way.
+		const customFetch = ('cache_defeat' in l && (l.cache_defeat != 0)) || ('params' in l);
+		if  (customFetch) {
+		    // We stash the base URL in the source object
+		    // The tileUrlFunction is called only when this.url and this.urls aren't set
 		    options.tileUrlFunction = function(tileCoord, pixelRatio, projection){
 			// tileCoord is representing the location of a tile in a tile grid (z, x, y)
 			let z = tileCoord[0].toString();
 			let x = tileCoord[1].toString();
 			let y = tileCoord[2].toString();
 
-			let path = this.baseUrl;
-			path = path.replace('{z}', z);
-			path = path.replace('{x}', x);
-			path = path.replace('{y}', y);
-			path += '?t=' + Math.floor(Date.now() / l.updateFrequency); // Every 10 minutes
-			// console.log("New XYZ path: " + path);
-			return path;
+			let url = this.baseUrl;
+			url = url.replace('{z}', z);
+			url = url.replace('{x}', x);
+			url = url.replace('{y}', y);
+
+			if ('params' in l) {
+			    for (p in l.params) {
+				url += `?${p}=${l.params.p}`;
+			    }
+			}
+			if ("cache_defeat" in l && (l.cache_defeat != 0)) {
+			    url += '?t=' + Math.floor((Date.now()/1000) / l.cache_defeat) * l.cache_defeat;
+			}
+			// console.log("gis XYZ layer XYZ url: " + url);
+			return url;
 		    }
 		} else {
 		    options.url = l.url + "/tile/{z}/{y}/{x}";
 		}
-		source = new ol.source.XYZ(options);
-		source.baseUrl = l.url + "/tile/{z}/{y}/{x}";
-	    } else if (l.type == "WMS") {
-		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
-		    l.params.t = Math.floor(Date.now() / l.updateFrequency) * l.updateFrequency;
+		if ('attributions' in l) {
+		    options.attributions = l.attributions;
+		};
+		if ('projection' in l) {
+		    options.projection = ol.proj.get(l.projection);
 		}
-		source = new ol.source.TileWMS({
+		source = new ol.source.XYZ(options);
+		if (customFetch) {
+		    // Stash the url in the source object for use by the tileUrlFunction()
+		    source.baseUrl = l.url + "/tile/{z}/{y}/{x}";
+		}
+	    } else if (l.type == "WMS") {
+		if ("cache_defeat" in l && (l.cache_defeat != 0)) {
+		    if (!("params" in l)) {
+			l.params = {};
+		    }
+		    l.params.t = Math.floor((Date.now()/1000) / l.cache_defeat) * l.cache_defeat;
+		}
+		let args = {
 		    url: l.url,
 		    attributions: l.attributions,
 		    params: l.params,
-		});
-		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
+		};
+		if ('projection' in l) {
+		    args.projection = ol.proj.get(l.projection);
+		}
+		source = new ol.source.TileWMS(args);
+		if ("cache_defeat" in l && (l.cache_defeat != 0)) {
 		    source.type = "TileWMS";
 		}
 	    } else if (l.type == "ArcGISRest") {
-		source = new ol.source.ImageArcGISRest({
+		let args = {
 		    url: l.url,
 		    attributions: l.attributions,
 		    params: l.params,
-		});
-		if ("updateFrequency" in l && (l.updateFrequency != 0)) {
+		};
+		if ('projection' in l) {
+		    args.projection = ol.proj.get(l.projection);
+		}
+		// Ratio defaults to 1.5 causing XYZ layers to not line up properly due to
+		// implementation issues on older systems. Ratio=1.0 is less efficient when
+		// panning / zooming.
+		args.ratio = 1.0;
+		source = new ol.source.ImageArcGISRest(args);
+		if ("cache_defeat" in l && (l.cache_defeat != 0)) {
 		    source.type = "ArcGISRest";
 		}
 	    } else if (l.type == "Stamen") {
