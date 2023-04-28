@@ -14,7 +14,11 @@ then
     df /wx
     for d in /wx/data/GOES/* /wx/data/overlay/*
     do
-	/home/stfyc/bin/prunebydate.py -days 90 -dir ${d}
+	/home/stfyc/bin/prunebydate.py -days 60 -dir ${d}
+    done
+    for d in /wx/data/overlay/Eddy
+    do
+	/home/stfyc/bin/prunebydate.py -days 10 -dir ${d}
     done
     df /wx
 fi

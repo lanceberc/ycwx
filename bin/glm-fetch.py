@@ -65,8 +65,6 @@ webroot = "/home/stfyc/www/html/data/GOES"
 if os.path.exists("/wx/data"):
     dataroot = "/wx/data"
 
-    
-
 destroot = "%s/GOES" % (dataroot)
 source = "NESDIS"
 regions = {}
@@ -88,6 +86,7 @@ imageProcess = {}
 imageProcess["CONUS-West_GLM_1k"] = [
     "%s/bin/paccup_overlay.py -region westcoastglm" % (binroot),
     "%s/bin/paccup_overlay.py -region cacoast" % (binroot),
+    "%s/bin/paccup_overlay.py -region eddy -since 8d" % (binroot),
     ]
 
 imageProcess["GOES-West_GLM_2k"] = [

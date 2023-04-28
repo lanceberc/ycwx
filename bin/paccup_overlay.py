@@ -544,22 +544,25 @@ FirePOIs_2020 = [
 
 regions["Eddy"] = {
     "arg": "eddy",
+    "title": "Catalina Eddy",
     "start": "2020-09-07T00:00:00 +0000",
-    "end": "2020-09-13T00:00:00 +0000",
-    "satroot": "GOES/NESDIS_CONUS-West",
-    "gribroot": "NOAA/HRRR/eddy",
-    "tz": "PDT",
+    "end": "2030-09-13T00:00:00 +0000",
+    "satroot": "GOES/NESDIS_CONUS-West_GLM_1k",
+#    "satroot": "GOES/NESDIS_CONUS-West",
+    "tz": "America/Los_Angeles",
     "model": "HRRR",
     "satellite": "GOES-18",
     "res": "1k",
     "sector": "CONUS",
     "area": (-121.33, 32.39, -116.50, 34.66),
     "srs": "anti_mercator",
+    "gribroot": "NOAA/HRRR/eddy",
     "wind": "barbs",
+    "wind": "none",
     "barbreduce": 2,
     "barblen": 4.0,
     "alpha": 30.0,
-    "size": (1280, 720),
+    "size": FullHD,
     "POIs": [
         ((-120.4532, 34.4424), "Pt Conception"),
         ((-117.5416, 34.9923), "4 Corners"),
@@ -576,9 +579,8 @@ regions["Eddy"] = {
         ((-118.4115, 33.7441), "Pt Vicente"),
         ((-117.2409, 32.6653), "Pt Loma"),
     ],
-    "title": "Catalina Eddy",
 }
-regions["Eddy"]["POIs"].extend(FirePOIs)
+#regions["Eddy"]["POIs"].extend(FirePOIs)
 
 regions["July"] = {
     "arg": "july",

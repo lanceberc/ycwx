@@ -49,6 +49,10 @@ regions = {
         "goes": "18",
         "prefix": "CaliforniaCoast",
     },
+    "eddy": {
+        "goes": "18",
+        "prefix": "Eddy",
+    },
 }
 
 def find_sources(region):
