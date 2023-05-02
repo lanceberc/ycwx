@@ -17,6 +17,7 @@ import logging
 import multiprocessing
 import subprocess
 import sys
+import shutil
 #from PIL import Image, ImageDraw, ImageFont, ImageFile
 
 quittingtime = datetime.datetime.now()
@@ -51,10 +52,19 @@ GOES-16 US West Coast
 https://cdn.star.nesdis.noaa.gov/GOES17/ABI/SECTOR/wus/GEOCOLOR/20192250850_GOES17-ABI-wus-GEOCOLOR-4000x4000.jpg
 """
 
-# Might need one root for data and one for binaries
-rootdir = "/home/stfyc"
+# One root for data and one for binaries
+binroot = "/home/stfyc"
+dataroot = binroot
+webroot = "/home/stfyc/www/html/data/GOES"
 
-destroot = "%s/www/html/data/GOES" % (rootdir)
+hasWx = False
+
+# If we have an external drive for archiving put images there.
+if os.path.exists("/wx/data"):
+    dataroot = "/wx/data"
+    hasWx = True
+
+destroot = "%s/GOES" % (dataroot)
 source = "NESDIS"
 regions = {}
 regions["GOES-East"] = {"goes": "16", "dir": "FD", "sector": "FD", "res": "5424x5424"}
@@ -62,7 +72,7 @@ regions["GOES-East"] = {"goes": "16", "dir": "FD", "sector": "FD", "res": "5424x
 regions["GOES-West"] = {"goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
 regions["CONUS-East"] = {"goes": "16", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 #regions["CONUS-West"] = {"goes": "17", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
-#regions["CONUS-West"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "10000x6000"}
+regions["CONUS-West-500m"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "10000x6000"}
 regions["CONUS-West"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 regions["PSW"] = {"goes": "17", "dir": "SECTOR/psw", "sector": "psw", "res": "2400x2400"}
 #regions["West_Coast"] = {"goes": "17", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
@@ -70,12 +80,20 @@ regions["West_Coast"] = {"goes": "18", "dir": "SECTOR/wus", "sector": "wus", "re
 
 imageProcess = {}
 imageProcess["CONUS-West"] = [
-    "%s/bin/paccup_overlay.py -region baydelta" % (rootdir),
-    "%s/bin/paccup_overlay.py -region westcoast" % (rootdir),
+    "%s/bin/paccup_overlay.py -region baydelta" % (binroot),
+    "%s/bin/paccup_overlay.py -region westcoast" % (binroot),
     ]
 
+imageProcess["CONUS-West-500m"] = [
+    "%s/bin/paccup_overlay.py -region baydelta500m" % (binroot),
+]
+
+if hasWx:
+    imageProcess["CONUS-West-500m"].append("%s/bin/paccup_overlay.py -region eddy500m -since 3d" % (binroot))
+
+
 imageProcess["GOES-West"] = [
-    "%s/bin/paccup_overlay.py -region pacific" % (rootdir),
+    "%s/bin/paccup_overlay.py -region pacific" % (binroot),
     ]
 
 urlbase = "https://cdn.star.nesdis.noaa.gov/GOES%s/ABI/%s/GEOCOLOR/" # goes, dir
@@ -213,7 +231,7 @@ def fetchts(region, ts, url):
     
     if os.path.exists(fn):
         logging.debug("Exists %s" % (fn))
-        return 0
+        return None
 
     if not os.path.exists(destdir):
         logging.debug("Create directory %s" % (destdir))
@@ -224,16 +242,8 @@ def fetchts(region, ts, url):
         logging.debug("Save %s" % (fn))
         with open(fn, "w+b") as f: # added +b for binary file - who knew?
             f.write(image)
-        bdir = "%s/%s_%s" % (destroot, source, region)
-        latest = "%s/%s" % (bdir, "latest.jpg")
-        if os.path.exists(latest):
-            try:
-                os.unlink(latest)
-            except OSError as err:
-                print("Error unlinking %s: %s (error type %s)" % (latest, err, type(err)))
-        os.symlink(fn, latest)
-        return 1
-    return 0
+        return fn
+    return None
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -270,10 +280,25 @@ if __name__ == '__main__':
     logging.info("Directory has %d images" % (len(tslist)))
     fetched = 0
     for ts in tslist:
-        fetched += fetchts(region, ts[0], ts[1])
+        lastfn = fetchts(region, ts[0], ts[1])
+        if lastfn != None:
+            fetched += 1
     logging.info("Fetched %d new images" % (fetched))
 
     if fetched > 0:
+        bdir = "%s/%s_%s" % (webroot, source, region)
+        if not os.path.exists(bdir):
+            logging.info("Creating %s" % (bdir))
+            os.mkdir(bdir)
+        latest = "%s/%s" % (bdir, "latest.jpg")
+        if os.path.exists(latest):
+            try:
+                os.unlink(latest)
+            except OSError as err:
+                print("Error unlinking %s: %s (error type %s)" % (latest, err, type(err)))
+
+        logging.info("Copy %s -> %s" % (lastfn, latest))
+        shutil.copyfile(lastfn, latest)
         if region in imageProcess:
             for cmd in imageProcess[region]:
                 logging.info("Running %s" % (cmd))
