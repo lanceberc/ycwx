@@ -29,3 +29,4 @@ fi
 #/usr/bin/python /home/stfyc/bin/fetch-obs.py
 date
 /usr/bin/python /home/stfyc/bin/fetch-tide.py
+/usr/bin/python /home/stfyc/bin/hrrr-fetch.py -region Eddy
