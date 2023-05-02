@@ -61,9 +61,11 @@ binroot = "/home/stfyc"
 dataroot = binroot
 webroot = "/home/stfyc/www/html/data/GOES"
 
+hasWx = False
 # If we have an external drive for archiving put images there.
 if os.path.exists("/wx/data"):
     dataroot = "/wx/data"
+    hasWx = True
 
 destroot = "%s/GOES" % (dataroot)
 source = "NESDIS"
@@ -83,14 +85,18 @@ regions["GOES-East_GLM_2k"] = {"goes": "18", "dir": "FD", "sector": "FD", "res":
 #regions["West_Coast"] = {"goes": "18", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
 
 imageProcess = {}
-imageProcess["CONUS-West_GLM_1k"] = [
-    "%s/bin/paccup_overlay.py -region westcoastglm" % (binroot),
-    "%s/bin/paccup_overlay.py -region cacoast" % (binroot),
-    "%s/bin/paccup_overlay.py -region eddy -since 8d" % (binroot),
+imageProcess["CONUS-West_GLM_1k"] = []
+if hasWx:
+    imageProcess["CONUS-West_GLM_1k"] = [
+        "%s/bin/paccup_overlay.py -region westcoastglm" % (binroot),
+        "%s/bin/paccup_overlay.py -region cacoast" % (binroot),
+        "%s/bin/paccup_overlay.py -region eddy -since 8d" % (binroot),
     ]
 
-imageProcess["GOES-West_GLM_2k"] = [
-    "%s/bin/paccup_overlay.py -region eastpacificglm" % (binroot),
+imageProcess["GOES-West_GLM_2k"] = []
+if hasWx:
+    imageProcess["GOES-West_GLM_2k"] = [
+        "%s/bin/paccup_overlay.py -region eastpacificglm" % (binroot),
     ]
 
 #urlbase = "https://cdn.star.nesdis.noaa.gov/GOES%s/ABI/%s/GEOCOLOR/" # goes, dir
