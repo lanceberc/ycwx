@@ -556,8 +556,8 @@ regions["Eddy"] = {
     "sector": "CONUS",
     "area": (-121.33, 32.39, -116.50, 34.66),
     "srs": "anti_mercator",
-    "gribroot": "NOAA/HRRR/eddy",
-    "wind": "barbs",
+    "gribroot": "NOAA/hrrr/eddy",
+    #"wind": "barbs",
     "wind": "none",
     "barbreduce": 2,
     "barblen": 4.0,
@@ -581,6 +581,45 @@ regions["Eddy"] = {
     ],
 }
 #regions["Eddy"]["POIs"].extend(FirePOIs)
+
+regions["Eddy500m"] = {
+    "arg": "eddy500m",
+    "title": "Catalina Eddy",
+    "start": "2020-09-07T00:00:00 +0000",
+    "end": "2030-09-13T00:00:00 +0000",
+    "satroot": "GOES/NESDIS_CONUS-West-500m",
+    "tz": "America/Los_Angeles",
+    "model": "HRRR",
+    "satellite": "GOES-18",
+    "res": "500m",
+    "sector": "CONUS",
+    "area": (-121.33, 32.39, -116.50, 34.66),
+    "srs": "anti_mercator",
+    "gribroot": "NOAA/HRRR/Eddy",
+    "wind": "barbs",
+    #"wind": "none",
+    "barbreduce": 2,
+    "barblen": 4.0,
+    "alpha": 30.0,
+    "size": FullHD,
+    "POIs": [
+        ((-120.4532, 34.4424), "Pt Conception"),
+        ((-117.5416, 34.9923), "4 Corners"),
+        ((-118.5278, 34.3786), "Santa Clarita"),
+        ((-119.7019, 34.4213), "Santa Barbara"),
+        #((-118.6051, 33.4783), "West End"),
+        ((-118.4086, 33.9435), "LAX"),
+        #((-119.0365, 33.4754), "Sta Barbara Is"),
+        ((-118.3267, 33.3447), "Avalon"),
+        ((-117.6466, 34.2881), "Mt Baldy"),
+        ((-116.8246, 34.0984), "San Gorgonio"),
+        ((-116.6791, 33.8142), "San Jacinto"),
+        ((-116.5467, 33.8445), "Palm Springs"),
+        ((-118.4115, 33.7441), "Pt Vicente"),
+        ((-117.2409, 32.6653), "Pt Loma"),
+    ],
+}
+
 
 regions["July"] = {
     "arg": "july",
@@ -873,6 +912,8 @@ def find_sat_images(region):
 def find_gribs(region):
     r = regions[region]
 
+    logging.debug("Find gribs %s" % (region))
+
     if not "model" in r or r["wind"] == "none":
         return None
         
@@ -889,6 +930,7 @@ def find_gribs(region):
     # Look for gribs in the daily directories but don't try to look in the future
     while day_ts <= (endts + oneday) and day_ts < (datetime.datetime.now(tz=datetime.timezone.utc) + oneday):
         path = "%s/%s/%04d%02d%02d" % (datastore_prefix, r["gribroot"], day_ts.year, day_ts.month, day_ts.day)
+        logging.debug("Looking for grib path %s" % (path))
         if os.path.exists(path) and os.path.isdir(path):
             l = os.listdir(path)
             l.sort()
@@ -1994,6 +2036,7 @@ def decorate(region, canvas, draw, sat_ts, sfc_ts, grib_ts):
 
 def process_region(region):
     logging.debug("Processing region %s" % (region))
+    lastfn = None
     r = regions[region]
 
     if args.size != None:
@@ -2003,7 +2046,7 @@ def process_region(region):
             (width, height) = m.groups()
         if (width == None) or (height == None):
             logging.critical("Illegal [width]x[height] '%s" % (args.size))
-            return
+            return lastfn
         logging.debug("Setting output size to %d x %d" % (int(width), int(height)))
         r["size"] = (int(width), int(height))
                         
@@ -2018,7 +2061,7 @@ def process_region(region):
     sat_images = find_sat_images(region)
     if len(sat_images) == 0:
         logging.info("No satellite images found")
-        return
+        return lastfn
     if args.latest:
         args.recent = 1
     if args.recent:
@@ -2029,13 +2072,13 @@ def process_region(region):
     gribs = find_gribs(region)
     if r["wind"] != "none" and "model" in r and r["model"] != None and (gribs == None or (len(gribs) == 0 and not args.ignorelastgrib)):
         logging.info("No GRIB files found")
-        return
+        return lastfn
     r["gribs"] = gribs
     r["sfcs"] = find_surface_analyses(region)
 
     if "surface" in r and not args.ignorelastsurface and (r["sfcs"] == None or len(r["sfcs"]) == 0):
         logging.info("No surface analyses files found")
-        return
+        return lastfn
 
     find_gpx(region)
 
@@ -2087,7 +2130,7 @@ def process_region(region):
         else:
             if (r["sfcs"] != None) and (not args.ignorelastsurface) and (surface_index == len(r["sfcs"])):
                 logging.info("process_region Past last surface analysis")
-                return
+                return lastfn
             if (r["sfcs"] != None):
                 logging.info("process_region No Surface Analysis %s" % (sat_ts))
 
@@ -2097,7 +2140,7 @@ def process_region(region):
         else:
             if (r["gribs"] != None) and (not args.ignorelastgrib) and (grib_index == len(r["gribs"])):
                 logging.info("process_region Past last grib")
-                return
+                return lastfn
             if (r["gribs"] != None):
                 logging.info("process_region No grib file %s" % (sat_ts))
             
@@ -2231,4 +2274,4 @@ if __name__ == '__main__':
         try:
             shutil.copyfile(fn, latest)
         except OSError as err:
-            print("Error copying %s -> %s: %s (error type %s)" % (latest, ofn, err, type(err)))
+            logging.error("Error copying %s -> %s: %s (error type %s)" % (latest, ofn, err, type(err)))
