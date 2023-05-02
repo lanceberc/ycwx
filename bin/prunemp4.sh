@@ -1,6 +1,6 @@
 #!/usr/bin/sh
 # remember that "latest.mp4" is out there too
-for d in WestCoast BayDelta BayDelta500m Pacific EastPacificGLM WestCoastGLM California-Coast CaliforniaCoast
+for d in WestCoast BayDelta BayDelta500m Pacific EastPacificGLM WestCoastGLM California-Coast Eddy Eddy500m Karl
 do
     if [ -d /home/stfyc/www/html/data/overlay/${d} ]
     then
