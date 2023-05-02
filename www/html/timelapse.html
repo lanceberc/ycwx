@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StFYC Weather Information</title>
+    <style>
+      * {
+	  box-sizing: border-box;
+      }
+      /*
+      :root {
+	  --rust: #844D36;
+	  --plum: #474853;
+	  --steel-blue: #86B3D1;
+	  --light-coffee: #AAADA0;
+	  --earth: #8E8268;
+	  --black: black;
+	  --white: white;
+	  --main-background-color: #844D36;
+	  --main-foreground-color: white;
+	  --hover-background: white;
+	  --hover-foreground: black;
+      }
+     */
+      :root {
+	  --rust: #14365D; /* Night Moon */
+	  --background2: #2F5C8F; /* Deep Blue */
+	  --foreground1: #A96762; /* Mauve */
+	  --foreground2: #D85C27; /* Mandarin */
+	  --foreground3: #B999BE; /* Lavender */
+	  --black: black;
+	  --white: white;
+	  --medium-grey: #80808080;
+	  --main-background-color: #14365D; /* Night Moon */
+	  --main-foreground-color: white;
+	  --hover-background: white;
+	  --hover-foreground: black;
+      }
+      body {
+	  background: var(--main-background-color);
+	  font-family: Arial;
+	  font-size: 16px;
+	  color: var(--main-foreground-color);
+	  height: 98vh;
+	  width: 98vw;
+	  /*max-height: 98vh;*/
+	  /*max-width: 98vw;*/
+	  display: block;
+      }
+      .wx-video {
+	  width: 100%;
+	  height: 100%;
+	  min-width: 0;
+	  min-height: 0;
+	  object-fit: contain;
+      }
+      .timelapse {
+	  margin: 0.5vw 0.5vh 1vw 0.5vh;
+	  display: flex;
+	  justify-content: center;
+      }
+    </style>
+    <script src="data/lib/d3.v7.js"></script>
+  </head>
+  
+  <script>
+    // https://web.dev/lazy-loading-video/
+    const lazyVideoObserver = new IntersectionObserver(function(entries, observer) {
+	entries.forEach(function(video) {
+	    if (video.isIntersecting) {
+		for (let source in video.target.children) {
+		    const videoSource = video.target.children[source];
+		    if (typeof videoSource.tagName === "string" && videoSource.tagName === "SOURCE") {
+			videoSource.setAttribute("src", videoSource.dataset.src);
+			videoSource.removeAttribute("data-src");
+		    }
+		}
+
+		console.log("lazyVideoObserver start " + video.target.id);
+		video.target.classList.remove("lazy");
+		lazyVideoObserver.unobserve(video.target);
+		video.target.load();
+		//video.target.play();
+	    }
+	});
+    });
+    
+    function initializeVideoLazyLoad() {
+	const lazyVideos = [].slice.call(document.querySelectorAll(".wx-video.lazy"));
+	lazyVideos.forEach(function(lazyVideo) {
+	    lazyVideoObserver.observe(lazyVideo);
+	});
+    }
+
+    function updateVideo(e) {
+	if (e == null) {
+	    return;
+	}
+
+	for (let source in e.children) {
+	    const videoSource = e.children[source];
+	    if (typeof videoSource.tagName === "string" && videoSource.tagName === "SOURCE") {
+		let src = videoSource.src;
+
+		if (src == null || src == "") {
+		    //console.log("updateVideo video not loaded");
+		    return;
+		}
+
+		let url = src.substring(0, src.lastIndexOf("/")) + "/latest.json?" + Date.now();
+		//console.log("updateVideo fetch src '" + src + "' url " + url);
+		d3.json(url)
+		    .then(
+			function(json) {
+			    if (videoSource.src.substr(src.lastIndexOf("/")+1) != json.fn.substr(json.fn.lastIndexOf("/")+1)) {
+				e.pause();
+				console.log("updateVideo " + videoSource.src + " -> " + json.fn);
+				videoSource.setAttribute("data-src", json.fn);
+				videoSource.removeAttribute("src");
+				e.classList.add("lazy");
+				lazyVideoObserver.observe(e);
+				return;
+			    }
+			    // console.log("updateVideo no change " + src);
+			    return;
+			},
+			function(error) {
+			    console.log("updateVideo couldn't fetch video filename latest " + url);
+			    return;
+			}
+			
+		    );
+		return;
+	    }
+	}
+	console.log("updateVideo no src found");
+    }
+
+    let lastSec = -1;
+    let lastMinute = -1;
+    function dispatch() {
+	const now = new Date();
+	const time = Math.floor(now.getTime() / 1000);
+	if (time == lastSec) {
+	    return;
+	}
+	lastSec = time;
+	
+	minutes = Math.floor(time/60);
+	if (minutes == lastMinute) {
+	    return;
+	}
+
+	// Everything here and below executes once per minute
+	lastMinute = minutes;
+	const hour = now.getHours();
+	const minute = now.getMinutes();
+	console.log(`Dispatch: h ${hour} m ${minute} t ${time/60} l ${lastMinute}`);
+	
+    	// Check the video .json files each minute to see if there is a new render
+	d3.selectAll(".wx-video").each(function() { updateVideo(this) });
+    }
+
+    function initialize() {
+	initializeVideoLazyLoad();
+	setInterval(dispatch, 1 * 1000);
+    }
+  </script>
+
+  <body id="body" class="wx" onload="initialize();" lang="en">
+    <div style="label">14-day North Pacific w/ synoptic chart overlay</div>
+    <div class="timelapse">
+      <video class="lazy wx-video" poster="data/overlay/Pacific/latest.jpg" controls="false" muted playsinline loop>
+	<source data-src="data/overlay/Pacific/latest.mp4">
+      </video>
+    </div>
+    <div style="label">7-day East Pacific GLM (Global Lightning Mapper)</div>
+    <div class="timelapse">
+      <video class="lazy wx-video" poster="data/overlay/EastPacificGLM/latest.jpg" controls="false" muted playsinline loop>
+	<source data-src="data/overlay/EastPacificGLM/latest.mp4">
+      </video>
+    </div>
+    <div style="label">6-day West Coast GLM (Global Lightning Mapper)</div>
+    <div class="timelapse">
+      <video class="lazy wx-video" poster="data/overlay/WestCoastGLM/latest.jpg" controls="false" muted playsinline loop>
+	<source data-src="data/overlay/WestCoastGLM/latest.mp4">
+      </video>
+    </div>
+    <div style="label">24-hour West Coast</div>
+    <div class="timelapse">
+      <video class="lazy wx-video" poster="data/overlay/WestCoast/latest.jpg" controls="false" muted playsinline loop>
+	<source data-src="data/overlay/WestCoast/latest.mp4">
+      </video>
+    </div>
+    <div style="label">6-hour Bay/Delta</div>
+    <div class="timelapse">
+      <video class="lazy wx-video" poster="data/overlay/BayDelta/latest.jpg" controls="false" muted playsinline loop>
+	<source data-src="data/overlay/BayDelta/latest.mp4">
+      </video>
+    </div>
+    <div style="label">12-hour Bay/Delta 500m resolution</div>
+    <div class="timelapse">
+      <video class="lazy wx-video" poster="data/overlay/BayDelta500m/latest.jpg" controls="false" muted playsinline loop>
+	<source data-src="data/overlay/BayDelta500m/latest.mp4">
+      </video>
+    </div>
+    <div style="label">72-hour Catalina Eddy</div>
+    <div class="timelapse">
+      <video class="lazy wx-video" poster="data/overlay/Eddy/latest.jpg" controls="false" muted playsinline loop>
+	<source data-src="data/overlay/Eddy/latest.mp4">
+      </video>
+    </div>
+    <div style="label">72-hour Catalina Eddy w/HRRR</div>
+    <div class="timelapse">
+      <video class="lazy wx-video" poster="data/overlay/Eddy500m/latest.jpg" controls="false" muted playsinline loop>
+	<source data-src="data/overlay/Eddy500m/latest.mp4">
+      </video>
+    </div>
+  </body>
+</html>
