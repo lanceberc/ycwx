@@ -6,9 +6,9 @@ if [[ $ipaddr =~ "192.168.2" ]] ; then where=dev ; fi
 date
 /usr/bin/python /home/stfyc/bin/sfcanalysis.py
 date
-/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-West
+/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -since 2 -region CONUS-West
 date
-/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-West
+/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -since 2 -region GOES-West
 date
 if [[ $where == "dev" ]]; then
   /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-West-500m -timelimit 4
@@ -29,4 +29,4 @@ fi
 #/usr/bin/python /home/stfyc/bin/fetch-obs.py
 date
 /usr/bin/python /home/stfyc/bin/fetch-tide.py
-/usr/bin/python /home/stfyc/bin/hrrr-fetch.py -region Eddy
+#/usr/bin/python /home/stfyc/bin/hrrr-fetch.py -region Eddy
