@@ -50,12 +50,16 @@ https://cdn.star.nesdis.noaa.gov/GOES17/ABI/SECTOR/psw/GEOCOLOR/20192250906_GOES
 
 GOES-16 US West Coast
 https://cdn.star.nesdis.noaa.gov/GOES17/ABI/SECTOR/wus/GEOCOLOR/20192250850_GOES17-ABI-wus-GEOCOLOR-4000x4000.jpg
+
+GOES-18 GLM
+https://cdn.star.nesdis.noaa.gov/GOES18/GLM/CONUS/EXTENT3/20222841436_GOES18-GLM-CONUS-EXTENT3-5000x3000.jpg
+https://cdn.star.nesdis.noaa.gov/GOES18/GLM/FD/EXTENT3/20230151206_GOES18-GLM-FD-EXTENT3-5424x5424.jpg
 """
 
 # One root for data and one for binaries
 binroot = "/home/stfyc"
-dataroot = binroot
-webroot = "/home/stfyc/www/html/data/GOES"
+dataroot = "/home/stfyc/www/html/data/NOAA"
+webroot = "/home/stfyc/www/html/data/NOAA/GOES"
 
 hasWx = False
 
@@ -67,37 +71,68 @@ if os.path.exists("/wx/data"):
 destroot = "%s/GOES" % (dataroot)
 source = "NESDIS"
 regions = {}
-regions["GOES-East"] = {"goes": "16", "dir": "FD", "sector": "FD", "res": "5424x5424"}
-#regions["GOES-West"] = {"goes": "17", "dir": "FD", "sector": "FD", "res": "5424x5424"}
-regions["GOES-West"] = {"goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
-regions["CONUS-East"] = {"goes": "16", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
-#regions["CONUS-West"] = {"goes": "17", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
-regions["CONUS-West-500m"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "10000x6000"}
-regions["CONUS-West"] = {"goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
-regions["PSW"] = {"goes": "17", "dir": "SECTOR/psw", "sector": "psw", "res": "2400x2400"}
-#regions["West_Coast"] = {"goes": "17", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
-regions["West_Coast"] = {"goes": "18", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
+regions["GOES-East"] = {"img": "ABI", "goes": "16", "dir": "FD", "sector": "FD", "res": "5424x5424"}
+#regions["GOES-West"] = {"img": "ABI", "goes": "17", "dir": "FD", "sector": "FD", "res": "5424x5424"}
+regions["GOES-West"] = {"img": "ABI", "goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
+regions["CONUS-East"] = {"img": "ABI", "goes": "16", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+#regions["CONUS-West"] = {"img": "ABI", "goes": "17", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+regions["CONUS-West-500m"] = {"img": "ABI", "goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "10000x6000"}
+regions["CONUS-West"] = {"img": "ABI", "goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+regions["PSW"] = {"img": "ABI", "goes": "17", "dir": "SECTOR/psw", "sector": "psw", "res": "2400x2400"}
+#regions["West_Coast"] = {"img": "ABI", "goes": "17", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
+regions["West_Coast"] = {"img": "ABI", "goes": "18", "dir": "SECTOR/wus", "sector": "wus", "res": "4000x4000"}
+
+regions["CONUS-West_GLM_1k"] = {"img": "GLM", "goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+regions["GOES-West_GLM_2k"] = {"img": "GLM", "goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
+regions["GOES-West_GLM_1k"] = {"img": "GLM", "goes": "18", "dir": "FD", "sector": "FD", "res": "10848x10848"}
+regions["CONUS-East_GLM_1k"] = {"img": "GLM", "goes": "16", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+regions["GOES-East_GLM_2k"] = {"img": "GLM", "goes": "16", "dir": "FD", "sector": "FD", "res": "5424x5424"}
 
 imageProcess = {}
 imageProcess["CONUS-West"] = [
-    "%s/bin/paccup_overlay.py -region baydelta" % (binroot),
-    "%s/bin/paccup_overlay.py -region westcoast" % (binroot),
+    #"%s/bin/paccup_overlay.py -region baydelta" % (binroot),
+    #"%s/bin/paccup_overlay.py -region westcoast" % (binroot),
     ]
 
 imageProcess["CONUS-West-500m"] = [
-    "%s/bin/paccup_overlay.py -region baydelta500m" % (binroot),
+    "%s/bin/paccup_overlay.py -region baydeltawind -since 1d" % (binroot),
+    "%s/bin/paccup_overlay.py -region baydelta500m -since 1h" % (binroot),
+    "%s/bin/paccup_overlay.py -region eddy500m -since 3d" % (binroot),
 ]
 
-if hasWx:
-    imageProcess["CONUS-West-500m"].append("%s/bin/paccup_overlay.py -region eddy500m -since 3d" % (binroot))
-
-
 imageProcess["GOES-West"] = [
-    "%s/bin/paccup_overlay.py -region pacific" % (binroot),
-    ]
+    # Now using GLM for synoptic chart overlay
+    # "%s/bin/paccup_overlay.py -region pacific" % (binroot),
+]
 
-urlbase = "https://cdn.star.nesdis.noaa.gov/GOES%s/ABI/%s/GEOCOLOR/" # goes, dir
-urlfn = "%s_GOES%s-ABI-%s-GEOCOLOR-%s.jpg" # timestamp, goes, sector, res
+imageProcess["CONUS-West_GLM_1k"] = [
+    "%s/bin/paccup_overlay.py -region baydeltaglm -since 30m" % (binroot),
+]
+if hasWx:
+    imageProcess["CONUS-West_GLM_1k"] = [
+        #"%s/bin/paccup_overlay.py -region baydeltaglm" % (binroot),
+        "%s/bin/paccup_overlay.py -region westcoastglm" % (binroot),
+        "%s/bin/paccup_overlay.py -region cacoast" % (binroot),
+        "%s/bin/paccup_overlay.py -region eddy -since 8d" % (binroot),
+    ]
+    
+imageProcess["GOES-West_GLM_2k"] = []
+imageProcess["GOES-West_GLM_2k"] = [
+    "%s/bin/paccup_overlay.py -region eastpacificglm" % (binroot),
+    "%s/bin/paccup_overlay.py -region pacific" % (binroot),
+]
+
+imaging = {}
+imaging["ABI"] = {
+    "urlbase": "https://cdn.star.nesdis.noaa.gov/GOES%s/ABI/%s/GEOCOLOR/", # goes, dir
+    "urlfn": "%s_GOES%s-ABI-%s-GEOCOLOR-%s.jpg" # timestamp, goes, sector, res
+    }
+
+imaging["GLM"] = {
+    "urlbase": "https://cdn.star.nesdis.noaa.gov/GOES%s/GLM/%s/EXTENT3/", # goes, dir
+    "urlfn": "%s_GOES%s-GLM-%s-EXTENT3-%s.jpg" # timestamp, goes, sector, res
+}
+
 destbase = "%s/%s_%s/%s%s%s" # destroot, source, region, YMD
 destfn = "GOES-%s_%s_%s%s%s%s%s.jpg" # goes, sector, YMDHm
 
@@ -188,15 +223,19 @@ def urltryhard(url):
             logging.debug("Couldn't close socket")
     return(resp)
 
+def dateSort(a):
+    return(a[0])
+
 def fetchdirectory(region):
     r = regions[region]
     """ Fetch directory url, filter for image timestamps w/ desired resolution"""
-    root = urlbase % (r['goes'], r['dir'])
+    root = imaging[r["img"]]["urlbase"] % (r['goes'], r['dir'])
+    logging.debug("Fetch directory %s" % (root))
     data = str(urltryhard(root))
-    #logging.debug(type(data))
     lines = data.split('\\r\\n')
     logging.debug("Directory has %d entries" % (len(lines)))
     #tspat = re.compile(r'<a href=\"(\d\d\d\d\d\d\d\d\d\d\d)_GOES%s-ABI-%s-GEOCOLOR-%s.jpg\">' % (r['goes'], r['sector'], r['res']))
+    urlfn = imaging[r["img"]]["urlfn"]
     pat = '<a href=\"' + urlfn % (r'(\d{11})', r['goes'], r['sector'], r['res']) + '\">' # group is timestamp
     #logging.debug("url pat: %s" % pat)
     tspat = re.compile(pat)
@@ -211,19 +250,25 @@ def fetchdirectory(region):
         if ts:
             href = hrefpat.match(l)
             logging.debug("found %s" % (href.group(1)))
-            tslist.append([ts.group(1), "%s/%s" % (root, href.group(1))])
+            tslist.append([ts.group(1), "%s%s" % (root, href.group(1))])
+    tslist.sort(key=dateSort)
     return tslist
 
-def fetchts(region, ts, url):
+def fetchts(region, ts, url, oldesttime):
     r = regions[region]
     """ NESDIS uses YEAR DAYOFYEAR TIME """
     year = ts[0:4]
     doy = ts[4:7]
-    dt = datetime.datetime.strptime(year + " " + doy, "%Y %j")
+    dt = datetime.datetime.strptime(year + " " + doy + " +0000", "%Y %j %z")
     month = "%02d" % (dt.month)
     day = "%02d" % (dt.day)
     hour = ts[7:9]
     minute = ts[9:11]
+
+    dt += datetime.timedelta(hours=int(hour), minutes=int(minute))
+    if dt < oldesttime:
+        logging.debug("fetchts: %s (%r) before %r" % (ts, dt, oldesttime))
+        return None
 
     destdir = destbase % (destroot, source, region, year, month, day)
     fn = destfn % (r['goes'], r['sector'], year, month, day, hour, minute)
@@ -251,6 +296,7 @@ if __name__ == '__main__':
     for r in regions:
         reg.append(r)
     parser.add_argument("-region", choices=reg, default="GOES-West", help="GOES Satellite")
+    parser.add_argument("-since", default=None, help="Since Xd days, Xh hours, or Xm minutes");
     parser.add_argument("-force", default=False, action='store_true', dest="force", help="Overwrite existing output")
     parser.add_argument("-log", choices=["debug", "info", "warning", "error", "critical"], default="info", help="Log level")
     parser.add_argument("-timelimit", default=5, type=int, help="Exit if not complete in TIMELIMIT minutes");
@@ -270,7 +316,23 @@ if __name__ == '__main__':
     region = args.region
     force = args.force
 
-    quittingtime = datetime.datetime.now() + datetime.timedelta(minutes=args.timelimit);
+    since = None
+    if args.since != None:
+        sl = len(args.since)
+        if args.since[sl-1:sl] == 'd':
+            since = datetime.timedelta(days=int(args.since[0:sl-1]))
+        elif args.since[sl-1:sl] == 'h':
+            since = datetime.timedelta(hours=int(args.since[0:sl-1]))
+        elif args.since[sl-1:sl] == 'm':
+            since = datetime.timedelta(minutes=int(args.since[0:sl-1]))
+        else:
+            logging.critical("Unknown timespan %s" % (args.since))
+
+    now = datetime.datetime.now()
+    quittingtime =  now + datetime.timedelta(minutes=args.timelimit);
+    oldesttime = datetime.datetime.now(datetime.timezone.utc)
+    if since != None:
+        oldesttime -= since
 
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=loglevel)
     logging.debug(args)
@@ -279,9 +341,11 @@ if __name__ == '__main__':
     tslist = fetchdirectory(region)
     logging.info("Directory has %d images" % (len(tslist)))
     fetched = 0
+    lastfn = None
     for ts in tslist:
-        lastfn = fetchts(region, ts[0], ts[1])
-        if lastfn != None:
+        fn = fetchts(region, ts[0], ts[1], oldesttime)
+        if fn != None:
+            lastfn = fn
             fetched += 1
     logging.info("Fetched %d new images" % (fetched))
 
@@ -295,7 +359,7 @@ if __name__ == '__main__':
             try:
                 os.unlink(latest)
             except OSError as err:
-                print("Error unlinking %s: %s (error type %s)" % (latest, err, type(err)))
+                logging.info("Error unlinking %s: %s (error type %s)" % (latest, err, type(err)))
 
         logging.info("Copy %s -> %s" % (lastfn, latest))
         shutil.copyfile(lastfn, latest)
