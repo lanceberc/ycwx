@@ -18,6 +18,7 @@ rootdir = "/home/stfyc/www/html/data/NOAA/OPC"
 imageProcess = {}
 imageProcess["pacific"] = [
     "%s/bin/paccup_overlay.py -region pacific" % ("/home/stfyc"),
+    "%s/bin/cmovie.py -region pacific -days 7 -hold 5 -withsource"  % ("/home/stfyc"),
     ]
 maps = {}
 
