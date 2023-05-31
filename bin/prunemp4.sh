@@ -1,9 +1,11 @@
-#!/usr/bin/sh
-# remember that "latest.mp4" is out there too
-for d in WestCoast BayDelta BayDelta500m Pacific EastPacificGLM WestCoastGLM California-Coast Eddy Eddy500m Karl
+#!/usr/bin/bash
+for d in /home/stfyc/www/html/data/NOAA/overlay/*
 do
-    if [ -d /home/stfyc/www/html/data/overlay/${d} ]
+    if [ -d ${d} ]
     then
-	ls -1 /home/stfyc/www/html/data/overlay/${d}/${d}*.mp4 | head -n -4 | xargs rm
+	count=`ls -1 ${d}| grep Z.mp4 | head -n -2 | wc -w`
+        if (( ${count} > 0 )); then
+	    ls -1 ${d}/*.mp4 | head -n -2 | xargs rm
+	fi
     fi
 done
