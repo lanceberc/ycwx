@@ -9,12 +9,12 @@ import os
 import os.path
 
 ffmpeg = "ffmpeg"
-rootdir = "/home/stfyc/www/html/data/overlay"
+rootdir = "/home/stfyc/www/html/data/NOAA/overlay"
 datadir = rootdir
 if os.path.exists("/wx/data"):
-    datadir = "/wx/data/overlay"
+    datadir = "/wx/data/NOAA/overlay"
 
-reldir = "data/overlay"
+reldir = "data/NOAA/overlay"
 
 regions = {
     "pacific" : {
@@ -32,6 +32,10 @@ regions = {
     "baydelta": {
         "goes": "18",
         "prefix": "BayDelta",
+    },
+    "baydeltawind": {
+        "goes": "18",
+        "prefix": "BayDeltaWind",
     },
     "baydelta500m": {
         "goes": "18",
@@ -218,12 +222,14 @@ if __name__ == '__main__':
         if stinfo.st_size < (1024*1024):
             logging.error("%s too small (%d) - not symlinking to latest.mp4" % (ofile, stinfo.st_size))
         else:
-            latest = "%s/%s/%s" % (rootdir, regions[args.region]["prefix"], "latest.mp4")
+            latest = "%s/%s/%s" % (rootdir, regions[o]["prefix"], "latest.mp4")
             if os.path.lexists(latest):
                 os.unlink(latest)
             os.symlink(ofile, latest)
-            latest = "%s/%s/%s" % (rootdir, regions[args.region]["prefix"], "latest.json")
+            latest = "%s/%s/%s" % (rootdir, regions[o]["prefix"], "latest.json")
             ofile = "%s/%s/%s_%s-%s.mp4" % (reldir, regions[o]["prefix"], regions[o]["prefix"], s, e)
+            logging.debug("New latest.json %s" % (latest))
+            logging.debug("New latest.json fn %s (reldir %s)" % (ofile, reldir))
             with open(latest, "w") as f:
                 f.write("{\n");
                 f.write('    "fn": "%s"\n' % (ofile));
