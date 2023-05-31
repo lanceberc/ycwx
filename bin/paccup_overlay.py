@@ -31,10 +31,10 @@ import shutil
 
 tau = math.pi * 2
 
-datastore_prefix = "/home/stfyc/www/html/data"
-web_prefix = "/home/stfyc/www/html/data"
+datastore_prefix = "/home/stfyc/www/html/data/NOAA"
+web_prefix = "/home/stfyc/www/html/data/NOAA"
 if os.path.exists("/wx/data"):
-    datastore_prefix = "/wx/data"
+    datastore_prefix = "/wx/data/NOAA"
     
 logo_prefix = "%s/%s" % (datastore_prefix, "logos")
 output_prefix = "/overlay"
@@ -109,6 +109,69 @@ regions["BayDelta"] = {
     ],
 }
 
+regions["BayDeltaGLM1k"] = {
+    "arg": "baydeltaglm",
+    "title": "SF Bay/Delta",
+    "tz": "America/Los_Angeles",
+#    "start": "2020-08-25T18:00:00 +0000",
+    "start": "2022-05-29T06:00:00 -0700",
+    "end": "2100-12-21T23:00:00 +0000",
+#    "area": (-125.20, 36.00, -118.50, 39.00), # lat/long of ll, ur (up to Monterey)
+    "area": (-125.67, 36.27, -120.00, 39.00), # lat/long of ll, ur
+    "satellite": "GOES-18",
+    "satroot": "GOES/NESDIS_CONUS-West_GLM_1k",
+    "res": "1k",
+    "sector": "CONUS",
+    "model": "HRRR",
+    "gribroot": "NOAA/HRRR/karl",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "barbreduce": 2,
+    "barblen": 4.0,
+    "alpha": 30.0,
+    "size": FullHD,
+    #"lonlat": "auto",
+    "POIs": [
+        ((-123.7360, 38.9530), "Pt Arena"),
+        ((-123.0239, 37.9951), "Pt Reyes"),
+        ((-122.7125, 38.4382), "Santa Rosa"),
+        #((-122.4535, 37.8083), "Anita Rk"),
+        ((-122.4466, 37.8073), "StFYC", "red"),
+        #((-122.3855, 37.7817), "Pier 40"),
+        #((-122.4935, 37.7247), "Harding Pk"),
+        #((-122.5056, 37.7351), "Zoo"),
+        #((-122.3914, 37.9036), "Richmond"),
+        ((-122.4545, 38.1608), "Sears Pt"),
+        #((-122.4333, 37.9632), "E Brother"),
+        #((-122.2257, 38.0606), "Carquinez Br"),
+        ((-122.1232, 38.0405), "Benicia Br"),
+        #((-122.2578, 37.8720), "Campanile"),
+        #((-122.3306, 37.7971), "Estuary"),
+        ((-122.4994, 37.4923), "Mavericks"),
+        ((-122.3862, 37.6163), "SFO"),
+        #((-122.2133, 37.7124), "OAK"),
+        #((-122.4273, 37.5288), "Montera Mt"),
+        ((-122.1058, 38.3995), "Mt Vaca"),
+        #((-122.5963, 37.9235), "Mt Tam"),
+        ((-121.9141, 37.8815), "Mt Diablo"),
+        ((-121.6427, 37.3419), "Mt Hamilton"),
+        ((-123.0016, 37.6989), "SE Farallon"),
+        #((-122.4830, 37.5026), "Pillar Pt"),
+        #((-121.2932, 37.9548), "Stockton"),
+        ((-121.4941, 38.0370), "Tinsley", "red"),
+        ((-121.4936, 38.5766), "Sacramento"),
+        ((-120.9973, 37.2537), "Gustine"),
+        ((-120.4863, 37.3025), "Merced"),
+        ((-119.7893, 36.7362), "Fresno"),
+        ((-121.5686, 37.0068), "Gilroy"),
+        ((-121.3272, 36.4289), "Soledad"),
+        ((-122.0019, 36.9606), "Santa Cruz"),
+        ((-121.9345, 36.6376), "Pt Pinos"),
+        #((-121.9521, 38.3732), "Vacaville"),
+        #((-119.7605, 39.0105), "North Sails Minden"),
+    ],
+}
+
 regions["BayDelta500m"] = {
     "arg": "baydelta500m",
     "title": "SF Bay/Delta",
@@ -123,7 +186,7 @@ regions["BayDelta500m"] = {
     "res": "500m",
     "sector": "CONUS",
     "model": "HRRR",
-    "gribroot": "NOAA/HRRR/karl",
+    "gribroot": "HRRR/Karl",
     "srs": "anti_mercator",
     "wind": "none",
     "barbreduce": 2,
@@ -177,21 +240,22 @@ regions["BayDeltaWind"] = {
     "title": "SF Bay/Delta",
     "tz": "America/Los_Angeles",
 #    "start": "2020-08-25T18:00:00 +0000",
-    "start": "2022-05-29T06:00:00 -0700",
+    "start": "2023-05-25T06:00:00 +0000",
     "end": "2100-12-21T23:00:00 +0000",
 #    "area": (-125.20, 36.00, -118.50, 39.00), # lat/long of ll, ur (up to Monterey)
-    "area": (-125.67, 36.27, -120.00, 39.00), # lat/long of ll, ur
+#    "area": (-125.67, 36.27, -120.00, 39.00), # lat/long of ll, ur
+    "area": (-124.50, 36.75, -120.00, 38.75), # lat/long of ll, ur (up to Monterey)
     "satellite": "GOES-18",
-    "satroot": "GOES/NESDIS_CONUS-West",
-    "res": "1k",
+    "satroot": "GOES/NESDIS_CONUS-West-500m",
+    "res": "500m",
     "sector": "CONUS",
     "model": "HRRR",
-    "gribroot": "NOAA/HRRR/karl",
+    "gribroot": "HRRR/Karl",
     "srs": "anti_mercator",
     "wind": "barbs",
-    "barbreduce": 2,
+    "barbreduce": 1,
     "barblen": 4.0,
-    "alpha": 30.0,
+    "alpha": 60.0,
     "size": FullHD,
     #"lonlat": "auto",
     "POIs": [
@@ -355,13 +419,14 @@ regions["PacCup"] = {
 
 regions["Pacific"] = {
     "arg": "pacific",
+    "title": "Northern Pacific",
     "tz": "UTC",
     "start": "2022-06-03T00:00:00 +0000",
     "end": "2050-01-01T00:00:00 +0000",
 #    "area": (-205.0, 16.0, -115.0, 55.0), # lat/long of ur, ll corner of Surface Analysis
     "area": (-200.0, 16.0, -115.0, 55.0), # lat/long of ur, ll corner of Surface Analysis
     "satellite": "GOES-18",
-    "satroot": "GOES/NESDIS_GOES-West",
+    "satroot": "GOES/NESDIS_GOES-West_GLM_2k",
     "res": "2k",
     "sector": "FD",
     "surface": "Pacific",
@@ -422,22 +487,22 @@ regions["SFBay"] = {
 
 regions["Karl"] = {
     "arg": "karl",
-    "tz": "PDT",
-    "start": "2020-09-01T00:00:00 +0000",
-    "end": "2021-10-01T00:00:00 +0000",
+    "tz": "America/Los_Angeles",
+    "start": "2023-05-25T00:00:00 +0000",
+    "end": "2030-10-01T00:00:00 +0000",
     "area": (-124.50, 36.75, -120.00, 38.75), # lat/long of ll, ur (up to Monterey)
     "satellite": "GOES-18",
-    "satroot": "GOES/NESDIS_CONUS-West",
-    "res": "1k",
+    "satroot": "GOES/NESDIS_CONUS-West-500m",
+    "res": "500m",
     "sector": "CONUS",
     "model": "HRRR",
-    "gribroot": "NOAA/HRRR/karl",
+    "gribroot": "HRRR/Karl",
     "srs": "anti_mercator",
     "wind": "barbs",
     "barbreduce": 1,
     "barblen": 4.0,
     "alpha": 60.0,
-    "size": (1280, 720),
+    "size": (1920, 1280),
     "POIs": [
         ((-123.7360, 38.9530), "Pt Arena"),
         ((-123.0239, 37.9951), "Pt Reyes"),
@@ -556,7 +621,7 @@ regions["Eddy"] = {
     "sector": "CONUS",
     "area": (-121.33, 32.39, -116.50, 34.66),
     "srs": "anti_mercator",
-    "gribroot": "NOAA/hrrr/eddy",
+    "gribroot": "NOAA/HRRR/Eddy",
     #"wind": "barbs",
     "wind": "none",
     "barbreduce": 2,
@@ -595,28 +660,40 @@ regions["Eddy500m"] = {
     "sector": "CONUS",
     "area": (-121.33, 32.39, -116.50, 34.66),
     "srs": "anti_mercator",
-    "gribroot": "NOAA/HRRR/Eddy",
+    "gribroot": "HRRR/Eddy",
     "wind": "barbs",
     #"wind": "none",
-    "barbreduce": 2,
+    "barbreduce": 1,
     "barblen": 4.0,
-    "alpha": 30.0,
+    "alpha": 50.0,
     "size": FullHD,
     "POIs": [
         ((-120.4532, 34.4424), "Pt Conception"),
         ((-117.5416, 34.9923), "4 Corners"),
         ((-118.5278, 34.3786), "Santa Clarita"),
         ((-119.7019, 34.4213), "Santa Barbara"),
+	((-120.3764, 34.0384), "San Miguel"),
+	((-120.1110, 33.9651), "Santa Rosa"),
+	((-119.7701, 34.0327), "Santa Cruz"),
         #((-118.6051, 33.4783), "West End"),
-        ((-118.4086, 33.9435), "LAX"),
+        ##((-118.4086, 33.9435), "LAX"),
+	((-118.4483, 33.9774), "MDR"),
+	((-117.8842, 33.6042), "Balboa"),
+	((-118.4008, 33.8491), "King Harbor"),
         #((-119.0365, 33.4754), "Sta Barbara Is"),
         ((-118.3267, 33.3447), "Avalon"),
+	((-118.6051, 33.4783), "West End"),
+	((-119.0365, 33.4754), "Sta Barbara"),
+	((-119.5052, 33.2437), "San Nicolas"),
         ((-117.6466, 34.2881), "Mt Baldy"),
         ((-116.8246, 34.0984), "San Gorgonio"),
         ((-116.6791, 33.8142), "San Jacinto"),
         ((-116.5467, 33.8445), "Palm Springs"),
         ((-118.4115, 33.7441), "Pt Vicente"),
+	((-118.4835, 32.8876), "San Clemente"),
         ((-117.2409, 32.6653), "Pt Loma"),
+	((-119.1363, 32.7053), "Tanner Bank"),
+        ((-119.1229, 32.4435), "Bishop Rock"),
     ],
 }
 
@@ -819,7 +896,7 @@ models["HRRR"] = {
 # Surface analyses (weather maps)
 surfaces = {}
 surfaces["Pacific"] = {
-    "root": "%s/NOAA/OPC/pacific" % (datastore_prefix),
+    "root": "%s/OPC/pacific" % (datastore_prefix),
     "frequency": 6 * 60, # every six hours
     "crop": (0, 8, 2441, 1564), # Cut off top 8 and bottom 36 pixels (text decorations)
     #"crop": (2441-2160, 1488-1215, 2441, 1488),
@@ -828,7 +905,7 @@ surfaces["Pacific"] = {
 }
 
 surfaces["Atlantic"] = {
-    "root": "%s/NOAA/OPC/atlantic" % (datastore_prefix),
+    "root": "%s/OPC/atlantic" % (datastore_prefix),
     "frequency": 6 * 60, # every six hours
     "crop": (0, 8, 2441, 1564), # Cut off top 8 and bottom 36 pixels
     "coverageArea": (-100.0, 65.0, 10.0, 16.0), # lon/lat of ul, lr corner of Surface Analysis
@@ -1453,7 +1530,8 @@ def prep_grib(region, ts):
     ax.margins(0)
     ax.tick_params(left=False, labelleft=False, bottom=False, labelbottom=False)
     fig.add_axes(ax)
-    cm = matplotlib.cm.get_cmap("jet")     # A colormap that's sort of the rainbow from blue (no wind) to red (25kts)
+    #cm = matplotlib.cm.get_cmap("jet")     # A colormap that's sort of the rainbow from blue (no wind) to red (25kts)
+    cm = matplotlib.colormaps["jet"]     # A colormap that's sort of the rainbow from blue (no wind) to red (25kts)
     plt.ylim(height, 0) # zero is at the top
     plt.xlim(0, width) # zero is on the left
 
@@ -2034,7 +2112,7 @@ def decorate(region, canvas, draw, sat_ts, sfc_ts, grib_ts):
         s.append(r["attribution"][0]['c'])
         annotate(canvas, draw, "UR", s)
 
-def process_region(region):
+def process_region(region, quittingtime):
     logging.debug("Processing region %s" % (region))
     lastfn = None
     r = regions[region]
@@ -2085,6 +2163,9 @@ def process_region(region):
     skipping = False
     lastfn = None
     for cur_sat in sat_images:
+        if (datetime.datetime.now() > quittingtime):
+            logging.warning("Surpassed time limit - exiting");
+            sys.exit(-1);
         (sat_fn, sat_ts) = cur_sat
 
         if sat_ts.day != last_day:
@@ -2209,7 +2290,9 @@ if __name__ == '__main__':
     parser.add_argument("-end", action='store', help="End YYYYMMDDHHMM[+zzzz] (Zulu unless optional TZ HHMM offset)")
     parser.add_argument("-since", action='store', help="Last Nd (days) or Nh (hours)");
     parser.add_argument("-deletebad", action='store_true', default=False, help="Delete source jpgs that don't parse correctly")
+    parser.add_argument("-timelimit", default=4, type=int, help="Exit if not complete in TIMELIMIT minutes");
     parser.add_argument("-log", choices=["debug", "info", "warning", "error", "critical"], default="info", help="Log level")
+    
     args = parser.parse_args()
 
     if args.log == "debug":
@@ -2249,20 +2332,23 @@ if __name__ == '__main__':
     if not "adjust" in r:
         r["adjust"] = "bottom"
     if args.since != None:
-        if args.since[-1] == 'h':
-            hours = int(args.since[0:-1]);
+        if  args.since[-1] == 'm':
+            minutes = int(args.since[0:-1]);
+        elif args.since[-1] == 'h':
+            minutes = int(args.since[0:-1]) * 60;
         elif args.since[-1] == 'd':
-            hours = int(args.since[0:-1]) * 24;
+            minutes = int(args.since[0:-1]) * 60 * 24;
         else:
-            logging.info('Illegal "since" duration "%s" - must end in "d" or "h"' % (args.since));
+            logging.info('Illegal "since" duration "%s" - must end in "m", "d" or "h"' % (args.since));
             exit(1);
         now = datetime.datetime.now(datetime.timezone.utc);
-        delta = datetime.timedelta(hours = hours);
+        delta = datetime.timedelta(minutes = minutes);
         since = now - delta;
         r["start"] = since.strftime("%Y-%m-%dT%H:%M:00 +0000");
         logging.debug("Start time since: %s" % (r["start"]));
 
-    fn = process_region(choicemap[args.region])
+    quittingtime = datetime.datetime.now() + datetime.timedelta(minutes=args.timelimit);
+    fn = process_region(choicemap[args.region], quittingtime)
 
     if fn != None:
         bdir = "%s%s/%s" % (web_prefix, output_prefix, choicemap[args.region])
