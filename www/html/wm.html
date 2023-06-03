@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Wind Forecasts</title>
+  <style>
+    body {
+	display: flex;
+    }
+    .wx-content {
+	display: flex;
+	flex-grow: 100;
+	flex-shrink: 1;
+	flex-basis: auto;
+	max-width: 100%;
+	max-height: 100%;
+	min-width: 0;
+	min-height: 0;
+    }
+    .wx-scene {
+	/* width: auto; */
+	/* height: auto; */
+	/* max-width: 100%; */
+	/* max-height: 100%; */
+	margin: 2px 2px 2px 2px;
+	flex-direction: column;
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: auto;
+	/*display: none;*/
+	max-width: 100%;
+	max-height: 100%;
+    }
+    .wx-image {
+	object-fit: contain;
+	max-width: 100%;
+	max-height: 100%;
+	min-width: 0;
+	min-height: 0;
+    }
+  </style>
+
+
+  <script src="lib/d3.v7.min.js"></script>
+  <script src="lib/topojson.min.js"></script>
+  <script src="lib/date.format.js"></script>
+  <script src="wmRegions.js"></script>
+  <script src="wm.js"></script>
+  <link rel="stylesheet" href="wm.css">
+
+  <script>
+    const defaultRegion = "Karl";
+    function main(el) {
+	// Should parse href arugments properly
+	let href = window.location.href;
+	
+	let r = defaultRegion;
+	for (const i in wmRegions) {
+	    if (href.indexOf("?"+i) != -1) {
+		r = i;
+	    }
+	}
+	console.log(`Model region ${r}`);
+	const kiosk = (href.indexOf("?kiosk") != -1) ? true : false;
+	
+	let windModel = new WindModel(el, r, kiosk);
+	d3.select("#"+el+"-canvas").classed("wx-image", true);
+    }
+  </script>
+
+  <body onload="main('KarlHRRR');" lang="en">
+    <div class="wx-content">
+      <div class="wx-scene">
+	<div id="KarlHRRR" class="wx-image"></div>
+      </div>
+    </div>
+  </body>
+</html>
