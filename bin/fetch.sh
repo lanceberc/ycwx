@@ -31,5 +31,6 @@ date
 /usr/bin/python /home/stfyc/bin/nomads-fetch.py -region Eddy
 /usr/bin/python /home/stfyc/bin/nomads-fetch.py -region NorCal-NAM
 /usr/bin/python /home/stfyc/bin/nomads-fetch.py -region CA-NAM
+/usr/bin/python /home/stfyc/bin/nomads-fetch.py -region CA-GFS
 /usr/bin/python /home/stfyc/bin/nomads-fetch.py -region NYBOS
 /usr/bin/python /home/stfyc/bin/nomads-fetch.py -region NYBOS-NAM
