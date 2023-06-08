@@ -76,13 +76,57 @@ def namURL(m, ts, f):
     url = root + "?" + d + "&file=" + fn
     return(t, f, url, fn)
 
+def gfsURL(m, ts, f):
+    # GFS 0.25 degree operational run
+    # Analysis
+    # https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?dir=%2Fgfs.20230606%2F12%2Fatmos&file=gfs.t12z.pgrb2.0p25.anl
+    # Forecast
+    # https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?dir=%2Fgfs.20230606%2F12%2Fatmos&file=gfs.t12z.pgrb2.0p25.f000
+    root = "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl"
+    # Fill in with year, month, date, hour
+    mdir = "dir=%%2Fgfs.%04d%02d%02d%%2F%02d%%2Fatmos"
+    # Fill in with model run hour, forecast hour
+    fn = "gfs.t%02dz.pgrb2.0p25.f%03d"
+
+    logging.debug("ts %r" % (ts))
+    t = ts - datetime.timedelta(minutes = m["lag"])
+    logging.debug("t1 minus lag %r" % (t))
+    hour = t.hour % 6
+    t = t - datetime.timedelta(hours = hour)
+    logging.debug("t2 (-hour %d) %r" % (hour, t))
+    d = mdir % (t.year, t.month, t.day, t.hour)
+
+    # GFS currently has hourly forecast to 120 hours, every three hours 123 - 384
+
+    # We will do every three hours for now, so 120 hours is the 41 forecasts (starting w/ zero)
+    forecast = f * 3;
+
+    fn = fn % (t.hour, forecast)
+    url = root + "?" + d + "&file=" + fn
+    return(t, forecast, url, fn)
+
+# HRRR and NAM have hourly forecasts
+def genHourly(f):
+    hours = []
+    for f in range(f):
+        hours.append(f);
+    return(hours)
+
+# GFS has hourly forecasts but we're currently fetching every three hours
+def genGFShours(f):
+    hours = []
+    for f in range(f):
+        hours.append(3*f)
+    return(hours)
+
 models = {};
 models["HRRR"] = {
     "model": "HRRR",
     "url": hrrrURL,
     "destroot": "NOAA",
     "lag": 55, # Minutes after the hour when the f18 forecast is ready
-    "tifroot": webroot + "/NOAA/HRRR"
+    "tifroot": webroot + "/NOAA/HRRR",
+    "forecastHours": genHourly,
 }
 
 models["NAM"] = {
@@ -90,7 +134,17 @@ models["NAM"] = {
     "url": namURL,
     "destroot": "NOAA",
     "lag": 101, # Minutes after the hour when the f00 forecast is ready
-    "tifroot": webroot + "/NOAA/NAM"
+    "tifroot": webroot + "/NOAA/NAM",
+    "forecastHours": genHourly,
+}
+
+models["GFS"] = {
+    "model": "GFS",
+    "url": gfsURL,
+    "destroot": "NOAA",
+    "lag": 210, # Minutes after the hour when the f000 forecast is ready
+    "tifroot": webroot + "/NOAA/GFS",
+    "forecastHours": genGFShours,
 }
 
 regions = {}
@@ -98,6 +152,8 @@ regions["Karl"] = { "top": 38.75, "left": -124.5, "right": -120.0, "bottom": 36.
 regions["Eddy"] = { "top": 34.66, "left": -121.33, "right": -116.50, "bottom": 32.39, "forecasts": 19, "model": "HRRR"}
 regions["NorCal-NAM"] = { "top": 38.5, "left": -123.5, "right": -121.0, "bottom": 36.5, "forecasts": 49, "model": "NAM", "vars": ["UGRD", "VGRD", "GUST"] }
 regions["CA-NAM"] = { "top": 42.0, "left": -130.0, "right": -116.0, "bottom": 32.50, "forecasts": 49, "model": "NAM", "vars": ["UGRD", "VGRD", "GUST"] }
+# GFS every 3 hours for 5 days is 41 forecasts
+regions["CA-GFS"] = { "top": 42.0, "left": -136.0, "right": -112.0, "bottom": 30.00, "forecasts": 41, "model": "GFS", "vars": ["UGRD", "VGRD", "GUST"] }
 regions["LIS"] = { "top": 41.5, "left": -74.2, "right": -71.5, "bottom": 40.50, "forecasts": 19, "model": "HRRR", "vars": ["UGRD", "VGRD", "GUST"] }
 regions["NYBOS"] = { "top": 42.6, "left": -74.2, "right": -70.00, "bottom": 40.00, "forecasts": 19, "model": "HRRR", "vars": ["UGRD", "VGRD", "GUST"] }
 regions["NYBOS-NAM"] = { "top": 42.6, "left": -74.2, "right": -70.00, "bottom": 40.00, "forecasts": 49, "model": "NAM", "vars": ["UGRD", "VGRD", "GUST"] }
@@ -183,7 +239,7 @@ def urltryhard(url):
             logging.debug("Couldn't close socket")
     return(resp)
 
-def fetchHRRR(reg, ts, force):
+def fetchNOMADS(reg, ts, force):
     r = regions[reg]
     m = models[r["model"]]
     
@@ -239,7 +295,7 @@ def fetchHRRR(reg, ts, force):
                         
                         # If this was the last forecast for a model run
                         logging.info("Downloaded forecast %d of %d" % (forecasthour + 1, r["forecasts"]))
-                        if forecasthour == r["forecasts"] - 1:
+                        if forecast == r["forecasts"] - 1:
                             latest = "%s/%s/%s" % (tifroot, reg, "latest.json")
                             try:
                                 os.unlink(latest)
@@ -248,7 +304,7 @@ def fetchHRRR(reg, ts, force):
                             logging.info("Writing %s" % (latest))
                             with open(latest, "w") as f:
                                 mdate = "%4d%02d%02d" % (modelTime.year, modelTime.month, modelTime.day)
-                                f.write('{ "mdate": "%s", "modelRun": "%d", "forecasts": "%d" }\n' % (mdate, modelTime.hour, forecasthour+1));
+                                f.write('{ "mdate": "%s", "modelRun": "%d", "forecasts": %r }\n' % (mdate, modelTime.hour, m["forecastHours"](r["forecasts"])));
                         
                     except subprocessCallProcessError as e:
                         logging.error("Executing gdal_translate fails: %s" % (e))
@@ -278,7 +334,6 @@ if __name__ == '__main__':
         loglevel = logging.CRITICAL
 
     region = args.region
-    #force = args.force
 
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=loglevel)
     logging.debug(args)
@@ -286,4 +341,4 @@ if __name__ == '__main__':
     now = datetime.datetime.now(datetime.timezone.utc)
     keep = 1
     for t in range(keep):
-        fetchHRRR(region, now - datetime.timedelta(hours=(keep-t)), args.force)
+        fetchNOMADS(region, now - datetime.timedelta(hours=(keep-t)), args.force)
