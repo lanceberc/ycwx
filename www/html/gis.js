@@ -77,11 +77,12 @@ class GIS {
 	    }
 	}
 
-	function onchange (evt) {
+	function onVisibilityChange (evt) {
 	    let v = "visible", h = "hidden";
 	    let evtMap = { focus:v, focusin:v, pageshow:v, blur:h, focusout:h, pagehide:h };
 	    
 	    evt = evt || window.event;
+	    console.log(`gis visibilitychange target ${evt.target}`);
 	    if (evt.type in evtMap) {
 		console.log("gis visibilitychange: " + evtMap[evt.type])
 	    } else {
@@ -256,6 +257,7 @@ class GIS {
 		    options.projection = ol.proj.get(l.projection);
 		}
 		source = new ol.source.XYZ(options);
+		source.type = "XYZ";
 		if (customFetch) {
 		    // Stash the url in the source object for use by the tileUrlFunction()
 		    source.baseUrl = l.url + "/tile/{z}/{y}/{x}";
@@ -343,7 +345,8 @@ class GIS {
 	);
 
 	// Look for various events to render element and start/stop animation
-	document.addEventListener("visibilitychange", onchange);
+	//document.getElementById(container).addEventListener("visibilitychange", onchange);
+	document.addEventListener("visibilitychange", onVisibilityChange);
 
 	new ResizeObserver((entries) => {
 	    entries.forEach(e => {
