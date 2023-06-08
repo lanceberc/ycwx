@@ -10,6 +10,7 @@ import logging
 import math
 from math import radians, degrees, cos, sin, tan, atan2, log, sqrt, modf, pi
 #import time
+import sys
 import os.path
 import os
 import datetime
@@ -235,8 +236,8 @@ regions["BayDelta500m"] = {
     ],
 }
 
-regions["BayDeltaWind"] = {
-    "arg": "baydeltawind",
+regions["BayDeltaHRRR"] = {
+    "arg": "baydeltahrrr",
     "title": "SF Bay/Delta",
     "tz": "America/Los_Angeles",
 #    "start": "2020-08-25T18:00:00 +0000",
@@ -299,8 +300,8 @@ regions["BayDeltaWind"] = {
     ],
 }
 
-regions["WestCoast"] = {
-    "arg": "westcoast",
+regions["WestCoast1"] = {
+    "arg": "westcoast1",
     "title": "West Coast Offshore",
     "tz": "America/Los_Angeles",
 #    "start": "2020-08-25T18:00:00 +0000",
@@ -325,8 +326,8 @@ regions["WestCoast"] = {
     ],
 }
 
-regions["WestCoastGLM"] = {
-    "arg": "westcoastglm",
+regions["WestCoastGLM1"] = {
+    "arg": "westcoastglm1",
     "title": "West Coast Offshore",
     "tz": "America/Los_Angeles",
 #    "start": "2020-08-25T18:00:00 +0000",
@@ -351,6 +352,26 @@ regions["WestCoastGLM"] = {
         ((-122.5939, 45.5850), "PDX"),
         ((-122.3079, 47.4506), "SEA"),
     ],
+}
+
+regions["WestCoastGLM"] = {
+    "arg": "westcoastglm",
+    "title": "West Coast",
+    "tz": "America/Los_Angeles",
+    "start": "2022-06-03T00:00:00 +0000",
+    "end": "2050-01-01T00:00:00 +0000",
+#    "area": (-205.0, 16.0, -115.0, 55.0), # lat/long of ur, ll corner of Surface Analysis
+    "area": (-161.5, 16.0, -94.5, 49.5), # lat/long of ur, ll corner of Surface Analysis
+    "satellite": "GOES-18",
+    "satroot": "GOES/NESDIS_GOES-West_GLM_2k",
+    "res": "2k",
+    "sector": "FD",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "size": FullHD,
+    #"logos": [{"fn": "rammb_logo.png"}, {"fn": "cira18Logo.png"}, {"fn": "GOES-S-Mission-Logo-1024x655.png"}, {"fn": "NOAA_logo.png"}, {"fn": "NWS_logo.png"}],
+    #"logos": [{"fn": "rammb_logo.png"}, {"fn": "NOAA_logo.png"}, {"fn": "NWS_logo.png"}],
+    #"logopos": "left",
 }
 
 regions["EastPacificGLM"] = {
@@ -647,8 +668,58 @@ regions["Eddy"] = {
 }
 #regions["Eddy"]["POIs"].extend(FirePOIs)
 
+EddyPOIs = [
+    ((-120.4532, 34.4424), "Pt Conception"),
+    ((-117.5416, 34.9923), "4 Corners"),
+    ((-118.5278, 34.3786), "Santa Clarita"),
+    ((-119.7019, 34.4213), "Santa Barbara"),
+    ((-120.3764, 34.0384), "San Miguel"),
+    ((-120.1110, 33.9651), "Santa Rosa"),
+    ((-119.7701, 34.0327), "Santa Cruz"),
+    #((-118.6051, 33.4783), "West End"),
+    ##((-118.4086, 33.9435), "LAX"),
+    ((-118.4483, 33.9774), "MDR"),
+    ((-117.8842, 33.6042), "Balboa"),
+    ((-118.4008, 33.8491), "King Harbor"),
+    #((-119.0365, 33.4754), "Sta Barbara Is"),
+    ((-118.3267, 33.3447), "Avalon"),
+    ((-118.6051, 33.4783), "West End"),
+    ((-119.0365, 33.4754), "Sta Barbara"),
+    ((-119.5052, 33.2437), "San Nicolas"),
+    ((-117.6466, 34.2881), "Mt Baldy"),
+    ((-116.8246, 34.0984), "San Gorgonio"),
+    ((-116.6791, 33.8142), "San Jacinto"),
+    ((-116.5467, 33.8445), "Palm Springs"),
+    ((-118.4115, 33.7441), "Pt Vicente"),
+    ((-118.4835, 32.8876), "San Clemente"),
+    ((-117.2409, 32.6653), "Pt Loma"),
+    ((-119.1363, 32.7053), "Tanner Bank"),
+    ((-119.1229, 32.4435), "Bishop Rock"),
+]
+
 regions["Eddy500m"] = {
     "arg": "eddy500m",
+    "title": "Catalina Eddy",
+    "start": "2020-09-07T00:00:00 +0000",
+    "end": "2030-09-13T00:00:00 +0000",
+    "satroot": "GOES/NESDIS_CONUS-West-500m",
+    "tz": "America/Los_Angeles",
+    "model": "HRRR",
+    "satellite": "GOES-18",
+    "res": "500m",
+    "sector": "CONUS",
+    "area": (-121.33, 32.39, -116.50, 34.66),
+    "srs": "anti_mercator",
+    "gribroot": "HRRR/Eddy",
+    "wind": "none",
+    "barbreduce": 1,
+    "barblen": 4.0,
+    "alpha": 50.0,
+    "size": FullHD,
+    "POIs": EddyPOIs,
+}
+regions["Eddy500mHRRR"] = {
+    "arg": "eddy500mhrrr",
     "title": "Catalina Eddy",
     "start": "2020-09-07T00:00:00 +0000",
     "end": "2030-09-13T00:00:00 +0000",
@@ -667,36 +738,8 @@ regions["Eddy500m"] = {
     "barblen": 4.0,
     "alpha": 50.0,
     "size": FullHD,
-    "POIs": [
-        ((-120.4532, 34.4424), "Pt Conception"),
-        ((-117.5416, 34.9923), "4 Corners"),
-        ((-118.5278, 34.3786), "Santa Clarita"),
-        ((-119.7019, 34.4213), "Santa Barbara"),
-	((-120.3764, 34.0384), "San Miguel"),
-	((-120.1110, 33.9651), "Santa Rosa"),
-	((-119.7701, 34.0327), "Santa Cruz"),
-        #((-118.6051, 33.4783), "West End"),
-        ##((-118.4086, 33.9435), "LAX"),
-	((-118.4483, 33.9774), "MDR"),
-	((-117.8842, 33.6042), "Balboa"),
-	((-118.4008, 33.8491), "King Harbor"),
-        #((-119.0365, 33.4754), "Sta Barbara Is"),
-        ((-118.3267, 33.3447), "Avalon"),
-	((-118.6051, 33.4783), "West End"),
-	((-119.0365, 33.4754), "Sta Barbara"),
-	((-119.5052, 33.2437), "San Nicolas"),
-        ((-117.6466, 34.2881), "Mt Baldy"),
-        ((-116.8246, 34.0984), "San Gorgonio"),
-        ((-116.6791, 33.8142), "San Jacinto"),
-        ((-116.5467, 33.8445), "Palm Springs"),
-        ((-118.4115, 33.7441), "Pt Vicente"),
-	((-118.4835, 32.8876), "San Clemente"),
-        ((-117.2409, 32.6653), "Pt Loma"),
-	((-119.1363, 32.7053), "Tanner Bank"),
-        ((-119.1229, 32.4435), "Bishop Rock"),
-    ],
+    "POIs": EddyPOIs,
 }
-
 
 regions["July"] = {
     "arg": "july",
@@ -876,6 +919,34 @@ regions["CaliforniaCoast"] = {
         ((-104.6742, 39.8493), "DEN"),
         ((-111.9869, 40.7886), "SLC"),
         ((-157.9192, 21.3322), "HNL"),
+    ],
+}
+
+regions["EastSmoke"] = {
+    "arg": "eastsmoke",
+    "title": "Northeast CONUS",
+    "tz": "America/New_York",
+    "start": "2023-06-07T00:00:00 -0700",
+    "end":   "2100-03-01T00:00:00 -0700",
+    #"night_exclude": ("0300", "1400"),
+    #37.755611, -88.614887
+    #49.39155526666467, -59.57910196142553
+    "area": (-89.00, 36.750, -59.00, 49.00), # lat/long of ll, ur
+    "adjust": "bottom", # CONUS side
+    "satellite": "GOES-16",
+    "satroot": "GOES/NESDIS_CONUS-East",
+    "res": "1k",
+    "sector": "CONUS",
+    "model": "HRRR",
+    "gribroot": "NOAA/HRRR/cahrrr",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "barbreduce": 20,
+    "barblen": 4.0,
+    "alpha": 30.0,
+    "size": (1920, 1080),
+    #"lonlat": "auto",
+    "POIs": [
     ],
 }
 
