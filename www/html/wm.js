@@ -56,7 +56,7 @@ function WindModel(container, r, kiosk) {
 	} else if (document.visibilityState != "visible") {
 	    console.log(`document is not visible`);
 	} else {
-	    s.currentFrame = (s.currentFrame + 1) % s.region.latest.forecasts;
+	    s.currentFrame = (s.currentFrame + 1) % s.region.latest.forecasts.length;
 	    updateFrame(s);
 	}
 	const timeout = (s.currentFrame == 0) ? firstFrameTime : frameTime;
@@ -69,13 +69,12 @@ function WindModel(container, r, kiosk) {
 	const m = Math.floor(diff / (60 * 1000)) % 60;
 	let label = r.model + " ";
 	label += frameState.ref.format("UTC:m/d HHMM") + "Z";
-	label += " +" + ((h < 10) ? "0" : "") + h + ((m < 10) ? "0" : "") + m;
+	label += " +" + ((h < 10) ? "0" : "") + h + ":" + ((m < 10) ? "0" : "") + m;
 	label += " valid " + frameState.valid.format("m/d ");
 	label += '<span class="wmForecastHour">' + frameState.valid.format("HH:MM") + "</span> " + frameState.valid.format("Z");
 	label += "<br>Barbs: 10m Wind, Color: Gusts";
 	if (!kiosk) {
-	    //label += `<br>${r.latest.forecasts} hours - 'b'ack, 'f'orward`;
-	    label += "<br>'b'ack, 'f'orward, &lt;space&gt; fullscreen";
+	    label += "<br>&larr; Back, &rarr; Forward, &lt;space&gt; fullscreen";
 	}
 	el.html(label);
     }
@@ -174,7 +173,8 @@ function WindModel(container, r, kiosk) {
     function renderComplete(s, evt, task) {
 	now = Date.now();
 	const fh = evt.data.forecastHour;
-	const frameState = s.frameStates[fh];
+	const forecast = evt.data.forecast;
+	const frameState = s.frameStates[forecast];
 	const elapsed =  now - task.startTime;
 	const sinceStart = now - s.startTime;
 	frameState.renderState = "renderComplete";
@@ -182,16 +182,17 @@ function WindModel(container, r, kiosk) {
 	frameState.imageData = evt.data.imageData;
 	frameState.ref = new Date(evt.data.ref * 1000);
 	frameState.valid = new Date(evt.data.valid * 1000);
+	frameState.windData = evt.data.windData;
 	updateRenderState(s);
 	
-	console.log(`Render ${fh} completed in ${(elapsed/1000.0).toFixed(2)} sinceStart ${(sinceStart/1000.0).toFixed(2)} current frame: ${s.currentFrame}`);
-	if (s.currentFrame == fh) {
+	console.log(`Render ${forecast} hour ${fh} completed in ${(elapsed/1000.0).toFixed(2)} sinceStart ${(sinceStart/1000.0).toFixed(2)} current frame: ${s.currentFrame}`);
+	if (s.currentFrame == forecast) {
 	    updateFrame(s);
 	}
     }
 
-    function renderStart(s, fh) {
-	const frameState = s.frameStates[fh];
+    function renderStart(s, forecast) {
+	const frameState = s.frameStates[forecast];
 	frameState.startTime = Date.now();
 	
 	const task = {};
@@ -201,7 +202,8 @@ function WindModel(container, r, kiosk) {
 	task.msg.width = s.canvasWidth;
 	task.msg.height = s.canvasHeight;
 	task.msg.region = s.region;
-	task.msg.forecastHour = fh;
+	task.msg.forecast = forecast;
+	task.msg.forecastHour = s.region.latest.forecasts[forecast];
 	task.msg.map = windModelCountries;
 	task.msg.windColorMap = {
 	    'steps': windColorMapSteps,
@@ -218,17 +220,59 @@ function WindModel(container, r, kiosk) {
 	if (model != null) {
 	    console.log(`New model fetched for ${s.r}`);
 	    s.region.latest = model;
-	    s.frameStates = new Array(s.region.latest.forecastHours);
-	    for (let f = 0; f < parseInt(s.region.latest.forecasts); f++) {
+	    s.frameStates = new Array(s.region.latest.forecasts.length);
+	    for (let f = 0; f < s.region.latest.forecasts.length; f++) {
 		s.frameStates[f] = {"renderState": "renderWaiting"};
 	    }
 	    updateRenderState(s);
-	    for (let fh = 0; fh < s.region.latest.forecasts; fh++) {
-		renderStart(s, fh);
+	    for (let f = 0; f < s.region.latest.forecasts.length; f++) {
+		renderStart(s, f);
 	    }
 	}
     }
 
+    const forwardKey = "ArrowRight";
+    const backKey = "ArrowLeft";
+    
+    //const forwardKey = "f";
+    //const backKey = "b";
+    const spaceKey = " ";
+    
+    let inkeypress = false;
+    let isFullScreen = false;
+    
+    async function keyEvent(s, event) {
+	if (!inkeypress) {
+	    inkeypress = true;
+	    if (event.key === forwardKey) {
+		if (s.currentFrame < s.region.latest.forecasts.length - 1) {
+		    s.currentFrame++;
+		    await updateFrame(s);
+		}
+	    } else if (event.key === backKey) {
+		if (s.currentFrame > 0) {
+		    s.currentFrame--;
+		    await updateFrame(s);
+		}
+	    } else if (event.key === spaceKey) {
+		const elem = document.getElementById(s.container);
+		if (!document.fullscreenElement) {
+		    try {
+			elem.requestFullscreen();
+			isFullScreen = true;
+		    } catch (e) {
+			console.log("Full screen denied: " + e);
+		    }
+		} else {
+		    document.exitFullscreen();
+		    isFullScreen = false;
+		}
+	    }
+	    s.slider.node().value = (s.currentFrame * 100.0) / (s.region.latest.forecasts.length-1);
+	    inkeypress = false;
+	}
+    }
+    
     async function init(container, r, kiosk) {
 	WindModels[r] = new Object();
 	const s = WindModels[r];
@@ -257,11 +301,11 @@ function WindModel(container, r, kiosk) {
 	    .attr("id", container + "-canvas")
 	    .attr("width", s.canvasWidth)
 	    .attr("height", s.canvasHeight)
-	    .classed("wmCanvas", true)
+	    .classed("wmCanvas", true);
 	s.label = d3.select(s.id)
 	    .append('div')
 	    .attr('id', container + "-label")
-	    .classed('wmLabel', true)
+	    .classed('wmLabel', true);
 	s.renderStatus = d3.select(s.id)
 	    .append('div')
 	    .attr('id', container + "-renderStatus")
@@ -270,7 +314,7 @@ function WindModel(container, r, kiosk) {
 	let sliderWrapper = d3.select(s.id)
 	    .append('div')
 	    .attr('id', container + "-sliderWrapper")
-	    .classed('wmSliderWrapper', true)
+	    .classed('wmSliderWrapper', true);
 	s.slider = sliderWrapper
 	    .append("input")
 	    .attr('id', container + '-slider')
@@ -279,6 +323,11 @@ function WindModel(container, r, kiosk) {
 	    .attr('min', 0)
 	    .attr('max', 100)
 	    .attr('value', 0)
+	    .attr("tabindex", "0");
+	s.value = d3.select(s.id)
+	    .append('div')
+	    .attr('id', container + '-value')
+	    .classed('wmValue', true);
 
 	// "world-110m.json" is lower-res - faster, but not enough detail to recognize features
 	// "countries-10m.json is high-res";
@@ -290,7 +339,7 @@ function WindModel(container, r, kiosk) {
 
 	s.slider.node().value = 0;
 	s.slider.node().oninput = function() {
-	    s.currentFrame = Math.round((this.value * (s.region.latest.forecasts-1))/100.0);
+	    s.currentFrame = Math.round((this.value * (s.region.latest.forecasts.length-1))/100.0);
 	    updateFrame(s);
 	}
 	if (!kiosk) {
@@ -309,48 +358,55 @@ function WindModel(container, r, kiosk) {
 
 	s.windColorLookup = generateWindLookupTable(windColorMapSteps, windColorMapMax);
 	
-	//const forwardKey = "ArrowLeft";
-	//const backKey = "ArrowRight";
-
-	const forwardKey = "f";
-	const backKey = "b";
-	const spaceKey = " ";
-	
-	let inkeypress = false;
-	let isFullScreen = false;
-
 	d3.select(s.id).attr("tabindex", 0);
-	document.getElementById(container)
-	    .addEventListener("keypress", async function onEvent(event) {
-	    if (!inkeypress) {
-		inkeypress = true;
-		if (event.key === forwardKey) {
-		    if (s.currentFrame < s.region.latest.forecasts - 1) {
-			s.currentFrame++;
-			await updateFrame(s);
-		    }
-		} else if (event.key === backKey) {
-		    if (s.currentFrame > 0) {
-			s.currentFrame--;
-			await updateFrame(s);
-		    }
-		} else if (event.key === spaceKey) {
-		    const elem = document.getElementById(s.container);
-		    if (!document.fullscreenElement) {
-			try {
-			    elem.requestFullscreen();
-			    isFullScreen = true;
-			} catch (e) {
-			    console.log("Full screen denied: " + e);
-			}
-		    } else {
-			document.exitFullscreen();
-			isFullScreen = false;
-		    }
-		}
-		s.slider.node().value = (s.currentFrame * 100.0) / (s.region.latest.forecasts-1);
-		inkeypress = false;
+	let el = document.getElementById(container);
+	el.addEventListener("mouseover", function() { el.focus(); });
+	//el.addEventListener("keypress", keyEvent(event));
+	el.addEventListener("keydown", evt => { keyEvent(s, evt) });
+
+	s.canvas.node().addEventListener("mousemove", (evt) => {
+	    const cf = s.currentFrame;
+	    const frameState = s.frameStates[cf];
+	    if (frameState.renderState != "renderComplete") {
+		return;
 	    }
+	    const canvas = evt.target;
+	    const cr = canvas.getBoundingClientRect();
+	    const ww = cr.width;
+	    const wh = cr.height;
+	    const cw = canvas.width;
+	    const ch = canvas.height;
+	    
+	    const x = Math.round(evt.layerX * cw / ww);
+	    const y = Math.round(evt.layerY * ch / wh);
+
+	    if (Number.isNaN(x) || Number.isNaN(y)) {
+		;
+	    } else {
+		const wind = Math.round(frameState.windData.wind[y*cw + x]);
+		const gust = Math.round(frameState.windData.gust[y*cw + x]);
+		const dir = Math.round(frameState.windData.dir[y*cw + x]);
+
+		if (dir < 361) {
+		    const windPad = (wind < 10) ? "&nbsp;" : "";
+		    const gustPad = (gust < 10) ? "&nbsp;" : "";
+		    const dirPad = ((dir < 100) ? "&nbsp;" : "") + ((dir < 10) ? "&nbsp;" : "");
+		    s.value.html(`${dirPad}${dir}&deg;T @ ${windPad}${wind} G ${gustPad}${gust} kts`);
+
+		    const px = evt.layerX;
+		    const py = evt.layerY;
+		    s.value.node().style.left = (px + 20) + 'px';		    
+		    s.value.node().style.top = (py + 20) + 'px';
+		} else {
+		    s.value.html("");
+		}
+	    }
+	});
+	s.canvas.node().addEventListener("focusout", (evt) => {
+	    s.value.html("");
+	});
+	s.canvas.node().addEventListener("mouseleave", (evt) => {
+	    s.value.html("");
 	});
 
 	await checkForNewModel(s);	
