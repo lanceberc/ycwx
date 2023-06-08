@@ -33,9 +33,9 @@ regions = {
         "goes": "18",
         "prefix": "BayDelta",
     },
-    "baydeltawind": {
+    "baydeltahrrr": {
         "goes": "18",
-        "prefix": "BayDeltaWind",
+        "prefix": "BayDeltaHRRR",
     },
     "baydelta500m": {
         "goes": "18",
@@ -60,6 +60,14 @@ regions = {
     "eddy500m": {
         "goes": "18",
         "prefix": "Eddy500m",
+    },
+    "eddy500mhrrr": {
+        "goes": "18",
+        "prefix": "Eddy500mHRRR",
+    },
+    "eastsmoke": {
+        "goes": "16",
+        "prefix": "EastSmoke",
     },
 }
 
