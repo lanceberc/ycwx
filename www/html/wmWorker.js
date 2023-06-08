@@ -62,12 +62,30 @@ function gribParseMetaData(s) {
 }
     
 async function fetchGrib(url, displayProjection) {
-    const tiff = await GeoTIFF.fromUrl(url);
-    const grib = await tiff.getImage();
-    let rasters = await grib.readRasters();
-      
-    const hrrrGeoKeys = grib.getGeoKeys();
-    const projObj = geokeysToProj4.toProj4( hrrrGeoKeys );
+    console.log(`Fetch ${url}`);
+    let tryCount = 0;
+    let done = false;
+    let tiff;
+    let grib;
+    let rasters;
+    while (!done && (tryCount < 4)) {
+	try {
+	    tiff = await GeoTIFF.fromUrl(url);
+	    grib = await tiff.getImage();
+	    rasters = await grib.readRasters();
+	    done = true;
+	} catch (e) {
+	    console.log(`Fetch failed '${e}' for ${url}`);
+	    tryCount++;
+	}
+    }
+
+    if (!done) {
+	return(null);
+    }
+
+    const geoKeys = grib.getGeoKeys();
+    const projObj = geokeysToProj4.toProj4( geoKeys );
     const proj4string = projObj.proj4;
 
     //console.log(`proj4: '${proj4string}'`);
@@ -208,15 +226,23 @@ function drawWindField(canvas, grib, dp, band, cm) {
     const context = canvas.getContext("2d");
     const b = grib.bands[band];
     const d = new ImageData(w,h);
+
+    const wind = new Uint8ClampedArray(w*h); // Wind and gust can't get above 255
+    const gust = new Uint8ClampedArray(w*h);
+    const dir = new Array(w*h); // Dir range [0 - 360], 361 indicates off-grid
+    const uIndex = grib.bands.UGRD;
+    const vIndex = grib.bands.VGRD;
+    const gustIndex = grib.bands['GUST'];
     
+    const ul = dp.invert([0, 0]);
+    const lr = dp.invert([w, h]);
+    //console.log(`top ${ul[1]} bottom ${lr[1]} left ${ul[0]} right ${lr[0]}`);
     for (let y = 0; y < h; y++) {
 	for (let x = 0; x < w; x++) {
 	    const lonLat = dp.invert([x, y]);
 	    const gCoords = projection.inverse(lonLat);
 	    i = (gCoords[0] - geoTransform[0]) / geoTransform[1];
 	    j = (gCoords[1] - geoTransform[3]) / geoTransform[5];
-	    pi = Math.round(i);
-	    pj = Math.round(j);
 	    if ((i >= 0) && (i < gw) && (j >= 0) && (j < gh) ){
 		// vals[y][x] = rasters[hrrrBands[band]][(Math.round(j)*gw) + Math.round(i)];
 		// Fancy weighted interpolation for smooth transitions
@@ -237,7 +263,7 @@ function drawWindField(canvas, grib, dp, band, cm) {
 		      (rasters[b][ar] * (1-pctBelow) * pctRight) +
 		      (rasters[b][bl] * pctBelow * (1-pctRight)) +
 		      (rasters[b][br] * pctBelow * pctRight); 
-		const v = 1.943844492 * avg;
+		const kavg = 1.943844492 * avg;
 
 		/*
 		Calling the windColorMap for each pixel and translating it to RGB was taking
@@ -248,7 +274,7 @@ function drawWindField(canvas, grib, dp, band, cm) {
 		d.data[offset + 2] = color.b;
 		*/
 		
-		let idx = Math.round((v*cm.steps)/cm.max);
+		let idx = Math.round((kavg*cm.steps)/cm.max);
 		if (idx >= cm.steps) {
 		    idx = cm.steps - 1; // Clamp to range max
 		}
@@ -258,11 +284,32 @@ function drawWindField(canvas, grib, dp, band, cm) {
 		d.data[offset + 1] = cm.map[coff + 1];
 		d.data[offset + 2] = cm.map[coff + 2];
 		d.data[offset + 3] = 255;
+
+		const gi = Math.round(i);
+		const gj = Math.round(j);
+		const gidx = (gj*gw) + gi;
+		const u = rasters[uIndex][gidx];
+		const v = rasters[vIndex][gidx];
+		const kts = 1.943844492 * Math.sqrt((u*u) + (v*v));
+		let angle = (Math.atan2(-v,u) * (180.0/Math.PI)) - 90.0;
+		angle += (angle < 0.0) ? 360.0 : 0.0;
+		angle = angle;
+		const gkts = 1.943844492 * rasters[gustIndex][gidx];
+		
+		idx = (y*w) + x;
+		wind[idx] = kts.toFixed(0);
+		gust[idx] = gkts.toFixed(0);
+		dir[idx] = angle.toFixed(0);
+	    } else {
+		wind[(y*w)+x] = 0;
+		gust[(y*w)+x] = 0;
+		dir[(y*w)+x] = 361;
 	    }
 	}
     }
     
     context.putImageData(d, 0, 0, 0, 0, w, h);
+    return({"wind": wind, "gust": gust, "dir": dir});
 }
 
 const textBorder = 4;
@@ -338,18 +385,19 @@ async function render(canvas, region, forecastHour, topo, colorMap) {
     const context = canvas.getContext("2d");
     const forecast = (forecastHour < 10 ? "0" : "") + `${forecastHour}`;
     const modelRun = (region.latest.modelRun < 10 ? "0" : "") + region.latest.modelRun;
-    const url = `${region.url}/${region.latest.mdate}/t${modelRun}_f0${forecast}.tif`;
+    const pad = (forecast < 100) ? "0" : "";
+    const url = `${region.url}/${region.latest.mdate}/t${modelRun}_f${pad}${forecast}.tif`;
     //console.log(`Loading ${url}`);
     const dp = region.dp;
     const grib = await fetchGrib(url, dp);
     
     grib.region = region;
-    drawWindField(canvas, grib, dp, 'GUST', colorMap);
+    windData = drawWindField(canvas, grib, dp, 'GUST', colorMap);
     drawTopo(canvas, topo, dp);
     //barbsString = barbsSVG(canvas.width, canvas.height, state, dp, "#000000");
     drawBarbs(canvas, grib, dp, "#000000");
     drawPOIs(canvas, grib, dp);
-    return(grib);
+    return([grib, windData]);
 }
 
 async function startWorker(evt) {
@@ -357,6 +405,7 @@ async function startWorker(evt) {
     const height = evt.data.height;
     const region = evt.data.region;
     const forecastHour = evt.data.forecastHour;
+    const forecast = evt.data.forecast;
 
     const dpParams = region.dpParams;
     region.dp = d3.geoMercator()
@@ -366,14 +415,14 @@ async function startWorker(evt) {
 	.translate([width/2, height/2]);
 
     const canvas = new OffscreenCanvas(width, height);
-    const grib = await render(canvas, region, forecastHour, evt.data.map, evt.data.windColorMap);
+    const [grib, windData] = await render(canvas, region, forecastHour, evt.data.map, evt.data.windColorMap);
 
     // Should show up in master e.data
     //console.log(`Worker ${forecastHour} Finished`);
     const context = canvas.getContext("2d");
     const imageData = context.getImageData(0, 0, width, height);
     //const image = canvas.transferToImageBitmap();
-    self.postMessage({"forecastHour": forecastHour, 'imageData': imageData, 'ref': grib.ref, 'valid': grib.valid});
+    self.postMessage({"forecast": forecast, "forecastHour": forecastHour, 'imageData': imageData, 'ref': grib.ref, 'valid': grib.valid, 'windData': windData});
 };
 
 onmessage = (evt) => {
