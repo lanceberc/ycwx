@@ -30,23 +30,39 @@
 	padding-left: 0.25em;
 	padding-right: 0.25em;
     }
+    .wmValue {
+	position: absolute;
+	/*position: fixed;*/
+	overflow: hidden;
+	z-index: 13;
+	font-family: "Courier New";
+	font-size: 14pt;
+	font-weight: bold;
+	color: white;
+	background-color: rgba(128, 128, 128, 0.6);
+	padding-left: 0.25em;
+	padding-right: 0.25em;
+	top: 0.5em;
+	right: 0.5em;
+	width: fit-content;
+    }
     .wmSliderWrapper {
 	position: absolute;
 	z-index: 15;
 	display: none;
-	width: 100%;
-	bottom: 2.0vh;
-	margin-bottom: 10.0vh;
+	width: 50%; /* Half the width of the window */
+	left: 25%; /* 1/4 from left to center the wrapper */
+	bottom: 5.0vh;
+	/*margin-bottom: 10.0vh;*/
     }
     .wmSlider {
-	width: 50%; /* Full-width */
-	height: 2.0vh; /* Specified height */
+	width: 100%; /* Full-width of wrapper*/
+	height: 5.0vh; /* Specified height */
 	background: #d3d3d3; /* Grey background */
 	outline: none; /* Remove outline */
 	opacity: 0.5; /* Set transparency (for mouse-over effects on hover) */
 	/* -webkit-transition: .2s; /* 0.2 seconds transition on hover */
 	transition: opacity .2s;
-	margin-left: 25%;
     }
     .wmWaiting {
 	color: blue;
