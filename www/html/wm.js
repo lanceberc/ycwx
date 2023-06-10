@@ -98,6 +98,7 @@ function WindModel(container, r, kiosk) {
 	    }
 	    context.putImageData(frameState.imageData, 0, 0);
 	    labelForecast(s.label, s.region, frameState);
+	    updateTooltip(s);
 	} else {
 	    console.log(`Frame ${s.r} frame ${s.currentFrame} not yet rendered`);
 	}
@@ -272,6 +273,63 @@ function WindModel(container, r, kiosk) {
 	    inkeypress = false;
 	}
     }
+
+    function updateTooltip(s) {
+	if (s.tooltip == null) {
+	    return;
+	}
+	const cf = s.currentFrame;
+	const frameState = s.frameStates[cf];
+	if (frameState.renderState != "renderComplete") {
+	    return;
+	}
+	const canvas = s.canvas.node();
+	const cr = canvas.getBoundingClientRect();
+	const ww = cr.width;
+	const wh = cr.height;
+	const cw = canvas.width;
+	const ch = canvas.height;
+	    
+	let lX;
+	let lY;
+	[lX, lY] = s.tooltip;
+	
+	const x = Math.round(lX * cw / ww);
+	const y = Math.round(lY * ch / wh);
+
+	if (Number.isNaN(x) || Number.isNaN(y)) {
+	    s.value.classed(".wmValue-show", false);
+	} else {	
+	    const wind = Math.round(frameState.windData.wind[y*cw + x]);
+	    const gust = Math.round(frameState.windData.gust[y*cw + x]);
+	    let dir = frameState.windData.dir[y*cw + x];
+	
+	    if (dir < 361) {
+		let declinationUnit;
+		if ('declination' in s.region) {
+		    dir -= s.region.declination;
+		    dir = (dir < 0) ? dir + 360 : dir;
+		    dir = (dir > 360) ? dir - 360 : dir;
+		    dir = (dir > 359.5) ? 0 : dir; // Special case to avoid "360"
+		    declinationUnit = 'M';
+		} else {
+		    declinationUnit = 'T';
+		}
+		const windPad = (wind < 10) ? "&nbsp;" : "";
+		const gustPad = (gust < 10) ? "&nbsp;" : "";
+		const dirPad = ((dir < 100) ? "&nbsp;" : "") + ((dir < 10) ? "&nbsp;" : "");
+		s.value.html(`${dirPad}${Math.round(dir)}&deg;${declinationUnit} @ ${windPad}${wind} G ${gustPad}${gust} kts`);
+		
+		const px = lX;
+		const py = lY;
+		s.value.node().style.left = (px + 20) + 'px';
+		s.value.node().style.top = (py + 20) + 'px';
+		s.value.classed(".wmValue-show", true);
+	    } else {
+		s.value.classed(".wmValue-show", false);
+	    }
+	}
+    }
     
     async function init(container, r, kiosk) {
 	WindModels[r] = new Object();
@@ -365,48 +423,18 @@ function WindModel(container, r, kiosk) {
 	el.addEventListener("keydown", evt => { keyEvent(s, evt) });
 
 	s.canvas.node().addEventListener("mousemove", (evt) => {
-	    const cf = s.currentFrame;
-	    const frameState = s.frameStates[cf];
-	    if (frameState.renderState != "renderComplete") {
-		return;
-	    }
-	    const canvas = evt.target;
-	    const cr = canvas.getBoundingClientRect();
-	    const ww = cr.width;
-	    const wh = cr.height;
-	    const cw = canvas.width;
-	    const ch = canvas.height;
-	    
-	    const x = Math.round(evt.layerX * cw / ww);
-	    const y = Math.round(evt.layerY * ch / wh);
-
-	    if (Number.isNaN(x) || Number.isNaN(y)) {
-		;
-	    } else {
-		const wind = Math.round(frameState.windData.wind[y*cw + x]);
-		const gust = Math.round(frameState.windData.gust[y*cw + x]);
-		const dir = Math.round(frameState.windData.dir[y*cw + x]);
-
-		if (dir < 361) {
-		    const windPad = (wind < 10) ? "&nbsp;" : "";
-		    const gustPad = (gust < 10) ? "&nbsp;" : "";
-		    const dirPad = ((dir < 100) ? "&nbsp;" : "") + ((dir < 10) ? "&nbsp;" : "");
-		    s.value.html(`${dirPad}${dir}&deg;T @ ${windPad}${wind} G ${gustPad}${gust} kts`);
-
-		    const px = evt.layerX;
-		    const py = evt.layerY;
-		    s.value.node().style.left = (px + 20) + 'px';		    
-		    s.value.node().style.top = (py + 20) + 'px';
-		} else {
-		    s.value.html("");
-		}
-	    }
+	    s.tooltip = [evt.layerX, evt.layerY];
+	    updateTooltip(s);
 	});
 	s.canvas.node().addEventListener("focusout", (evt) => {
+	    s.value.classed(".wmValue-show", false);
 	    s.value.html("");
+	    s.tooltip = null;
 	});
 	s.canvas.node().addEventListener("mouseleave", (evt) => {
+	    s.value.classed(".wmValue-show", false);
 	    s.value.html("");
+	    s.tooltip = null;
 	});
 
 	await checkForNewModel(s);	
