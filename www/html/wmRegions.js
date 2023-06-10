@@ -107,6 +107,8 @@ const wmRegions = {
 	'model': 'HRRR',
 	//'proj4': '+proj=lcc +lat_0=38.5 +lon_0=262.5 +lat_1=38.5 +lat_2=38.5 +x_0=0 +y_0=0 +a=6371229 +b=6371229 +no_defs',
 	'url': 'data/NOAA/HRRR/Karl',
+	// https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml#declination
+	'declination': 13.1,
 	'dpParams': {
 	    'rotate': [0, 0],
 	    'center': [-122.60, 37.75],
@@ -159,6 +161,7 @@ const wmRegions = {
 	'model': 'NAM',
 	//'proj4': '+proj=lcc +lat_0=38.5 +lon_0=262.5 +lat_1=38.5 +lat_2=38.5 +x_0=0 +y_0=0 +a=6371229 +b=6371229 +no_defs',
 	'url': 'data/NOAA/NAM/NorCal-NAM',
+	'declination': 13.1,
 	'dpParams': {
 	    'rotate': [0, 0],
 	    'center': [-122.60, 37.75],
@@ -210,6 +213,8 @@ const wmRegions = {
     "Eddy": {
 	'model': 'HRRR',
 	//'proj4': '+proj=lcc +lat_0=38.5 +lon_0=262.5 +lat_1=38.5 +lat_2=38.5 +x_0=0 +y_0=0 +a=6371229 +b=6371229 +no_defs',
+	// Declination for LA harbor
+	'declination': 11.5,
 	'url': 'data/NOAA/HRRR/Eddy',
 	'dpParams': {
 	    'rotate': [0, 0],
@@ -221,6 +226,8 @@ const wmRegions = {
     "EddyNAM": {
 	'model': 'NAM',
 	'url': 'data/NOAA/NAM/CA-NAM',
+	// Declination for LA harbor
+	'declination': 11.5,
 	'dpParams': {
 	    'rotate': [0, 0],
 	    'center': [-118.8,33.5],
