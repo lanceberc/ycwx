@@ -183,6 +183,12 @@ function WindModel(container, r, kiosk) {
 	frameState.ref = new Date(evt.data.ref * 1000);
 	frameState.valid = new Date(evt.data.valid * 1000);
 	frameState.windData = evt.data.windData;
+	if (s.region.xy == undefined && evt.data.xy != undefined) {
+	    s.region.xy = evt.data.xy;
+	}
+	if (s.region.ij == undefined && evt.data.ij != undefined) {
+	    s.region.ij = evt.data.ij;
+	}
 	updateRenderState(s);
 	
 	console.log(`Render ${forecast} hour ${fh} completed in ${(elapsed/1000.0).toFixed(2)} sinceStart ${(sinceStart/1000.0).toFixed(2)} current frame: ${s.currentFrame}`);
@@ -337,6 +343,8 @@ function WindModel(container, r, kiosk) {
 	s.id = "#" + container;
 	s.r = r;
 	s.region = wmRegions[r];
+	s.region.xy = undefined;
+	s.region.ij = undefined;
 	s.config = {
 	    canvasWidth: 1920,
 	    canvasHeight: 1080,

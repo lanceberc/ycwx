@@ -22,6 +22,7 @@ alternate https://unpkg.com/topojson@3
  */
 
 // Make barbs 20% longer to account for LCC tilt
+// This could/should be per-region
 const barbLenFudge = 1.20;
 
 /*
@@ -144,15 +145,36 @@ function drawBarbs(canvas, grib, dp, cm) {
 
     let context = canvas.getContext("2d");
 
+    // Compute the canvas (x, y) of each grib location
+    // This gets passed back to the main thread to be used by subsequent workers
+    const canvasMax = 65535;
+    if (grib.region.xy == undefined) {
+	console.log("Create cacheable xy transfrom");
+	// Warning - sort of - using Uint16Array limits the canvas to 64k x 64k pixels
+	grib.region.xy = new Uint16Array(gh*gw*2);
+	//grib.region.xy = new Array(gh*gw*2);
+
+	for (let j = 0; j < gh; j++){
+	    for(let i = 0; i < gw; i++) {
+		let px, py;
+		const lonLat = projection.forward([bbox[0] + (i * scale[0]), bbox[3] - (j * scale[1])]);
+		[px, py] = dp(lonLat); // grib[i, j] projected to display[x,y]
+		px = Math.round(px);
+		py = Math.round(py);
+		const off = 2*((j*gw) + i);
+		grib.region.xy[off+0] = ((px < 0) ? canvasMax : ((px > canvasMax) ? canvasMax : px));
+		grib.region.xy[off+1] = ((py < 0) ? canvasMax : ((py > canvasMax) ? canvasMax : py));
+	    }
+	}
+    }
+
     for (let j = 0; j < gh; j++){
 	for(let i = 0; i < gw; i++) {
-	    let px, py;
-	    const lonLat = projection.forward([bbox[0] + (i * scale[0]), bbox[3] - (j * scale[1])]);
-	    [px, py] = dp(lonLat); // grib[i, j] projected to display[x,y]
-	    px = Math.round(px);
-	    py = Math.round(py);
+	    const off = 2*((j*gw) + i);
+	    const px = grib.region.xy[off+0];
+	    const py = grib.region.xy[off+1];
 	    
-	    if (((px >=0) && (px < canvas.width)) && ((py >=0) && (py < canvas.height))) {
+	    if ((px < canvas.width) && (py < canvas.height)) {
 		const u = rasters[uIndex][i + j*gw];
 		const v = rasters[vIndex][i + j*gw];
 		
@@ -236,13 +258,30 @@ function drawWindField(canvas, grib, dp, band, cm) {
     
     const ul = dp.invert([0, 0]);
     const lr = dp.invert([w, h]);
+
+    // Precompute the canvas(x,y)-to-grib(i,j) transform
+    if (grib.region.ij == undefined) {
+	grib.region.ij = new Float64Array(w*h*2);
+	for (let y = 0; y < h; y++) {
+	    for (let x = 0; x < w; x++) {
+		const lonLat = dp.invert([x, y]);
+		const gCoords = projection.inverse(lonLat);
+		const i = (gCoords[0] - geoTransform[0]) / geoTransform[1];
+		const j = (gCoords[1] - geoTransform[3]) / geoTransform[5];
+		const off = 2 * ((y*w) + x);
+		grib.region.ij[off + 0] = i;
+		grib.region.ij[off + 1] = j;
+	    }
+	}
+    }
+    
     //console.log(`top ${ul[1]} bottom ${lr[1]} left ${ul[0]} right ${lr[0]}`);
     for (let y = 0; y < h; y++) {
 	for (let x = 0; x < w; x++) {
-	    const lonLat = dp.invert([x, y]);
-	    const gCoords = projection.inverse(lonLat);
-	    i = (gCoords[0] - geoTransform[0]) / geoTransform[1];
-	    j = (gCoords[1] - geoTransform[3]) / geoTransform[5];
+	    const off = 2 * ((y*w) + x);
+	    const i = grib.region.ij[off + 0];
+	    const j = grib.region.ij[off + 1];
+
 	    if ((i >= 0) && (i < gw) && (j >= 0) && (j < gh) ){
 		// vals[y][x] = rasters[hrrrBands[band]][(Math.round(j)*gw) + Math.round(i)];
 		// Fancy weighted interpolation for smooth transitions
@@ -390,14 +429,24 @@ async function render(canvas, region, forecastHour, topo, colorMap) {
     //console.log(`Loading ${url}`);
     const dp = region.dp;
     const grib = await fetchGrib(url, dp);
-    
+
+    const returnTransforms = (region.ij == undefined || region.xy == undefined);
+    if (returnTransforms) {
+	region.ij = undefined;
+	region.xy = undefined;
+    }
     grib.region = region;
     windData = drawWindField(canvas, grib, dp, 'GUST', colorMap);
     drawTopo(canvas, topo, dp);
     //barbsString = barbsSVG(canvas.width, canvas.height, state, dp, "#000000");
     drawBarbs(canvas, grib, dp, "#000000");
     drawPOIs(canvas, grib, dp);
-    return([grib, windData]);
+
+    if (!returnTransforms) {
+	region.xy = undefined;
+	region.ij = undefined;
+    }
+    return([grib, windData, region.xy, region.ij]);
 }
 
 async function startWorker(evt) {
@@ -415,14 +464,15 @@ async function startWorker(evt) {
 	.translate([width/2, height/2]);
 
     const canvas = new OffscreenCanvas(width, height);
-    const [grib, windData] = await render(canvas, region, forecastHour, evt.data.map, evt.data.windColorMap);
+    const [grib, windData, xy, ij] = await render(canvas, region, forecastHour, evt.data.map, evt.data.windColorMap);
 
     // Should show up in master e.data
     //console.log(`Worker ${forecastHour} Finished`);
     const context = canvas.getContext("2d");
     const imageData = context.getImageData(0, 0, width, height);
     //const image = canvas.transferToImageBitmap();
-    self.postMessage({"forecast": forecast, "forecastHour": forecastHour, 'imageData': imageData, 'ref': grib.ref, 'valid': grib.valid, 'windData': windData});
+    
+    self.postMessage({"forecast": forecast, "forecastHour": forecastHour, 'imageData': imageData, 'ref': grib.ref, 'valid': grib.valid, 'windData': windData, 'xy': xy, 'ij': ij});
 };
 
 onmessage = (evt) => {
