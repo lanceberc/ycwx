@@ -114,6 +114,11 @@ const wmRegions = {
 	    'center': [-122.60, 37.75],
 	    'scale': 40000
 	},
+	//"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_0.topojson', 'feature': 'gadm41_USA_0'} ],
+	//"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_2.topojson', 'feature': 'gadm41_USA_2'} ],
+	//"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_2.simple.topojson', 'feature': 'gadm41_USA_2'} ],
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_2.quantized.json', 'feature': 'gadm41_USA_2'} ],
+	//"maps": [ {'url': 'lib/cb_2014_06/ca.quantized.json', 'feature': 'counties'} ],
 	"POIs": [
 	    [[-123.7360, 38.9530], "Pt Arena"],
 	    //# [[-123.0239, 37.9951], "Pt Reyes"], // Ends up under title label
@@ -167,6 +172,7 @@ const wmRegions = {
 	    'center': [-122.60, 37.75],
 	    'scale': 40000
 	},
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_2.quantized.json', 'feature': 'gadm41_USA_2'} ],
 	"POIs": [
 	    [[-123.7360, 38.9530], "Pt Arena"],
 	    //# [[-123.0239, 37.9951], "Pt Reyes"], // Ends up under title label
@@ -221,6 +227,7 @@ const wmRegions = {
 	    'center': [-118.8,33.5],
 	    'scale': 22000
 	},
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_2.topojson', 'feature': 'gadm41_USA_2'} ],
 	'POIs': wmEddyPOIs,
     },
     "EddyNAM": {
@@ -233,6 +240,7 @@ const wmRegions = {
 	    'center': [-118.8,33.5],
 	    'scale': 22000
 	},
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_2.quantized.json', 'feature': 'gadm41_USA_2'} ],
 	'POIs': wmEddyPOIs,
     },
     "CentralCoast": {
@@ -244,6 +252,7 @@ const wmRegions = {
 	    'center': [-122.0,35.25],
 	    'scale': 8500
 	},
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_2.quantized.json', 'feature': 'gadm41_USA_2'} ],
 	'POIs': [
 	    [[-123.7360, 38.9530], "Pt Arena"],
 	    [[-122.1058, 38.3995], "Mt Vaca"],
@@ -328,6 +337,7 @@ const wmRegions = {
 	    //'center': [-72.30, 40.84],
 	    'scale': 35000
 	},
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_1.topojson', 'feature': 'gadm41_USA_1'} ],
 	"POIs": wmLISPOIs,
     },
     "LISNAM": {
@@ -340,6 +350,7 @@ const wmRegions = {
 	    //'center': [-72.30, 40.84],
 	    'scale': 35000
 	},
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_1.topojson', 'feature': 'gadm41_USA_1'} ],
 	"POIs": wmLISPOIs,
     },
     "Frolic": {
@@ -352,6 +363,7 @@ const wmRegions = {
 	    //'center': [-72.30, 40.84],
 	    'scale': 25000
 	},
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_1.topojson', 'feature': 'gadm41_USA_1'} ],
 	"POIs": wmLISPOIs.concat(wmFrolicPOIs),
     },
     "FrolicNAM": {
@@ -364,6 +376,7 @@ const wmRegions = {
 	    //'center': [-72.30, 40.84],
 	    'scale': 25000
 	},
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_1.topojson', 'feature': 'gadm41_USA_1'} ],
 	"POIs": wmLISPOIs.concat(wmFrolicPOIs),
     },
     "NYBOS": {
@@ -376,6 +389,7 @@ const wmRegions = {
 	    //'scale': 40000
 	    'scale': 15000
 	},
+	"maps": [ {'url': 'lib/gadm41_USA/gadm41_USA_1.topojson', 'feature': 'gadm41_USA_1'} ],
 	"POIs": [
 	],
     },

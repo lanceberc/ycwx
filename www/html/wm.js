@@ -1,10 +1,9 @@
 // Display a wind model in a container
 
 let WindModels = {};
-let windModelCountries = null;
-
 function WindModel(container, r, kiosk) {
 
+    let windModelMap = null;
     let windModelState = {};
     const windColorMapMax = 30.0; // knots
     const windColorMapSteps = 512; // Smooth gradient
@@ -205,7 +204,7 @@ function WindModel(container, r, kiosk) {
 	task.msg.region = s.region;
 	task.msg.forecast = forecast;
 	task.msg.forecastHour = s.region.latest.forecasts[forecast];
-	task.msg.map = windModelCountries;
+	task.msg.map = windModelMap;
 	task.msg.windColorMap = {
 	    'steps': windColorMapSteps,
 	    'max': windColorMapMax,
@@ -390,9 +389,20 @@ function WindModel(container, r, kiosk) {
 	// "world-110m.json" is lower-res - faster, but not enough detail to recognize features
 	// "countries-10m.json is high-res";
 	//const worldMap = await fetchMap("data/lib/world-110m.json");
-	if (windModelCountries == null) {
-	    const worldMap = await fetchMap("lib/countries-10m.json");
-	    windModelCountries = topojson.feature(worldMap, worldMap.objects.countries);
+	if (windModelMap == null) {
+	    let mapURL;
+	    let mapFeature;
+	    if ('maps' in s.region) {
+		mapURL = s.region.maps[0].url;
+		mapFeature = s.region.maps[0].feature;
+	    } else {
+		mapURL = "lib/countries-10m.json";
+		mapFeature = 'countries';
+	    }
+	    const map = await fetchMap(mapURL);
+	    features = topojson.feature(map, map.objects[mapFeature]);
+	    //merged = topojson.merge(features, features.objects["COUNTYFP"]);
+	    windModelMap = features;
 	}
 
 	s.slider.node().value = 0;
