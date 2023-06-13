@@ -11,6 +11,9 @@ function WindModel(container, r, kiosk) {
     const firstFrameTime = 3000;
     const modelCheckInterval = 60 * 1000;
 
+    const fullscreenPath = 'M5,40L5,5L40,5M60,5L95,5L95,40M95,60L95,95L60,95M40,95L5,95L5,60';
+    const unfullscreenPath = 'M5,40L40,40L40,5M60,5L60,40L95,40M95,60L60,60L60,95M40,95L40,60L5,60';
+
     function generateWindLookupTable(steps, max) {
 	const windColorMap = d3.interpolateHslLong("#613CFF", "#FB4B39");
 
@@ -246,6 +249,21 @@ function WindModel(container, r, kiosk) {
     
     let inkeypress = false;
     let isFullScreen = false;
+
+    function toggleFullscreen(s, evt) {
+	if (!document.fullscreenElement) {
+	    const elem = document.getElementById(s.container);
+	    try {
+		elem.requestFullscreen();
+		isFullScreen = true;
+	    } catch (e) {
+		console.log("Full screen denied: " + e);
+	    }
+	} else {
+	    document.exitFullscreen();
+	    isFullScreen = false;
+	}
+    }
     
     async function keyEvent(s, event) {
 	if (!inkeypress) {
@@ -261,18 +279,7 @@ function WindModel(container, r, kiosk) {
 		    await updateFrame(s);
 		}
 	    } else if (event.key === spaceKey) {
-		const elem = document.getElementById(s.container);
-		if (!document.fullscreenElement) {
-		    try {
-			elem.requestFullscreen();
-			isFullScreen = true;
-		    } catch (e) {
-			console.log("Full screen denied: " + e);
-		    }
-		} else {
-		    document.exitFullscreen();
-		    isFullScreen = false;
-		}
+		toggleFullscreen(s, event)
 	    }
 	    s.slider.node().value = (s.currentFrame * 100.0) / (s.region.latest.forecasts.length-1);
 	    inkeypress = false;
@@ -376,6 +383,21 @@ function WindModel(container, r, kiosk) {
 	    .attr('id', container + "-renderStatus")
 	    .classed('wmRenderStatus', true)
 	    .html('Render Status')
+	if (!kiosk) {
+	    s.fullscreen = d3.select(s.id)
+		.append('svg')
+		.attr('xmlns', 'http://www.w3.org/2000/svg')
+		.attr('id', container + '-fullscreen')
+		//.attr('width', '4em')
+		//.attr('height', '4em')
+		.classed('wmFullscreen', true)
+		.classed('wmShow', true)
+		.attr("viewBox", "0 0 100 100")
+	    s.fullscreen
+		.append('path')
+		.attr('id', container + "-fullscreenPath")
+		.attr("d", fullscreenPath)
+	}
 	let sliderWrapper = d3.select(s.id)
 	    .append('div')
 	    .attr('id', container + "-sliderWrapper")
@@ -440,6 +462,11 @@ function WindModel(container, r, kiosk) {
 	//el.addEventListener("keypress", keyEvent(event));
 	el.addEventListener("keydown", evt => { keyEvent(s, evt) });
 
+	s.fullscreen.node().addEventListener('click', (evt) => {
+	    console.log("Toggle full screen click");
+	    toggleFullscreen(s, evt);
+	});
+	
 	s.canvas.node().addEventListener("mousemove", (evt) => {
 	    s.tooltip = [evt.layerX, evt.layerY];
 	    updateTooltip(s);
@@ -453,6 +480,11 @@ function WindModel(container, r, kiosk) {
 	    s.value.classed(".wmValue-show", false);
 	    s.value.html("");
 	    s.tooltip = null;
+	});
+	document.getElementById(s.container).addEventListener("fullscreenchange", (evt) => {
+	    const path = (document.fullscreenElement) ? unfullscreenPath : fullscreenPath;
+	    d3.select("#" + s.container + '-fullscreenPath')
+		.attr("d", path);
 	});
 
 	await checkForNewModel(s);	

@@ -15,8 +15,8 @@
 	background-color: rgba(64, 64, 64, 0.5);
 	padding-left: 0.25em;
 	padding-right: 0.25em;
-	top: 0.5em;
-	left: 0.5em;
+	top: 1.0em;
+	left: 1.0em;
 	width: fit-content;
     }
     .wmRenderStatus {
@@ -42,8 +42,8 @@
 	background-color: rgba(128, 128, 128, 0.6);
 	padding-left: 0.25em;
 	padding-right: 0.25em;
-	top: 0.5em;
-	right: 0.5em;
+	top: 1.0em;
+	right: 1.0em;
 	width: fit-content;
     }
     .wmSliderWrapper {
@@ -64,6 +64,24 @@
 	/* -webkit-transition: .2s; /* 0.2 seconds transition on hover */
 	transition: opacity .2s;
     }
+    .wmFullscreen {
+	position: absolute;
+	width: 4em;
+	height: 4em;
+	background-color: rgba(128, 128, 128, 0.6);
+	outline: none; /* Remove outline */
+	padding: 0.5em;
+	bottom: 1.0em;
+	right: 1.0em;
+	display: none;
+	z-index: 11;
+	stroke: white;
+	fill: none;
+	stroke-width: .5em;
+    }
+    .wmShow {
+	display: inherit;
+    }
     .wmWaiting {
 	color: blue;
     }
@@ -81,18 +99,17 @@
     .wmSlider-show {
 	display: flex;
     }
-
     @media (min-aspect-ratio: 1) {
 	/* landscape mode */
 	.wmRenderStatus {
-	    bottom: 0.5em;
-	    left: 0.5em;
+	    bottom: 1.0em;
+	    left: 1.0em;
 	}
     }
     @media (max-aspect-ratio: 1) {
 	/* portrait mode */
 	.wmRenderStatus {
-	    right: 0.5em;
-	    top: 0.5em;
+	    right: 1.0em;
+	    top: 1.0em;
 	}
     }
