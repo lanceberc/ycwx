@@ -287,7 +287,7 @@ function WindModel(container, r, kiosk) {
     }
 
     function updateTooltip(s) {
-	if (s.tooltip == null) {
+	if (s.tooltipPos == null) {
 	    return;
 	}
 	const cf = s.currentFrame;
@@ -304,13 +304,13 @@ function WindModel(container, r, kiosk) {
 	    
 	let lX;
 	let lY;
-	[lX, lY] = s.tooltip;
+	[lX, lY] = s.tooltipPos;
 	
 	const x = Math.round(lX * cw / ww);
 	const y = Math.round(lY * ch / wh);
 
 	if (Number.isNaN(x) || Number.isNaN(y)) {
-	    s.value.classed(".wmValue-show", false);
+	    s.tooltip.classed("wmShow", false);
 	} else {	
 	    const wind = Math.round(frameState.windData.wind[y*cw + x]);
 	    const gust = Math.round(frameState.windData.gust[y*cw + x]);
@@ -330,15 +330,15 @@ function WindModel(container, r, kiosk) {
 		const windPad = (wind < 10) ? "&nbsp;" : "";
 		const gustPad = (gust < 10) ? "&nbsp;" : "";
 		const dirPad = ((dir < 100) ? "&nbsp;" : "") + ((dir < 10) ? "&nbsp;" : "");
-		s.value.html(`${dirPad}${Math.round(dir)}&deg;${declinationUnit} @ ${windPad}${wind} G ${gustPad}${gust} kts`);
+		s.tooltip.html(`${dirPad}${Math.round(dir)}&deg;${declinationUnit}&nbsp;@&nbsp;${windPad}${wind}&nbsp;G&nbsp;${gustPad}${gust}&nbsp;kts`);
 		
 		const px = lX;
 		const py = lY;
-		s.value.node().style.left = (px + 20) + 'px';
-		s.value.node().style.top = (py + 20) + 'px';
-		s.value.classed(".wmValue-show", true);
+		s.tooltip.node().style.left = (px + 20) + 'px';
+		s.tooltip.node().style.top = (py + 20) + 'px';
+		s.tooltip.classed("wmShow", true);
 	    } else {
-		s.value.classed(".wmValue-show", false);
+		s.tooltip.classed("wmShow", false);
 	    }
 	}
     }
@@ -411,10 +411,10 @@ function WindModel(container, r, kiosk) {
 	    .attr('max', 100)
 	    .attr('value', 0)
 	    .attr("tabindex", "0");
-	s.value = d3.select(s.id)
+	s.tooltip = d3.select(s.id)
 	    .append('div')
-	    .attr('id', container + '-value')
-	    .classed('wmValue', true);
+	    .attr('id', container + '-tooltip')
+	    .classed('wmTooltip', true);
 
 	// "world-110m.json" is lower-res - faster, but not enough detail to recognize features
 	// "countries-10m.json is high-res";
@@ -468,18 +468,18 @@ function WindModel(container, r, kiosk) {
 	});
 	
 	s.canvas.node().addEventListener("mousemove", (evt) => {
-	    s.tooltip = [evt.layerX, evt.layerY];
+	    s.tooltipPos = [evt.layerX, evt.layerY];
 	    updateTooltip(s);
 	});
 	s.canvas.node().addEventListener("focusout", (evt) => {
-	    s.value.classed(".wmValue-show", false);
-	    s.value.html("");
-	    s.tooltip = null;
+	    s.tooltip.classed("wmShow", false);
+	    s.tooltip.html("");
+	    s.tooltipPos = null;
 	});
 	s.canvas.node().addEventListener("mouseleave", (evt) => {
-	    s.value.classed(".wmValue-show", false);
-	    s.value.html("");
-	    s.tooltip = null;
+	    s.tooltip.classed("wmShow", false);
+	    s.tooltip.html("");
+	    s.tooltipPos = null;
 	});
 	document.getElementById(s.container).addEventListener("fullscreenchange", (evt) => {
 	    const path = (document.fullscreenElement) ? unfullscreenPath : fullscreenPath;
