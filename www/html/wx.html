@@ -1703,7 +1703,7 @@
 	      t += o.nickName;
 	      let time = o.gmt - tzOffset;
 	      time += (time < 0) ? 24 : ((time > 24) ? -24 : 0);
-	      t += '\nTime:  ' + time + "00";
+	      t += '\nTime:  ' + ((time < 10)? '0' : '') + time + "00";
 	      t += (!("airPressure" in o)) ? "" : '\nPress: ' + o.airPressure + "mb";
 	      t += (!("airTemp" in o)) ? "" : '\nTemp:  ' + o.airTemp + "\xB0F";
 	      if ("calm" in o) {
