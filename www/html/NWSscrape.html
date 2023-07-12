@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Wind Forecasts</title>
+  <style>
+    body {
+	display: flex;
+    }
+  </style>
+  <script src="lib/d3.v7.min.js"></script>
+  <script src="NWSscrape.js"></script>
+  <link rel="stylesheet" href="NWSscrape.css">
+    
+  <script>
+    const NWSscrapeSites = [
+	{
+	    //"url": "https://tgftp.nws.noaa.gov/data/raw/sx/sxus86.kmtr.omr.mtr.txt",
+	    "url": "./data/nwsZones/observations.txt",
+	    "stations": {
+		"FTPC1": { "nickName": "Ft Point",           "lat": 37.807, "lon": -122.495, "realLat": 37.80669, "realLon": -122.46500},
+		"PXOC1": { "nickName": "SF Pier 1",          "lat": 37.800, "lon": -122.420, "realLat": 37.79800 , "realLon": -122.39297},
+		"AISC1": { "nickName": "Pt Blunt",           "lat": 37.860, "lon": -122.440, "realLat": 37.85312, "realLon": -122.41912}, // Not reporting
+		"GGBC1": { "nickName": "Midspan",            "lat": 37.830, "lon": -122.555, "realLat": 37.81975, "realLon": -122.47904}, // Not reporting
+		"PPXC1": { "nickName": "Pt Potrero",         "lat": 37.906, "lon": -122.365, "realLat": 37.90581, "realLon": -122.36503},
+		"CF131": { "nickName": "I5 near Tinsley",    "lat": 37.906, "lon": -122.240, "realLat": 38.04637, "realLon": -121.36868},
+		"KOAK":  { "nickName": "OAK",                "lat": 37.730, "lon": -122.240, "realLat": 37.7178, "realLon": -122.23294},
+		"KSJC":  { "nickName": "San Jose Airport",   "lat": 37.730, "lon": -122.330, "realLat": 37.35917, "realLon": -121.92417}, // Not in page
+		"KSFO":  { "nickName": "SFO",                "lat": 37.730, "lon": -122.420, "realLat": 37.61961, "realLon": -122.36558},
+		"KHAF":  { "nickName": "HMB Airport",        "lat": 37.730, "lon": -122.500, "realLat": 37.5136, "realLon": -122.4996},
+		"46013": { "nickName": "46013 Bodega Bay",   "lat": 37.880, "lon": -122.650, "realLat": 38.20000, "realLon": -123.30000},
+		"46026": { "nickName": "46026 SF Buoy",      "lat": 37.800, "lon": -122.650, "realLat": 37.80000, "realLon": -122.80000},
+		"46012": { "nickName": "46012 HMB Buoy",     "lat": 37.750, "lon": -122.650, "realLat": 37.356, "realLon": -122.881},
+		//"FNDC1": "Farallon Is", // (not reporting)
+		"TIBC1": { "nickName": "Tiburon Pier",       "lat": 37.892, "lon": -122.447, "realLat": 37.892, "realLon": -122.447,}
+	    },
+	},
+    ];
+
+    function scrapeCallback(observations) {
+	const now = new Date();
+	const tzOffset = now.getTimezoneOffset() / 60; // getTimeZoneOffset() is in minutes
+	const Declination = -13; // KLUDGE - doesn't handle a large geographic area or somewhere not San Francisco
+	
+	for (const [station, o] of Object.entries(observations)) {
+	    let t = '<div class="NWSscrape-grid">';
+	    //t += '<div class="NWSscrape-header">' + station + '</div>';
+	    t += '<div class="NWSscrape-header">' + o.nickName + '</div>';
+	    let time = o.gmt - tzOffset;
+	    time += (time < 0) ? 24 : ((time > 24) ? -24 : 0);
+	    t += '<div>Time:</div><div>' + time + "00" + '</div>';
+	    t += (!("airPressure" in o)) ? "" : '<div>' + "Press: " + '</div><div>' + o.airPressure + "mb" + '</div>';
+	    t += (!("airTemp" in o)) ? "" : '<div>' + "Temp: " + '</div><div>' + o.airTemp + "&deg;F" + '</div>';
+	    if ("calm" in o) {
+		t += '<div>' + "WDir: " + '</div><div>' + "CALM" + '</div>';
+		t += '<div>' + 'WSpeed: ' + '</div><div>' + "CALM" + '</div>';
+	    } else {
+		if ("windDir" in o) {
+		    t += '<div>' + "WDir: " + '</div><div>' + (o.windDir + Declination) + "&deg;M" + '</div>';
+		}
+		if ("windSpeed" in o) {
+		    t += '<div>' + "WSpeed: " + '</div><div>' + o.windSpeed;
+		    if ("windGust" in o) {
+			t += 'G' + o.windGust;
+		    }
+		    t += "kts" + '</div>';
+		}
+	    }
+	    t += (!("waterTemp" in o)) ? "" : '<div>' + "WTemp: " + '</div><div>' + o.waterTemp + "&deg;F" + '</div>';
+	    t += (!("waveHeight" in o)) ? "" : '<div>' + "WHeight: " + '</div><div>' + o.waveHeight + "ft" + '</div>';
+	    t += (!("wavePeriod" in o)) ? "" : '<div>' + "WPeriod: " + '</div><div>' + o.wavePeriod + "s" + '</div>';
+	    
+	    console.log(`NWsscrape update station ${station}`);
+	    d3.select("#NWS-" + station).html(t);
+	}
+    }
+
+    function main() {
+	let scrape = new NWSscrape(NWSscrapeSites, scrapeCallback);
+    }
+  </script>
+
+  <body onload="main();" lang="en">
+    <div id="NWS-46026"></div>
+    <div id="NWS-46013"></div>
+    <div id="NWS-46014"></div>
+    <div id="NWS=46026"></div>
+    <div id="NWS-46012"></div>
+    <div id="NWS-GGBC1"></div>
+    <div id="NWS-AISC1"></div>
+    <div id="NWS-FNDC1"></div>
+    <div id="NWS-KSFO"></div>
+    <div id="NWS-KHAF"></div>
+    <div id="NWS-KOAK"></div>
+    <div id="NWS-FTPC1"></div>
+    <div id="NWS-PXOC1"></div>
+    <div id="NWS-TIBC1"></div>
+    <div id="NWS-KSJO"></div>
+  </body>
+</html>

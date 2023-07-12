@@ -1,0 +1,8 @@
+.NWSscrape-grid {
+    display: grid;
+    grid: auto / auto auto;
+    grid-column-gap: 0.25em;
+}
+.NWSscrape-header {
+    grid-column: 1 / span 2;
+}
