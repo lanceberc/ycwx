@@ -386,18 +386,15 @@
 	  margin: 4px;
       }
       .high-wind-label {
-	  /*fill: red;*/
-	  /*stroke: white;*/
 	  color: #FB4B39;
 	  background: white;
       }
-
-      /* Override d3's 10pt default */
       .wind-plot-wind-avg {
 	  fill: var(--main-background-color);
 	  stroke: var(--main-foreground-color);
 	  stroke-width: 4.0;
       }
+      
       .wind-plot-wind-gust {
 	  fill: none;
 	  stroke: var(--foreground2);
@@ -428,7 +425,7 @@
 	  min-width: 0px;
 	  background: var(--background2);
       }
-       /* Override d3's 10pt default */
+       /* Override d3s 10pt default */
       .tide-plot-now {
 	  font-size: 1.25vw;
 	  stroke: var(--foreground1);
@@ -454,6 +451,7 @@
 	  stroke-width: 4.0;
       }
       .tide-plot-label-group {
+	  /* */
       }
       .tide-plot-label {
 	  stroke: var(--main-foreground-color);
@@ -463,7 +461,6 @@
       .tide-plot-label-item {
 	  stroke: var(--black);
 	  fill: var(--black);
-	  /*color: var(--main-foreground-color);*/
       }
       .tide-plot-label-background {
 	  font-size: 1.25vw;
@@ -473,10 +470,9 @@
       .current-plot-label-item {
 	  stroke: var(--black);
 	  fill: var(--black);
-	  /*color: var(--main-foreground-color);*/
       }
       .current-plot-label-background {
-	  font-size: 1.25vw; /* Override d3's 10pt default */
+	  font-size: 1.25vw;
 	  stroke: none;
 	  fill: #c0c0c0a0;
       }
@@ -780,13 +776,18 @@
     <script src="gis.js" defer=""></script>
     <script src="gisConfig.js" defer=""></script>
 
+    <!-- Weatherflow forecasts -->
     <link rel="stylesheet" href="wfforecast.css">
     <script src="wfforecast.js"></script>
 
+    <!-- Wind Models (GFS, NAM, HRRR) -->
     <script src="lib/topojson.min.js"></script>
     <script src="wmRegions.js"></script>
     <script src="wm.js"></script>
     <link rel="stylesheet" href="wm.css">
+
+    <!-- NWS observations from scraping a Monterey text page -->
+    <script src="NWSscrape.js"></script>
     
     <script>
 
@@ -948,7 +949,7 @@
 	  zones: {},
       }
 
-      // Scrolling uses jQuery because d3 doesn't have the right primitives.
+      // Scrolling uses jQuery because d3 doesnt have the right primitives.
       function nwsScroll(parent) {
 	  const id = "#" + $(parent).attr("id");
 	  const child = $(parent).children().first();
@@ -957,7 +958,7 @@
 	  const cId = "#" + $(child).attr("id");
 
 	  if ((cHeight == 0) || (cHeight <= pHeight)) {
-	      // Either not displayed or doesn't need scrolling
+	      // Either not displayed or doesnt need scrolling
 	      console.log(`nwsScroll: stop scroll parent ${id} ${pHeight}, child ${cId} ${cHeight}`);
 	      $(parent).stop();
 	      return;
@@ -1667,56 +1668,69 @@
 	  }
       }
 
-      let localObs = {
-	  "tableId": "sfLocalObservationsTable",
-	  "url": "https://api.synopticdata.com/v2/stations/latest?stid=&units=english,speed|kts,pres|mb&showemptystations=1&token=".replace("token=", "token=" + synopticData_apitoken),
-	  "stations": ["FTPC1", "GGBC1", "AISC1", "PXOC1", "PPXC1", "46026", "46012", "46013", "KSFO", "KOAK", "KSJC", "KHAF", "CF131"],
-	  "fieldMap": {
-	      "temp": "air_temp_value_1",
-	      "pressure": "pressure_value_1",
-	      "seaLevelPressure": "sea_level_pressure_value_1",
-	      "wind": "wind_speed_value_1",
-	      "gust": "wind_gust_value_1",
-	      "direction": "wind_direction_value_1",
-	      "waterTemp": "T_water_temp_value_1",
-	      "waveHeight": "wave_height_value_1",
-	      "wavePeriod": "wave_period_value_1",
-	      "primarySwellHeight": "primary_swell_wave_height_value_1",
-	      "primarySwellDirection": "primary_swell_true_direction_value_1",
-	      "primarySwellPeriod": "primary_swell__wave_period_value_1",
+      const NWSscrapeSites = [
+	  {
+	      //"url": "https://tgftp.nws.noaa.gov/data/raw/sx/sxus86.kmtr.omr.mtr.txt",
+	      "url": "./data/nwsZones/observations.txt",
+	      "stations": {
+		  "FTPC1": { "nickName": "Ft Point",           "lat": 37.807, "lon": -122.500, "realLat": 37.80669, "realLon": -122.46500},
+		  "PXOC1": { "nickName": "SF Pier 1",          "lat": 37.800, "lon": -122.420, "realLat": 37.79800 , "realLon": -122.39297},
+		  //"AISC1": { "nickName": "Pt Blunt",           "lat": 37.860, "lon": -122.440, "realLat": 37.85312, "realLon": -122.41912}, // Not reporting
+		  //"GGBC1": { "nickName": "Midspan",            "lat": 37.830, "lon": -122.560, "realLat": 37.81975, "realLon": -122.47904}, // Not reporting
+		  "PPXC1": { "nickName": "Pt Potrero",         "lat": 37.906, "lon": -122.365, "realLat": 37.90581, "realLon": -122.36503},
+		  //"CF131": { "nickName": "I5 near Tinsley",    "lat": 37.906, "lon": -122.240, "realLat": 38.04637, "realLon": -121.36868},
+		  "KOAK":  { "nickName": "OAK",                "lat": 37.730, "lon": -122.240, "realLat": 37.7178, "realLon": -122.23294},
+		  //"KSJC":  { "nickName": "San Jose Airport",   "lat": 37.730, "lon": -122.330, "realLat": 37.35917, "realLon": -121.92417}, // Not in page
+		  "KSFO":  { "nickName": "SFO",                "lat": 37.730, "lon": -122.420, "realLat": 37.61961, "realLon": -122.36558},
+		  "KHAF":  { "nickName": "HMB Airport",        "lat": 37.730, "lon": -122.500, "realLat": 37.5136, "realLon": -122.4996},
+		  "46013": { "nickName": "46013 Bodega Bay",   "lat": 37.880, "lon": -122.650, "realLat": 38.20000, "realLon": -123.30000},
+		  "46026": { "nickName": "46026 SF Buoy",      "lat": 37.800, "lon": -122.650, "realLat": 37.80000, "realLon": -122.80000},
+		  "46012": { "nickName": "46012 HMB Buoy",     "lat": 37.750, "lon": -122.650, "realLat": 37.356, "realLon": -122.881},
+		  //"FNDC1": "Farallon Is", // (not reporting)
+		  "TIBC1": { "nickName": "Tiburon Pier",       "lat": 37.892, "lon": -122.500, "realLat": 37.892, "realLon": -122.447,}
+	      },
 	  },
-	  "displayFields": [
-	      { "field": "id", "label": "Station", "style": "obs-meta" },
-	      { "field": "name", "label": "Name", "style": "obs-meta" },
-	      { "field": "time", "label": "Time", "style": "obs-data" },
-	      { "field": "temp", "fname": "Temp ", "label": "Temp<br>(&#176;F)", "style": "obs-data", "precision": 1, "units": "\xB0F" },
-	      { "field": "pressure", "fname": "Press", "label": "Press<br>(mb)", "style": "obs-data", "precision": 0, "units": "mb" },
-	      { "field": "seaLevelPressure", "fname": "Press", "label": "MSLP<br>(mb)", "style": "obs-data", "precision": 0, "units": "mb" },
-	      { "field": "wind", "fname": "Wind ", "label": "Wind<br>(Kts)", "style": "obs-data", "precision": 1, "units": "kts" },
-	      { "field": "gust", "fname": "Gust ", "label": "Gust<br>(Kts)", "style": "obs-data", "precision": 1, "units": "kts" },
-	      { "field": "direction", "fname": "Dir  ", "label": "Dir<br>(&#176;T)", "style": "obs-data", "precision": 0, "units": "\xB0T" },
-	      { "field": "waterTemp", "fname": "WTemp", "label": "WTemp<br>(&#176;F)", "style": "obs-data", "precision": 1, "units": "\xB0F" },
-	      { "field": "waveHeight", "fname": "WaveH", "label": "Wave<br>Height", "style": "obs-data", "precision": 1, "units": "ft" },
-	      { "field": "wavePeriod", "fname": "WaveP", "label": "Wave<br>Period", "style": "obs-data", "precision": 0, "units": "secs" },
-	  ],
-	  "stationInfo": {
-	      "FTPC1": { "nickName": "Ft Point",           "lat": 37.807, "lon": -122.495, "realLat": 37.80669, "realLon": -122.46500},
-	      "PXOC1": { "nickName": "SF Pier 1",          "lat": 37.800, "lon": -122.420, "realLat": 37.79800 , "realLon": -122.39297},
-	      "AISC1": { "nickName": "Pt Blunt",           "lat": 37.860, "lon": -122.440, "realLat": 37.85312, "realLon": -122.41912},
-	      "GGBC1": { "nickName": "Midspan",            "lat": 37.830, "lon": -122.555, "realLat": 37.81975, "realLon": -122.47904},
-	      "PPXC1": { "nickName": "Pt Potrero",         "lat": 37.906, "lon": -122.365, "realLat": 37.90581, "realLon": -122.36503},
-	      "CF131": { "nickName": "I5 near Tinsley",    "lat": 37.906, "lon": -122.240, "realLat": 38.04637, "realLon": -121.36868},
-	      "KOAK":  { "nickName": "OAK",                "lat": 37.730, "lon": -122.240, "realLat": 37.7178, "realLon": -122.23294},
-	      "KSJC":  { "nickName": "San Jose Airport",   "lat": 37.730, "lon": -122.330, "realLat": 37.35917, "realLon": -121.92417},
-	      "KSFO":  { "nickName": "SFO",                "lat": 37.730, "lon": -122.420, "realLat": 37.61961, "realLon": -122.36558},
-	      "KHAF":  { "nickName": "HMB Airport",        "lat": 37.730, "lon": -122.500, "realLat": 37.5136, "realLon": -122.4996},
-	      "46013": { "nickName": "46013 Bodega Bay",   "lat": 37.880, "lon": -122.650, "realLat": 38.20000, "realLon": -123.30000},
-	      "46026": { "nickName": "46026 SF Buoy",      "lat": 37.800, "lon": -122.650, "realLat": 37.80000, "realLon": -122.80000},
-	      "46012": { "nickName": "46012 HMB Buoy",     "lat": 37.750, "lon": -122.650, "realLat": 37.356, "realLon": -122.881},
-	  },
-	  "observations": {}
-      }
+      ];
 
+      function scrapeCallback(observations) {
+	  const now = new Date();
+	  const tzOffset = now.getTimezoneOffset() / 60; // getTimeZoneOffset() is in minutes
+	  const Declination = -13; // KLUDGE - doesn't handle a large geographic area or somewhere not San Francisco
+	  
+	  for (const [station, o] of Object.entries(observations)) {
+	      let t = '';
+	      //t += station;
+	      t += o.nickName;
+	      let time = o.gmt - tzOffset;
+	      time += (time < 0) ? 24 : ((time > 24) ? -24 : 0);
+	      t += '\nTime:  ' + time + "00";
+	      t += (!("airPressure" in o)) ? "" : '\nPress: ' + o.airPressure + "mb";
+	      t += (!("airTemp" in o)) ? "" : '\nTemp:  ' + o.airTemp + "\xB0F";
+	      if ("calm" in o) {
+		  t += '\nWDir:  ' + "CALM";
+		  t += '\nWSpd:  ' + "CALM";
+	      } else {
+		  if ("windDir" in o) {
+		      t += '\nWDir:  ' + (o.windDir + Declination) + "\xB0M";
+		  }
+		  if ("windSpeed" in o) {
+		      t += '\nWSpd:  ' + o.windSpeed;
+		      if ("windGust" in o) {
+			  t += 'G' + o.windGust;
+		      }
+		      t += "kts";
+		  }
+	      }
+	      t += (!("waterTemp" in o))  ? "" : '\nWTemp: ' + o.waterTemp + "\xB0F";
+	      t += (!("waveHeight" in o)) ? "" : '\nWHght: ' + o.waveHeight + "ft";
+	      t += (!("wavePeriod" in o)) ? "" : '\nWPer:  ' + o.wavePeriod + "s";
+	    
+	      console.log(`NWsscrape update station ${station}`);
+	      //d3.select("#NWS-" + station).html(t);
+	      localObsRadarStations[station].set('text', t);
+	  }
+      }
+      
       let localObsRadarStations = {};
 
       // Tempest stations are a bit flakey - if the Tempest is down, use NOAA data
@@ -1725,143 +1739,8 @@
 	  { "stid": "FTPC1", "tempest": "St. Francis Yacht Club", "tempestField": "temp", "localField": "temp", "precision": 1 },
 	  // Fort Point and Pier 1 don't have baromoters - there's probably a better choice than the buoy
 	  { "stid": "46026", "tempest": "St. Francis Yacht Club", "tempestField": "tempest-baro", "localField": "pressure", "precision": 0 },
-	  { "stid": "CF131", "tempest": "Tinsley Island", "tempestField": "temp", "localField": "temp", "precision": 1  },
       ];
 
-      function handleObs(json) {
-	  let intervalStart = 0;
-	  let lastObservation;
-	  let STID;
-	  
-	  function checkObs(station, f) {
-	      let val = ""
-	      if (f in json["STATION"][station]["OBSERVATIONS"]) {
-		  const t = json["STATION"][station]["OBSERVATIONS"][f]["date_time"]
-		  const ms = Date.parse(t)
-		  if (ms > intervalStart) {
-		      if (ms > lastObservation) {
-			  lastObservation = ms;
-		      }
-		      val = json["STATION"][station]["OBSERVATIONS"][f]["value"]
-		  } else {
-		      // console.log(STID + " Field " + f + " " + t + " too old")
-		  }
-	      } else {
-		  // console.log("Key " + f + " not found in observations")
-	      }
-	      return(val);
-	  }
-
-	  //console.log("Received SynopticData observations");
-
-	  // Buoys are not reporting updated times but have updated values. This is weird or broken.
-	  intervalStart = Date.now() - (24 * 60 * 60 * 1000) // If observation was in the last 24 hours
-	  const tt = new Date()
-	  tt.setTime(intervalStart)
-
-	  //console.log("Interval starts at " + tt.toUTCString())
-	  
-	  for (let station =  0; station < json["STATION"].length; station++) {
-	      let lastObservation = 0
-	      const STID = json["STATION"][station]["STID"];
-
-	      localObs["observations"][STID] = {}
-	      let name = (STID in localObs.stationInfo) ? localObs.stationInfo[STID].nickName : json["STATION"][station]["NAME"];
-	      localObs["observations"][STID]["name"] = name;
-	      for (let k in localObs["fieldMap"]) {
-		  localObs["observations"][STID][k] = checkObs(station, localObs["fieldMap"][k])
-	      }
-
-	      // We could disable displaying non-reporting stations here
-	      // Look for the newest reported datum - a bit kludgey
-	      let tstring = ""
-	      if (lastObservation != 0) {
-		  tt.setTime(lastObservation);
-		  tstring = tt.toTimeString().substr(0, 5);
-	      }
-	      localObs["observations"][STID]["time"] = tstring;
-
-	      let stid;
-	      firstCharacter = STID.charAt(0);
-	      if (((firstCharacter >= 'A') && (firstCharacter <= 'Z')) || ((firstCharacter >= 'a') && (firstCharacter <= 'z'))) {
-		  stid = STID;
-	      } else {
-		  stid = 'B' + STID;
-	      }
-
-	      for (let f = 0; f < localObs["displayFields"].length; f++ ) {
-		  const field = localObs["displayFields"][f]["field"];
-		  if (field != "id") {
-		      const id = stid + '_' + field;
-		      let val = localObs["observations"][STID][field];
-		      if (typeof val === 'number' && typeof localObs["displayFields"][f]["precision"] === 'number') {
-			  val = val.toFixed(localObs["displayFields"][f]["precision"]);
-		      }
-		      d3.select("#" + id).html(val);
-		  }
-	      }
-	  }
-
-	  for (let station =  0; station < json["STATION"].length; station++) {
-	      const id = json["STATION"][station]["STID"];
-	      if (id in localObsRadarStations) {
-		  let text = localObs.stationInfo[id].nickName;
-		  for (let f = 0; f < localObs["displayFields"].length; f++ ) {
-		      const field = localObs["displayFields"][f]["field"];
-		      if (field != "id") {
-			  let val = localObs["observations"][id][field];
-			  let fname = localObs["displayFields"][f].fname;
-			  if (typeof val === 'number' && typeof localObs["displayFields"][f]["precision"] === 'number') {
-			      val = val.toFixed(localObs["displayFields"][f]["precision"]);
-			      const units = ("units" in localObs["displayFields"][f]) ? localObs["displayFields"][f].units : "";
-			      text = text + "\n" + fname + " " + val + units;
-			  }
-		      }
-		  }
-		  localObsRadarStations[id].set('text', text);
-	      }
-	  }
-	  
-	  // If a Tempest hasn't reported recently use NOAA data
-	  now = Math.floor(Date.now()/1000); // now in seconds
-	  for (const i in backupFields) {
-	      const b = backupFields[i];
-	      const station = b.tempest;
-	      if (tempestStations[station].lastTime < (now - tempestValidTimespan)) {
-		  const stid = b.stid;
-		  const lfield = b.localField;
-		  const tfield = b.tempestField;
-		  let val = localObs["observations"][stid][lfield];
-		  if (Number.isFinite(val)) {
-		      val = val.toFixed(b.precision) + "*";
-		  } else {
-		      val = "*";
-		  }
-		  const nickname = tempestStations[station].nickname;
-		  console.log("handleObs() Use NOAA in place of stale Tempest datum " + station + " -> " + stid + " " + tfield + " -> " + lfield + "(" + val + ")");
-		  const classString = "." + tfield + "-span-" + nickname;
-		  // console.log("handleObs() classString " + classString);
-		  d3.selectAll(classString).html(val);
-	      }
-	  }
-      }
-
-      function fetchObs(c) {
-	  const nonce = Date.now()
-	  if (c["stations"].length == 0) {
-	      return;
-	  }
-	  
-	  let stns = c["stations"][0]
-	  for (i = 1; i < c["stations"].length; i++) {
-	      stns += "," + c["stations"][i]
-	  }
-	  const url = c["url"].replace("stid=", "stid=" + stns);
-	  d3.json(url)
-	      .then(handleObs,
-		    function(error) { console.log("Couldn't fetch weather from url: " + url) }
-		   );
-      }
 
       const noaaTideStation = "9414290";
       const minTide = -1.5;
@@ -2531,7 +2410,6 @@
 	  if (!((minute+1) % 5)) {
 	      console.log("dispatch 5: " + now);
 	      d3.selectAll(".wx-image.update5").each(function() { updateImg(this) });
-	      fetchObs(localObs);
 	      fetchTempestHistory("St. Francis Yacht Club");
 	      fetchTidesAndCurrents();
 	  }
@@ -2659,48 +2537,6 @@
 	  }
       }
 
-      function initializeLocalObs() {
-	  // Table header row
-	  const r = d3.select("#" + localObs["tableId"]).append("div").attr("id", localObs["tableId"] + "-header").classed("obs-header", true)
-	  for (let i = 0; i < localObs["displayFields"].length; i++) {
-	      const f = localObs["displayFields"][i];
-	      r.append("div")
-		  .classed("obs-table-cell", true)
-		  .classed(f["style"], true)
-		  .html(f["label"]);
-	  }
-
-	  const bodyId = localObs["tableId"] + "-body";
-	  const b = d3.select("#" + localObs["tableId"]).append("div").attr("id", bodyId).classed("obs-body", true)
-	  for (let s = 0; s < localObs["stations"].length; s++) {
-	      var stid;
-	      const STID = localObs["stations"][s];
-	      const firstCharacter = STID.charAt(0);
-	      if (((firstCharacter >= 'A') && (firstCharacter <= 'Z')) || ((firstCharacter >= 'a') && (firstCharacter <= 'z'))) {
-		  stid = STID;
-	      } else {
-		  // Prepend a 'B' for buoys
-		  stid = 'B' + STID;
-	      }
-
-	      const r = b.append("div").attr("id", stid).attr("class", "obs-row");
-	      // Add an element for each field
-	      for (let i = 0; i < localObs["displayFields"].length; i++) {
-		  const f = localObs["displayFields"][i];
-		  const id = stid + '_' + f["field"];
-		  r.append("div")
-		      .attr("id", id)
-		      .classed("obs-table-cell", true)
-		      .classed(f["style"], true)
-	      }
-	      // Insert station ID field
-	      d3.select("#" + stid + "_id").html(STID);
-	  }
-
-	  d3.selectAll(".obs-row:nth-child(2n+1)").classed("obs-table-even", true);
-	  d3.selectAll(".obs-row:nth-child(2n+2)").classed("obs-table-odd", true);
-      }
-
       function setCarouselMode(m) {
 	  console.log("setCarouselMode to " + m);
 	  if (m == "Carousel") {
@@ -2748,7 +2584,6 @@
       let kioskMode = false;
       function initialize() {
 	  console.log("Initializing wx page");
-	  initializeLocalObs();
 
 	  let href = window.location.href;
 
@@ -2776,7 +2611,6 @@
 	      rotateScene();
 	  }
 
-	  fetchObs(localObs);
 	  fetchNWS();
 	  //setCurrentChartURL();
 
@@ -2846,14 +2680,18 @@
 	  const sstanomaly = new GIS(SSTanomalyConfig);
 	  const globalwind = new GIS(GlobalWindConfig);
 	  const globalwave = new GIS(GlobalWaveConfig);
+			
+	  // Set up the spec to overlay the observations on the radar / hazards map
 	  const spec = {};
 	  spec.points = [];
-	  for (let i in localObs.stations) {
-	      const id = localObs.stations[i];
-	      spec.points.push({"id": id, "lat": localObs.stationInfo[id].lat, "lon": localObs.stationInfo[id].lon, "txt": id});
+      
+	  for (const [id, c] of Object.entries(NWSscrapeSites[0].stations)) {
+	      spec.points.push({"id": id, "lat": c.lat, "lon": c.lon, "txt": id});
 	  }
 	  localObsRadarStations = localObsRadar.initializeFeatures(spec);
 
+	  const scrape = new NWSscrape(NWSscrapeSites, scrapeCallback);
+	  
 	  initializeVideoLazyLoad();
 
 	  d3.selectAll("#scene-pull-down-enable")
