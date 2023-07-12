@@ -26,8 +26,9 @@ urllib2knownerrors = {
 
 regions = {}
 regions["sf"] = {
-    "zones": "https://tgftp.nws.noaa.gov/data/raw/fz/fzus56.kmtr.cwf.mtr.txt",
-    "afd": "https://tgftp.nws.noaa.gov/data/raw/fx/fxus66.kmtr.afd.mtr.txt",
+    "zones":        "https://tgftp.nws.noaa.gov/data/raw/fz/fzus56.kmtr.cwf.mtr.txt",
+    "afd":          "https://tgftp.nws.noaa.gov/data/raw/fx/fxus66.kmtr.afd.mtr.txt",
+    "observations": "https://tgftp.nws.noaa.gov/data/raw/sx/sxus86.kmtr.omr.mtr.txt",
 }
 
 # Fetch and parse NOAA zones from the ftp server.
@@ -240,3 +241,12 @@ if __name__ == '__main__':
         with open(fn, "w+b") as f: # added +b for binary file - who knew?
             f.write(text)
         parseAFD(text.decode("UTF-8"))
+
+    if "observations" in regions[region]:
+        logging.info("Fetch Observations for %s" % region)
+        text = urltryhard(regions[region]["observations"])
+    
+        fn = "%s/%s" % (destdir, "observations.txt")
+        logging.debug("Save %s" % (fn))
+        with open(fn, "w+b") as f: # added +b for binary file - who knew?
+            f.write(text)
