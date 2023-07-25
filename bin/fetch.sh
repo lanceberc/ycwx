@@ -8,12 +8,16 @@ date
 date
 /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-West-500m -timelimit 4 -since 12h
 date
-/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-West -since 2d
+/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-West_GLM_1k -timelimit 4 -since 2d
+date
+#/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-West -since 2d
+date
+/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-West_GLM_2k -timelimit 4 -since 2d
 date
 if [[ $where == "dev" ]]; then
-  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-West_GLM_1k -timelimit 4 -since 2d
+#  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-West_GLM_1k -timelimit 4 -since 2d
   date
-  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-West_GLM_2k -timelimit 4 -since 2d
+#  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-West_GLM_2k -timelimit 4 -since 2d
   date
   /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-East -timelimit 4 -since 1d
   date
