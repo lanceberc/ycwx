@@ -181,7 +181,7 @@ if __name__ == '__main__':
     now += datetime.timedelta(days = 2)
     end_date = now.strftime("%Y-%m-%d 00:00")
     
-    cmd = 'tide -l "LOCATION" -in y -b "BEGIN" -e "END" -m r -s 00:06'
+    cmd = '/usr/local/bin/tide -l "LOCATION" -in y -b "BEGIN" -e "END" -m r -s 00:06'
     cmd = cmd.replace("LOCATION", location)
     cmd = cmd.replace("BEGIN", begin_date)
     cmd = cmd.replace("END", end_date)
@@ -222,17 +222,19 @@ if __name__ == '__main__':
     now += datetime.timedelta(days = 2)
     end_date = now.strftime("%Y-%m-%d 00:00")
     
-    cmd = 'tide -l "LOCATION" -b "BEGIN" -e "END" -in y -df "%Y-%m-%d" -tf "%H:%M"'
+    cmd = '/usr/local/bin/tide -l "LOCATION" -b "BEGIN" -e "END" -in y -df "%Y-%m-%d" -tf "%H:%M"'
     cmd = cmd.replace("LOCATION", location)
     cmd = cmd.replace("BEGIN", begin_date)
     cmd = cmd.replace("END", end_date)
-    logging.debug("tide command: %s " % (cmd))
+    logging.info("tide command: %s " % (cmd))
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
     except subprocess.CalledProcessError as e:
-        logging.info("Execution failed: %s" % (e))
+        logging.info("tide Execution failed: %s" % (e))
 
-    logging.debug("Current info %r" % (result.stdout))
+    logging.info("tide command return code %r" % (result.returncode))
+    logging.info("tide command returned %r" % (result.stdout))
+    logging.info("tide command error %r" % (result.stderr))
 
     info_list = result.stdout.split("\n")
     current_info = {}
@@ -262,7 +264,7 @@ if __name__ == '__main__':
             else:
                 e = line[19:]
                 current_info["events"].append({"t": t, "e": e})
-    logging.debug("Events: %r" % (current_info))
+    logging.info("Events: %r" % (current_info))
 
     """
     logging.debug("Fetch: %s" % (url))
