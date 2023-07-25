@@ -2695,9 +2695,13 @@
 	  initializeVideoLazyLoad();
 
 	  d3.selectAll("#scene-pull-down-enable")
-		  .on('click', handleScenePullDownClick);
+	      .on('click', handleScenePullDownClick);
 
-	  let windModel = new WindModel("KarlHRRR", "Karl", kioskMode);
+	  const userAgent = window.navigator.userAgent.toLowerCase();
+	  const tooltips = (kioskMode == false) && (userAgent.match(/firefox|fxios/i));
+	  console.log(`UserAgent ${userAgent}: ${(tooltips)?"Using":"Not using"} wind model tooltips`);
+
+	  let windModel = new WindModel("KarlHRRR", "Karl", kioskMode, tooltips);
 	  d3.select("#KarlHRRR-canvas").classed("wx-image", true);
 	  windModel = new WindModel("KarlNAM", "KarlNAM", kioskMode);
 	  d3.select("#KarlNAM-canvas").classed("wx-image", true);

@@ -420,7 +420,7 @@ function drawTopo(canvas, topo, displayProjection) {
     context.restore();
 }
 
-async function render(canvas, region, forecastHour, topo, colorMap) {
+async function render(canvas, region, forecastHour, topo, colorMap, returnAll) {
     const context = canvas.getContext("2d");
     const forecast = (forecastHour < 10 ? "0" : "") + `${forecastHour}`;
     const modelRun = (region.latest.modelRun < 10 ? "0" : "") + region.latest.modelRun;
@@ -442,7 +442,7 @@ async function render(canvas, region, forecastHour, topo, colorMap) {
     drawBarbs(canvas, grib, dp, "#000000");
     drawPOIs(canvas, grib, dp);
 
-    if (!returnTransforms) {
+    if (!returnTransforms || !returnAll) {
 	region.xy = undefined;
 	region.ij = undefined;
     }
@@ -455,6 +455,7 @@ async function startWorker(evt) {
     const region = evt.data.region;
     const forecastHour = evt.data.forecastHour;
     const forecast = evt.data.forecast;
+    const returnAll = evt.data.returnAll;
 
     const dpParams = region.dpParams;
     region.dp = d3.geoMercator()
@@ -464,7 +465,7 @@ async function startWorker(evt) {
 	.translate([width/2, height/2]);
 
     const canvas = new OffscreenCanvas(width, height);
-    const [grib, windData, xy, ij] = await render(canvas, region, forecastHour, evt.data.map, evt.data.windColorMap);
+    const [grib, windData, xy, ij] = await render(canvas, region, forecastHour, evt.data.map, evt.data.windColorMap, returnAll);
 
     // Should show up in master e.data
     //console.log(`Worker ${forecastHour} Finished`);

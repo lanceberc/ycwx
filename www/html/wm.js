@@ -1,7 +1,7 @@
 // Display a wind model in a container
 
 let WindModels = {};
-function WindModel(container, r, kiosk) {
+function WindModel(container, r, kiosk, tooltips) {
 
     let windModelMap = null;
     let windModelState = {};
@@ -11,6 +11,7 @@ function WindModel(container, r, kiosk) {
     const firstFrameTime = 3000;
     const modelCheckInterval = 60 * 1000;
 
+    // Icons for entering and exiting full-screen mode
     const fullscreenPath = 'M5,40L5,5L40,5M60,5L95,5L95,40M95,60L95,95L60,95M40,95L5,95L5,60';
     const unfullscreenPath = 'M5,40L40,40L40,5M60,5L60,40L95,40M95,60L60,60L60,95M40,95L40,60L5,60';
 
@@ -219,6 +220,7 @@ function WindModel(container, r, kiosk) {
 	    'max': windColorMapMax,
 	    'map': s.windColorLookup
 	};
+	task.msg.returnAll = s.tooltips;
 	task.finish = renderComplete;
 	taskAdd(s, task);
 	updateRenderState(s);
@@ -343,19 +345,21 @@ function WindModel(container, r, kiosk) {
 	}
     }
     
-    async function init(container, r, kiosk) {
+    async function init(container, r, kiosk, tooltips) {
 	WindModels[r] = new Object();
 	const s = WindModels[r];
+	const workerPool = (tooltips) ? 3 : 1;
 	s.container = container;
 	s.id = "#" + container;
 	s.r = r;
 	s.region = wmRegions[r];
 	s.region.xy = undefined;
 	s.region.ij = undefined;
+	s.tooltips = tooltips;
 	s.config = {
 	    canvasWidth: 1920,
 	    canvasHeight: 1080,
-	    workerPool: 3,
+	    workerPool: workerPool,
 	}
 	
 	s.workerPool = s.config.workerPool;
@@ -411,10 +415,12 @@ function WindModel(container, r, kiosk) {
 	    .attr('max', 100)
 	    .attr('value', 0)
 	    .attr("tabindex", "0");
-	s.tooltip = d3.select(s.id)
+	if (tooltips) {
+	    s.tooltip = d3.select(s.id)
 	    .append('div')
 	    .attr('id', container + '-tooltip')
-	    .classed('wmTooltip', true);
+		.classed('wmTooltip', true);
+	}
 
 	// "world-110m.json" is lower-res - faster, but not enough detail to recognize features
 	// "countries-10m.json is high-res";
@@ -466,21 +472,23 @@ function WindModel(container, r, kiosk) {
 	    console.log("Toggle full screen click");
 	    toggleFullscreen(s, evt);
 	});
-	
-	s.canvas.node().addEventListener("mousemove", (evt) => {
-	    s.tooltipPos = [evt.layerX, evt.layerY];
-	    updateTooltip(s);
-	});
-	s.canvas.node().addEventListener("focusout", (evt) => {
-	    s.tooltip.classed("wmShow", false);
-	    s.tooltip.html("");
-	    s.tooltipPos = null;
-	});
-	s.canvas.node().addEventListener("mouseleave", (evt) => {
-	    s.tooltip.classed("wmShow", false);
-	    s.tooltip.html("");
-	    s.tooltipPos = null;
-	});
+
+	if (tooltips) {
+	    s.canvas.node().addEventListener("mousemove", (evt) => {
+		s.tooltipPos = [evt.layerX, evt.layerY];
+		updateTooltip(s);
+	    });
+	    s.canvas.node().addEventListener("focusout", (evt) => {
+		s.tooltip.classed("wmShow", false);
+		s.tooltip.html("");
+		s.tooltipPos = null;
+	    });
+	    s.canvas.node().addEventListener("mouseleave", (evt) => {
+		s.tooltip.classed("wmShow", false);
+		s.tooltip.html("");
+		s.tooltipPos = null;
+	    });
+	}
 	document.getElementById(s.container).addEventListener("fullscreenchange", (evt) => {
 	    const path = (document.fullscreenElement) ? unfullscreenPath : fullscreenPath;
 	    d3.select("#" + s.container + '-fullscreenPath')
@@ -498,5 +506,5 @@ function WindModel(container, r, kiosk) {
 	}
     }
 
-    init(container, r, kiosk);
+    init(container, r, kiosk, tooltips);
 }
