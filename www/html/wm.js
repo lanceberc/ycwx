@@ -1,7 +1,7 @@
 // Display a wind model in a container
 
 let WindModels = {};
-function WindModel(container, r, kiosk, tooltips) {
+function WindModel(container, r, kiosk) {
 
     let windModelMap = null;
     let windModelState = {};
@@ -144,20 +144,38 @@ function WindModel(container, r, kiosk, tooltips) {
 	if (s.workerFree == 0 || s.taskList.length == 0) {
 	    return;
 	}
-	for (let w = 0; w < s.workerPool; w++) {
-	    if (s.workers[w].task == null) {
-		task = s.taskList.shift();
-		task.startTime = Date.now();
-		s.workers[w].task = task;
-		s.workerFree--;
-		task.frameState.renderState = "renderRendering";
-		s.workers[w].worker.postMessage(task.msg);
-		//console.log(`${s.r} worker ${w} started`);
-		updateRenderState(s);
-		return;
+	let w;
+	for (w = 0; w < s.workerPool; w++) {
+	    if ((s.workers[w].worker != null) && (s.workers[w].task == null)) {
+		break;
 	    }
 	}
-	console.log("taskStart couldn't find free worker");
+	if (w == s.workerPool) {
+	    for (w = 0; w < s.workerPool; w++) {
+		if (s.workers[w].worker == null) {
+		    console.log(`wm taskStart() create worker ${w}`);
+		    s.workers[w] = {};
+		    s.workers[w].task = null;
+		    s.workers[w].worker = new Worker("wmWorker.js");
+		    s.workers[w].worker.addEventListener('message', evt => {
+			taskComplete(s, w, evt);
+		    });
+		    break;
+		}
+	    }
+	}
+	if (w < s.workerPool) {
+	    task = s.taskList.shift();
+	    task.startTime = Date.now();
+	    s.workers[w].task = task;
+	    s.workerFree--;
+	    task.frameState.renderState = "renderRendering";
+	    s.workers[w].worker.postMessage(task.msg);
+	    //console.log(`${s.r} worker ${w} started`);
+	    updateRenderState(s);
+	    return;
+	}
+	console.log("wm taskStart couldn't find free worker");
     }
 	
     function taskAdd(s, task) {
@@ -171,7 +189,13 @@ function WindModel(container, r, kiosk, tooltips) {
 	s.workers[w].task = null;
 	s.workerFree++;
 	//console.log(`Worker ${w} completed`);
-	taskStart(s);
+	if (s.taskList.length > 0) {
+	    taskStart(s);
+	} else {
+	    console.log(`wm taskComplete() terminate worker ${w}`);
+	    s.workers[w].worker.terminate();
+	    s.workers[w].worker = null;
+	}
     }
 
     function renderComplete(s, evt, task) {
@@ -370,6 +394,11 @@ function WindModel(container, r, kiosk, tooltips) {
 	s.currentFrame = -1;
 	s.canvasWidth = s.config.canvasWidth;
 	s.canvasHeight = s.config.canvasHeight;
+	for (let w = 0; w < s.workerPool; w++) {
+	    s.workers[w] = {};
+	    s.workers[w].worker = null;
+	    s.workers[w].task = null;
+	}
 
 	d3.select(s.id).selectAll("*").remove();
 	s.canvas = d3.select(s.id)
@@ -450,14 +479,10 @@ function WindModel(container, r, kiosk, tooltips) {
 	    sliderWrapper.classed("wmSlider-show", true);
 	}
 
-	// Start loading the worker code as early as possible - it can be large
 	for (let w = 0; w < s.workerPool; w++) {
 	    s.workers[w] = {};
 	    s.workers[w].task = null;
-	    s.workers[w].worker = new Worker("wmWorker.js");
-	    s.workers[w].worker.addEventListener('message', evt => {
-		taskComplete(s, w, evt);
-	    });
+	    s.workers[w].worker = null;
 	}
 
 	s.windColorLookup = generateWindLookupTable(windColorMapSteps, windColorMapMax);
@@ -505,6 +530,12 @@ function WindModel(container, r, kiosk, tooltips) {
 	    updateFrame(s);
 	}
     }
+
+    // For now detect user agent and only generate tooltips for Firefox
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    //const tooltips = (kiosk == false) && (userAgent.match(/firefox|fxios/i));
+    const tooltips = (kiosk == false) && (userAgent.match(/firefox/i));
+    console.log(`UserAgent ${userAgent}: ${(tooltips)?"Using":"Not using"} wind model tooltips`);
 
     init(container, r, kiosk, tooltips);
 }
