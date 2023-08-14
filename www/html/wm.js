@@ -383,6 +383,8 @@ function WindModel(container, r, kiosk) {
 	s.config = {
 	    canvasWidth: 1920,
 	    canvasHeight: 1080,
+	    //canvasWidth: 1080,
+	    //canvasHeight: 720,
 	    workerPool: workerPool,
 	}
 	
@@ -534,7 +536,8 @@ function WindModel(container, r, kiosk) {
     // For now detect user agent and only generate tooltips for Firefox
     const userAgent = window.navigator.userAgent.toLowerCase();
     //const tooltips = (kiosk == false) && (userAgent.match(/firefox|fxios/i));
-    const tooltips = (kiosk == false) && (userAgent.match(/firefox/i));
+    //const tooltips = (kiosk == false) && (userAgent.match(/firefox/i));
+    const tooltips = true;
     console.log(`UserAgent ${userAgent}: ${(tooltips)?"Using":"Not using"} wind model tooltips`);
 
     init(container, r, kiosk, tooltips);
