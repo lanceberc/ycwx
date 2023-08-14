@@ -885,7 +885,7 @@
 	  ],
 	  "All": [
 	      { "div": "", "label": "Local", "duration": 0 },
-	      { "div": "localWind", "label": "Wind", "duration": 30 },
+	      /*{ "div": "localWind", "label": "Wind", "duration": 30 },*/
 	      /*{ "div": "sfLocalObservations", "label": "Observations", "duration": 15 }, */
 	      { "div": "NOAAObservationsScene", "label": "Observations", "duration": 15 },
 	      { "div": "sfTides", "label": "Tide & Current", "duration": 15 },
@@ -1695,7 +1695,7 @@
       function scrapeCallback(observations) {
 	  const now = new Date();
 	  const tzOffset = now.getTimezoneOffset() / 60; // getTimeZoneOffset() is in minutes
-	  const Declination = -13; // KLUDGE - doesn't handle a large geographic area or somewhere not San Francisco
+	  const Declination = -13; // KLUDGE - doesn't handle a large geographic area or somewhere not San Francisco - should be in local config
 	  
 	  for (const [station, o] of Object.entries(observations)) {
 	      let t = '';
@@ -1711,7 +1711,7 @@
 		  t += '\nWSpd:  ' + "CALM";
 	      } else {
 		  if ("windDir" in o) {
-		      t += '\nWDir:  ' + (o.windDir + Declination) + "\xB0M";
+		      t += '\nWDir:  ' + Math.round(o.windDir + Declination + 360) % 360 + "\xB0M";
 		  }
 		  if ("windSpeed" in o) {
 		      t += '\nWSpd:  ' + o.windSpeed;
@@ -3028,8 +3028,8 @@
 	    <div id="links" class="text-scene">
 	      <h3>Weather Sites</h3>
 	      <a href="https://weather.gov/mtr">NWS Bay Area</a> - The Weather Field Office (WFO) in Monterey<br>
-	      <a href="https://new.nowcoast.noaa.gov/mariner.html">NOAA nowCOAST</a> - Real-time observations and warnings for mariners & more<br>
-	      <a href="https://tropicaltidbits.com">Tropical Tidbits</a> - Dr Levi Cowen's site with many weather models and his excellent storm analysis when appropriate.<br>
+	      <a href="https://nowcoast.noaa.gov">NOAA nowCOAST</a> - CONUS-focused weather w/ many overlays<br>
+	      <a href="https://tropicaltidbits.com">Tropical Tidbits</a> - Dr Levi Cowen's site with weather models and his excellent storm analysis when appropriate.<br>
 	      <a href="https://windy.com">Windy</a> - Excellent display of current weather and models.<br>
 	      <a href="https://l-36.com/weather.php?lat=37.82&lon=-122.48&point1=Sausalito,+CA&point2=Marine+Location+Near+Sausalito,+CA&tide1=San+Francisco,+California+(2)+(expired+1998-12-31)&tide2=San+Francisco+Bay+Entrance+(Golden+Gate),+California+Current&lat_long1=37.82,-122.48&radar=MUX&radar2=DAX&station=mtr&ports=9414290&rss=ftpc1&rss2=tibc1&rss3=46237&airport=KSFO&geos=west/wc&lat_long2=37.82,-122.48&yd10=on&zone1=PZZ530&zone2=PZZ500&v=0.50">L-36 Golden Gate</a> - Weather from Lapworth 36 owners<br>
 	      <a href="https://www.wunderground.com/">Weather Underground</a> - Started by Dr Jeff Masters, it was a great grass-roots weather site until it was purchased first by The Weather Channel, then by IBM.<br>
@@ -3201,7 +3201,7 @@
 		NOAA has made an effort  to make its various data and forecast products available on
 		the Internet in many forms. The National Radar map overlays recent NEXRAD radar mosaics on top of current hazard,
 		watch, and warning areas. More information is available from NOAA's
-		<a href="https://nowcoast.noaa.gov/mariner.html">NowCOAST</a> and
+		<a href="https://nowcoast.noaa.gov">NowCOAST</a> and
 		<a href="https://www.wrh.noaa.gov/map/?&zoom=14&scroll_zoom=false&center=39.198404895765826,-120.23180007934572&boundaries=false,false,false,false,false,false,false,false,false&tab=observation&obs=true&obs_type=air_temp&obs_popup=true&obs_density=10&obs_provider=ALL">Weather & Hazards</a> data viewers.
 	      </p>
 	      <hr>
