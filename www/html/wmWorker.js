@@ -251,7 +251,7 @@ function drawWindField(canvas, grib, dp, band, cm) {
 
     const wind = new Uint8ClampedArray(w*h); // Wind and gust can't get above 255
     const gust = new Uint8ClampedArray(w*h);
-    const dir = new Array(w*h); // Dir range [0 - 360], 361 indicates off-grid
+    const dir = new Uint16Array(w*h); // Dir range [0 - 360], 361 indicates off-grid
     const uIndex = grib.bands.UGRD;
     const vIndex = grib.bands.VGRD;
     const gustIndex = grib.bands['GUST'];
