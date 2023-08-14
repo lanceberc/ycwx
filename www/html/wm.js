@@ -51,14 +51,26 @@ function WindModel(container, r, kiosk) {
 	let topojsonData = await response.json();
 	return(topojsonData);
     }
-	
+
     function serviceTimer(r) {
 	const s = WindModels[r];
 	if (d3.select(s.id).node().offsetParent == null) {
-	    console.log(`wm ${s.id} is hidden`);
+	    if (!s.hidden) {
+		console.log(`wm ${s.id} is hidden`);
+		s.hidden = true;
+	    }
 	} else if (document.visibilityState != "visible") {
-	    console.log(`document is not visible`);
+	    if (!s.visible) {
+		console.log(`wm document is not visible`);
+		s.visible = false;
+	    }
 	} else {
+	    if (s.hidden || !s.visible) {
+		console.log(`wm ${s.id} is showing - resetting to first frame`);
+		s.currentFrame = 0;
+	    }
+	    s.hidden = false;
+	    s.visible = true;
 	    s.currentFrame = (s.currentFrame + 1) % s.region.latest.forecasts.length;
 	    updateFrame(s);
 	}
@@ -369,10 +381,21 @@ function WindModel(container, r, kiosk) {
 	}
     }
     
-    async function init(container, r, kiosk, tooltips) {
+    async function init(container, r, kiosk) {
 	WindModels[r] = new Object();
 	const s = WindModels[r];
-	const workerPool = (tooltips) ? 3 : 1;
+
+	// For now detect user agent and only generate tooltips for Firefox
+	s.userAgent = window.navigator.userAgent.toLowerCase();
+	//const tooltips = (kiosk == false) && (s.userAgent.match(/firefox|fxios/i));
+	const tooltips = (kiosk == false);
+	//const workerPool = (tooltips) ? 3 : 1;
+	let workerPool = (s.userAgent.match(/firefox/i)) ? 3 : 1; // Other browsers are memory & CPU hogs
+	if (typeof(Worker) === "undefined") {
+	    workerPool = 0; // Workers not supported
+	}
+	console.log(`wm: init with ${workerPool} workers, UserAgent ${s.userAgent}: ${(tooltips)?"Using":"Not using"} wind model tooltips`);
+	
 	s.container = container;
 	s.id = "#" + container;
 	s.r = r;
@@ -387,6 +410,9 @@ function WindModel(container, r, kiosk) {
 	    //canvasHeight: 720,
 	    workerPool: workerPool,
 	}
+
+	s.visible = true; // for console debugging
+	s.hidden = false; // for console debugging
 	
 	s.workerPool = s.config.workerPool;
 	s.workers = new Array(s.workerPool);
@@ -495,10 +521,12 @@ function WindModel(container, r, kiosk) {
 	//el.addEventListener("keypress", keyEvent(event));
 	el.addEventListener("keydown", evt => { keyEvent(s, evt) });
 
-	s.fullscreen.node().addEventListener('click', (evt) => {
-	    console.log("Toggle full screen click");
-	    toggleFullscreen(s, evt);
-	});
+	if (!kiosk) {
+	    s.fullscreen.node().addEventListener('click', (evt) => {
+		console.log("Toggle full screen click");
+		toggleFullscreen(s, evt);
+	    });
+	}
 
 	if (tooltips) {
 	    s.canvas.node().addEventListener("mousemove", (evt) => {
@@ -533,12 +561,5 @@ function WindModel(container, r, kiosk) {
 	}
     }
 
-    // For now detect user agent and only generate tooltips for Firefox
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    //const tooltips = (kiosk == false) && (userAgent.match(/firefox|fxios/i));
-    //const tooltips = (kiosk == false) && (userAgent.match(/firefox/i));
-    const tooltips = true;
-    console.log(`UserAgent ${userAgent}: ${(tooltips)?"Using":"Not using"} wind model tooltips`);
-
-    init(container, r, kiosk, tooltips);
+    init(container, r, kiosk);
 }
