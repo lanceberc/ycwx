@@ -19,7 +19,9 @@
 #include <cjson/cJSON.h>
 
 #define HAS_TEMPEST 1
-#define HAS_AIRMAR 0
+#define HAS_AIRMAR 1
+// Until the Airmar is working again, don't bother checking and trying to reboot it
+#define CHECK_AIRMAR 0
 
 // 8000 + 0183 - why not?
 #define PORT 8183
@@ -547,6 +549,7 @@ unsigned int airmar_check()
 {
   int pid;
 
+#if CHECK_AIRMAR > 0
   /* If we're already rebooting, don't bother to check further */
   if (airmar_rebooting) return(0);
   
@@ -589,6 +592,7 @@ unsigned int airmar_check()
   }
   lwsl_notice("airmar_check() rebooting Airmar (%d, %d, %d, %d) and system pid %d\n", timeout, high_gust, read_error, airmar_rebooting, pid);
   airmar_rebooting = 1;
+#endif
   return(0);
 }
 
@@ -601,7 +605,9 @@ unsigned int airmar_init(struct lws *wsi, void *user)
   int fd = -1;
   lws_sock_file_fd_type u;
 
+#if AIRMAR_CHECK > 0
   int i = airmar_power("on");
+#endif
 
   airmar_restore();
   
