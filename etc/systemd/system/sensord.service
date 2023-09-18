@@ -1,0 +1,11 @@
+[Unit]
+Description=sensord
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/home/stfyc/bin/sensord
+
+[Install]
+WantedBy=multi-user.target
