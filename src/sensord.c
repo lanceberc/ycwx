@@ -19,7 +19,7 @@
 #include <cjson/cJSON.h>
 
 #define HAS_TEMPEST 1
-#define HAS_AIRMAR 1
+#define HAS_AIRMAR 0
 
 // 8000 + 0183 - why not?
 #define PORT 8183
