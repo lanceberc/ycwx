@@ -48,6 +48,8 @@ function windInitialize(callback) {
 	    windURL = "wss://" + location.hostname + "/wind/";
 	}
 	console.log("Setting windURL to " + windURL);
+    } else {
+	console.log("Passed windURL " + windURL);
     }
     if (windSocketInitializing == null) {
 	windSocketInitializing = new Date().now;
