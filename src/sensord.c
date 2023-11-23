@@ -103,7 +103,7 @@ char *airmarfn;
 #define SOURCE AIRMAR_APPARENT
 
 // Our sensor is not pointed north - add SENSOR_OFFSET to each reading
-#define SENSOR_OFFSET 75.0
+#define SENSOR_OFFSET -25.0
 
 /* should the buffer be in the vhd? */
 #define AIRMAR_RECENT 120
@@ -766,6 +766,7 @@ airmar_process(struct lws *wsi, void *user)
       // Adjust reading for sensor not pointing north
       awa += SENSOR_OFFSET;
       awa = (awa < 360.0) ? awa : awa - 360.0;
+      awa = (awa < 0.0) ? awa + 360 : awa;
       
       airmar_last_samples.awa = awa;
       airmar_last_samples.aws = aws;
