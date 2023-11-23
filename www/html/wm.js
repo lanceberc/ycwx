@@ -100,7 +100,7 @@ function WindModel(container, r, kiosk) {
 	    //console.log(`Display frame ${s.currentFrame}`);
 	    let context = s.canvas.node().getContext("2d");
 	    if (context == null) {
-		console.log(`windmodel ${s.r} no 2d context`);
+		console.log(`wm ${s.r} no 2d context`);
 		d3.select(s.id + "-canvas").remove();
 		let canvas = d3.select(s.id)
 		    .insert("canvas")
@@ -115,7 +115,7 @@ function WindModel(container, r, kiosk) {
 	    labelForecast(s.label, s.region, frameState);
 	    updateTooltip(s);
 	} else {
-	    console.log(`Frame ${s.r} frame ${s.currentFrame} not yet rendered`);
+	    console.log(`wm Frame ${s.r} frame ${s.currentFrame} not yet rendered`);
 	}
     }
 
@@ -137,7 +137,7 @@ function WindModel(container, r, kiosk) {
 		rClass = "wmComplete";
 		completeCount++;
 	    } else {
-		console.log(`Unknown state ${f} renderState ${rs}`);
+		console.log(`wm Unknown state ${f} renderState ${rs}`);
 	    }
 	    if (!(f % 10)) {
 		renderLabel += "<br>";
@@ -183,7 +183,7 @@ function WindModel(container, r, kiosk) {
 	    s.workerFree--;
 	    task.frameState.renderState = "renderRendering";
 	    s.workers[w].worker.postMessage(task.msg);
-	    //console.log(`${s.r} worker ${w} started`);
+	    //console.log(`wm ${s.r} worker ${w} started`);
 	    updateRenderState(s);
 	    return;
 	}
@@ -231,7 +231,7 @@ function WindModel(container, r, kiosk) {
 	}
 	updateRenderState(s);
 	
-	console.log(`Render ${forecast} hour ${fh} completed in ${(elapsed/1000.0).toFixed(2)} sinceStart ${(sinceStart/1000.0).toFixed(2)} current frame: ${s.currentFrame}`);
+	console.log(`wm Render ${forecast} hour ${fh} completed in ${(elapsed/1000.0).toFixed(2)} sinceStart ${(sinceStart/1000.0).toFixed(2)} current frame: ${s.currentFrame}`);
 	if (s.currentFrame == forecast) {
 	    updateFrame(s);
 	}
@@ -265,7 +265,7 @@ function WindModel(container, r, kiosk) {
     async function checkForNewModel(s) {
 	let model = await fetchLatest(s.region);
 	if (model != null) {
-	    console.log(`New model fetched for ${s.r}`);
+	    console.log(`wm New model fetched for ${s.r}`);
 	    s.region.latest = model;
 	    s.frameStates = new Array(s.region.latest.forecasts.length);
 	    for (let f = 0; f < s.region.latest.forecasts.length; f++) {
@@ -295,7 +295,7 @@ function WindModel(container, r, kiosk) {
 		elem.requestFullscreen();
 		isFullScreen = true;
 	    } catch (e) {
-		console.log("Full screen denied: " + e);
+		console.log("wm Full screen denied: " + e);
 	    }
 	} else {
 	    document.exitFullscreen();
@@ -386,13 +386,15 @@ function WindModel(container, r, kiosk) {
 	const s = WindModels[r];
 
 	// For now detect user agent and only generate tooltips for Firefox
-	s.userAgent = window.navigator.userAgent.toLowerCase();
+	const ua = window.navigator.userAgent;
+	s.userAgent = ua.toLowerCase();
 	//const tooltips = (kiosk == false) && (s.userAgent.match(/firefox|fxios/i));
 	const tooltips = (kiosk == false);
 	//const workerPool = (tooltips) ? 3 : 1;
 	let workerPool = (s.userAgent.match(/firefox/i)) ? 3 : 1; // Other browsers are memory & CPU hogs
 	if (typeof(Worker) === "undefined") {
 	    workerPool = 0; // Workers not supported
+	    console.log(`wm Workers not supported user agent ${ua}`);
 	}
 	console.log(`wm: init with ${workerPool} workers, UserAgent ${s.userAgent}: ${(tooltips)?"Using":"Not using"} wind model tooltips`);
 	
@@ -523,7 +525,7 @@ function WindModel(container, r, kiosk) {
 
 	if (!kiosk) {
 	    s.fullscreen.node().addEventListener('click', (evt) => {
-		console.log("Toggle full screen click");
+		console.log("wm Toggle full screen click");
 		toggleFullscreen(s, evt);
 	    });
 	}
