@@ -14,15 +14,21 @@ date
 date
 /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-West_GLM_2k -timelimit 4 -since 2d
 date
+/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-East -timelimit 4 -since 1d
+date
+/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-East_GLM_1k -timelimit 4 -since 1d
+date
+/usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-East -timelimit 4 -since 2d
 if [[ $where == "dev" ]]; then
+    date
 #  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-West_GLM_1k -timelimit 4 -since 2d
-  date
+#  date
 #  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-West_GLM_2k -timelimit 4 -since 2d
-  date
-  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-East -timelimit 4 -since 1d
-  date
-  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-East -timelimit 4 -since 2d
-  date
+#  date
+#  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region CONUS-East -timelimit 4 -since 1d
+#  date
+#  /usr/bin/python /home/stfyc/bin/nesdis-fetch.py -region GOES-East -timelimit 4 -since 2d
+#  date
 fi
 /usr/bin/python /home/stfyc/bin/fetch-sfcurrents.py -image current
 /usr/bin/python /home/stfyc/bin/fetch-sfcurrents.py -image tide
