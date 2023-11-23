@@ -25,9 +25,12 @@
 # prune old data every 6 hours at 5 after the hour
 5 /6 * * * /usr/bin/bash /home/stfyc/bin/prunedata.sh
 10,25,40,55 * * * * /usr/bin/python /home/stfyc/bin/nwsZones.py
-1 * * * * /home/stfyc/bin/cmovie.py -region baydeltawind -hours 6 -hold 5 -withsource
+1 * * * * /home/stfyc/bin/cmovie.py -region baydeltawind -hours 6 -hold 3 -withsource
+31 * * * * /home/stfyc/bin/cmovie.py -region baydeltahrrr -hours 24 -hold 3 -withsource
 2 * * * * /home/stfyc/bin/cmovie.py -region eddy500m -days 3 -hold 5 -withsource
-3,33 * * * * /home/stfyc/bin/cmovie.py -region eastpacificglm -hours 12 -hold 5 -withsource
-4,19,34,49 * * * * /home/stfyc/bin/cmovie.py -region baydelta500m -hours 6 -hold 5 -withsource
+#3,33 * * * * /home/stfyc/bin/cmovie.py -region eastpacificglm -hours 12 -hold 3 -withsource
+3,33 * * * * /home/stfyc/bin/cmovie.py -region westcoastglm -hours 12 -hold 3 -withsource
+4,19,34,49 * * * * /home/stfyc/bin/cmovie.py -region baydelta500m -hours 6 -hold 3 -withsource
+5 * * * * /home/stfyc/bin/cmovie.py -region eddy500mhrrr -hours 24 -hold 3 -withsource
 #35 3,9,15,21 * * * /home/stfyc/bin/cmovie.py -region pacific -days 7 -hold 10 -withsource
 #30 7,8,9,10,11,12,13,14,15,16 * * * /usr/bin/go run /home/stfyc/src/nomads/nomads.go -zone sfrcsub -threads 8
