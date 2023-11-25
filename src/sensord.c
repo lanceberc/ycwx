@@ -795,9 +795,16 @@ airmar_process(struct lws *wsi, void *user)
 
   // $WIMDA,29.3262,I,0.9931,B,14.5,C,,,,,,,314.1,T,299.1,M,4.1,N,2.1,M*24
   // $WIMDA,29.4384,I,0.9969,B,20.1,C,,,,,,,37.7,T,22.7,M,7.7,N,4.0,M*26
+  // $WIMDA,29.9936,I,1.0157,B,14.5,C,,,,,,,,,,,,,,*3C - 110WX sentence doesn't have the true wind data
   if (!strncmp((const char *)&buf, "$WIMDA", sizeof("$WIMDA")-1)) {
-    int r = sscanf(buf, "$WIMDA,%f,%c,%f,%c,%f,%c,,,,,,,%f,%c,%f,%c,%f,%c,%f,%c", &baro_i, &baro_i_unit, &baro_m, &baro_m_unit, &temp, &temp_unit, &twa_t, &twa_t_ref, &twa_m, &twa_m_ref, &tws_n, &tws_n_unit, &tws_m, &tws_m_unit);
-    if ((r != 14) || (baro_m_unit != 'B') || (temp_unit != 'C')) {
+    int good_parse = 0;
+    int r = sscanf(buf, "$WIMDA,%f,%c,%f,%c,%f,%c,,,,,,,,,,,,,,", &baro_i, &baro_i_unit, &baro_m, &baro_m_unit, &temp, &temp_unit);
+    good_parse = (r == 6);
+    if (!good_parse) {
+      r = sscanf(buf, "$WIMDA,%f,%c,%f,%c,%f,%c,,,,,,,%f,%c,%f,%c,%f,%c,%f,%c", &baro_i, &baro_i_unit, &baro_m, &baro_m_unit, &temp, &temp_unit, &twa_t, &twa_t_ref, &twa_m, &twa_m_ref, &tws_n, &tws_n_unit, &tws_m, &tws_m_unit);
+      good_parse = (r == 14);
+    }
+    if (!good_parse || (baro_m_unit != 'B') || (temp_unit != 'C')) {
       lwsl_user("$WIMDA Bad Parse %d %c %c %s", r, baro_m_unit, temp_unit, buf);
     } else {
       airmar_last_samples.baro = baro_m * 1000.0;
