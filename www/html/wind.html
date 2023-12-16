@@ -674,15 +674,15 @@
       }
     </style>
     
-    <script src="local_config.js"></script>
-    <script src="dateformat.js"></script>
+    <script src="local_config.js" type="03a5b13335efb9dba951d047-text/javascript"></script>
+    <script src="dateformat.js" type="03a5b13335efb9dba951d047-text/javascript"></script>
       
-    <script src="https://d3js.org/d3.v7.js"></script>
+    <script src="https://d3js.org/d3.v7.js" type="03a5b13335efb9dba951d047-text/javascript"></script>
     
-    <script src="gauge.js"></script>
-    <script src="wind.js"></script>
+    <script src="gauge.js" type="03a5b13335efb9dba951d047-text/javascript"></script>
+    <script src="wind.js" type="03a5b13335efb9dba951d047-text/javascript"></script>
 
-    <script>
+    <script type="03a5b13335efb9dba951d047-text/javascript">
       const magnetic_declination = +13; // Actually 13.2 or so
       
       const recent_history_hours = 6;
@@ -702,6 +702,7 @@
       function vmax(v) { return Math.max(vh(v), vw(v)); }
 
       let windHistory = null;
+      var highWindMode =false;
       
       function stfycWindCallback(json) {
 	  const wind = JSON.parse(json);
@@ -713,6 +714,14 @@
 	      const dir_avg = wind.dir_avg.toFixed(0);
 	      anemometer.update(1, speed_avg);
 	      anemometer.update(0, gust);
+	      if (gust > highWindThreshhold) {
+		  highWindMode = true;
+		  highWindTime = Date.now();
+	      } else {
+		  if (highWindMode && (Date.now() > highWindTime + highWindDuration)) {
+		      highWindMode = false;
+		  }
+	      }
 	      d3.selectAll(".wind-span-stfyc").html(speed_avg);
 	      d3.selectAll(".gust-span-stfyc").html(gust);
 	      d3.selectAll(".awa-span-stfyc").html(dir);
@@ -720,7 +729,7 @@
 	  }
 	  if (wind.event == "airmar_history") {
 	      windHistory = wind.history;
-	      windPlotHistory("wind-history-recent", windHistory);
+	      windPlotHistory("wind-history-recent", windHistory, (highWindMode == true) ? 50 : 30);
 	      d3.selectAll(".baro-span-stfyc").html(wind.baro);
 	      d3.selectAll(".temperature-span-stfyc").html(wind.temp);
 	  }
@@ -740,7 +749,7 @@
 	      d3.selectAll(".tempest-baro-span-stfyc").html(wind.baro);
 	      d3.selectAll(".tempest-temperature-span-stfyc").html((wind.temp * (9.0 /5.0) + 32.0).toFixed(1));
 	      windHistory = wind.history;
-	      windPlotHistory("tempest-wind-history-recent", windHistory);
+	      windPlotHistory("tempest-wind-history-recent", windHistory, (highWindMode == true) ? 50 : 30);
 	  }
       }
 
@@ -833,7 +842,7 @@
     </script>
   </head>
 
-  <body id="body" class="wx" onload="initialize();" lang="en">
+  <script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="03a5b13335efb9dba951d047-|49"></script><body id="body" class="wx" onload="initialize();" lang="en">
     <div id="localWind" class="wx-scene localWind">
       <div class="wind-grid">
 
@@ -873,5 +882,5 @@
 	      
       </div>
     </div>
-  </body>
+  <script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="03a5b13335efb9dba951d047-|49" defer></script></body>
 </html>
