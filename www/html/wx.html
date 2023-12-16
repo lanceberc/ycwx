@@ -1112,15 +1112,16 @@
       // Tempest forecasts are implemented at objects
       let wfstfyc;
       let wftinsley;
-      
+
       const tempestFieldMap = {
-  	  "temp": { "field": "air_temperature", "convert": c2f, "precision": 1 },
-	  "pressure": {"field": "sea_level_pressure", "convert": mb2mb, "precision": 0 },
+	  //Don't use the Tempest for anything except Tinsley temperature now that the Airmar works and seems to be more accurate
+  	  "temperature": { "field": "air_temperature", "convert": c2f, "precision": 1 },
+	  //"pressure": {"field": "sea_level_pressure", "convert": mb2mb, "precision": 0 },
 	  //"wind": { "field": "wind_avg", "convert": m2kts, "precision": 1 },
 	  //"gust": { "field": "wind_gust", "convert": m2kts, "precision": 0 },
-	  "direction": {"field": "wind_direction", "convert": t2m, "precision": 0 },
+	  //"direction": {"field": "wind_direction", "convert": t2m, "precision": 0 },
       };
-
+      
       const tempestStations = {
 	  "St. Francis Yacht Club": {
 	      "nickname": "stfyc",
@@ -1218,13 +1219,14 @@
 			  for (const [field, f] of Object.entries(tempestFieldMap)) {
 			      if (f.field in obs) {
 				  let val = f.convert(obs[f.field]).toFixed(f.precision);
+				  console.log("fetchTempestCurrent setting " + "." + field + "-span-" + tempestStations[station].nickname + " to " + val);
 				  d3.selectAll("." + field + "-span-" + tempestStations[station].nickname).html(val);
 				  // Kludge - update the anemometer gust value
 				  /* Wind now cumes from Race Deck anemometer
-				  if (tempestStations[station].nickname == "stfyc" && field == "gust") {
-				      console.log("fetchTempestCurrent " + station + " update gust " + val);
-				      anemometer.update(0, val);
-				  }
+				     if (tempestStations[station].nickname == "stfyc" && field == "gust") {
+				     console.log("fetchTempestCurrent " + station + " update gust " + val);
+				     anemometer.update(0, val);
+				     }
 				  */
 			      }
 			  }
@@ -1540,14 +1542,17 @@
 	      now = Math.floor(Date.now() / 1000);
 	      if (now < ts + tempestValidTimespan) {
 		  for (const [f, i] of Object.entries(obs_stMap)) {
-		      const fm = tempestFieldMap[f];
-		      const val = fm.convert(message.obs[0][i]).toFixed(fm.precision);
-		      d3.selectAll("." + f + "-span-" + nickname).html(val);
-		      /*
-			if (nickname == "stfyc" && f == "gust") { // Kludge
-			anemometer.update(0, val);
-			}
-		      */
+		      if (f in tempestFieldMap) {
+			  const fm = tempestFieldMap[f];
+			  const val = fm.convert(message.obs[0][i]).toFixed(fm.precision);
+			  console.log("tempestMessage Setting " + "." + f + "-span-" + nickname + " to " + val);
+			  d3.selectAll("." + f + "-span-" + nickname).html(val);
+			  /*
+			    if (nickname == "stfyc" && f == "gust") { // Kludge
+			    anemometer.update(0, val);
+			    }
+			  */
+		      }
 		  }
 	      } else {
 		  nts = new Date(ts * 1000);
@@ -1566,10 +1571,12 @@
 		  anemometer.update(1, wind);
 	      }
 	      */
-	      fm = tempestFieldMap["direction"];
-	      let direction = fm.convert(message.ob[2]).toFixed(fm.precision);
-	      //d3.selectAll(".wind-span-" + nickname).html(wind);
-	      d3.selectAll(".tempest-direction-span-" + nickname).html(direction);
+	      if ("direction" in tempestFieldMap) {
+		  fm = tempestFieldMap["direction"];
+		  let direction = fm.convert(message.ob[2]).toFixed(fm.precision);
+		  //d3.selectAll(".wind-span-" + nickname).html(wind);
+		  d3.selectAll(".tempest-direction-span-" + nickname).html(direction);
+	      }
 	  } else if (message.type == "connection_opened") {
 	  } else {
 	      console.log("tempestMessage unknown message type: " + message.type);
@@ -1645,8 +1652,9 @@
 	  if (wind.event == "airmar_history") {
 	      windHistory = wind.history;
 	      windPlotHistory("wind-history-recent", windHistory, (highWindMode == true) ? 50 : 30);
-	      d3.selectAll(".baro-span-stfyc").html(wind.baro);
-	      d3.selectAll(".temperature-span-stfyc").html(wind.temp);
+	      d3.selectAll(".baro-span-stfyc").html(wind.baro.toFixed(0));
+	      console.log("Setting .temp-span-stfyc to " + wind.temp);
+	      d3.selectAll(".temp-span-stfyc").html(wind.temp);
 	  }
 
 	  if (wind.event == "tempest_update") {
@@ -2728,13 +2736,13 @@
 	  Wind&nbsp;<span class="direction-avg-span-stfyc"></span>&#176M&nbsp;
 	  @&nbsp;<span class="wind-span-stfyc"></span>&nbsp;
 	  G&nbsp;<span class="gust-span-stfyc"></span>&nbsp;
-	  <span id="stfyc-tempest-baro" class="tempest-baro-span-stfyc"></span>mb&nbsp;
-	  Tinsley:&nbsp;<span id="tinsley-temp" class="temp-span-tinsley"></span>&#8457;&nbsp;&nbsp;
+	  <span class="baro-span-stfyc"></span>mb&nbsp;
+	  Tinsley:&nbsp;<span class="temperature-span-tinsley"></span>&#8457;&nbsp;&nbsp;
 	</div>
 	<div class="local-number wx-header-2">
 	  <div>
 	    StFYC:&nbsp;<span class="temp-span-stfyc"></span>&#8457;&nbsp;
-	    <span class="tempest-baro-span-stfyc"></span>mb&nbsp;
+	    <span class="baro-span-stfyc"></span>mb&nbsp;
 	    Tinsley:&nbsp;<span class="temp-span-tinsley"></span>&#8457;
 	  </div>
 	  <div>
@@ -2891,7 +2899,8 @@
 	  </div>
 	  
 	  <div id="pacificSurfaceAnalysis" class="wx-scene wx-image">
-	    <div class="wx-cell">
+	    <!-- <div class="wx-cell"> -->
+	    <div class="ol-flex-fit">
 	      <img class="wx-image update5" alt="Pacific Surface Analysis" src="https://ocean.weather.gov/P_sfc_full_ocean_color.png">
 	    </div>
 	  </div>
@@ -2899,7 +2908,10 @@
 	    <img class="wx-image update5" alt="West Coast + Offshore Satellite image" src="data/NOAA/overlay/WestCoastGLM/latest.jpg">
 	  </div>
 	  <div id="goes-PACUS" class="wx-scene">
-	    <img class="wx-image update5" alt="PACUS image" src="data/NOAA/GOES/NESDIS_CONUS-West_GLM_1k/latest.jpg">
+	    <div class="ol-flex-fit">
+	      <div id="PACUSLabel" class="ol-label">Latest GOES-West PACUS Image w/ Lightning</div>
+	      <img class="wx-image update5" alt="PACUS image" src="data/NOAA/GOES/NESDIS_CONUS-West_GLM_1k/latest.jpg">
+	    </div>
 	  </div>
 	  <div id="overlay-BayDelta" class="wx-scene">
 	    <img class="wx-image update5" alt="Bay/Delta Satellite image" src="data/NOAA/overlay/BayDelta500m/latest.jpg">
@@ -2941,7 +2953,7 @@
 
 <!--
 	  <div id="currentMapScene" class="wx-scene">
-	    <div id="currentLabel" class="label"></div>
+	    <div id="currentLabel" class="label">Operational Forecast System Currents</div>
 	    <div id="currentMap" class="ol-flex-fit" width="1280" height="720"></div>
 	  </div>
 -->
@@ -2984,8 +2996,7 @@
 
 	  <div id="cloudTopsScene" class="wx-scene">
 	    <div id="cloudTops" class="ol-flex-fit" width="1280" height="720">
-	      <div id="cloudTopsLabel" class="ol-label">
-	      </div>
+	      <div id="cloudTopsLabel" class="ol-label">GOES-East Infra-red Cloud Tops</div>
 	    </div>
 	  </div>
 
