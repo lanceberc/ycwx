@@ -106,7 +106,8 @@ char *airmarfn;
 #define SENSOR_OFFSET -25.0
 
 /* should the buffer be in the vhd? */
-#define AIRMAR_RECENT 120
+#define AIRMAR_RECENT 180
+#define ONE_MINUTE 60
 
 struct {
   unsigned int sec;
@@ -114,7 +115,7 @@ struct {
   double dir;
 } airmar_recent[AIRMAR_RECENT];
 
-char airmar_wind_msgbuf[256];
+char airmar_wind_msgbuf[MSGBUF]; // Much larger than it needs to be - should be 256 bytes or so.
 char *airmar_wind_msg;
 char airmar_wind_len;
 int airmar_recent_idx = 0;
@@ -130,6 +131,14 @@ float airmar_high_gust = 0.0;
 unsigned long airmar_last_good_sample = 0;
 int airmar_bad_read = 0;
 unsigned long sensord_start = 0;
+
+#define AIRMAR_DEBUG_THRESHHOLD 0.0
+//#define AIRMAR_DEBUG 1
+
+char airmar_debug_last_highwind_sentence[MSGBUF]; // debugging - save last high-wind sentence
+int airmar_debug_last_highwind_idx;
+float airmar_debug_last_highwind_speed;
+long airmar_debug_last_highwind_sec;
 
 /*#define AIRMAR_HIST_ENTRY_JSON "{\"ts\": %u, \"aws\": %4.1f, \"gust\": %4.1f, \"awa\": %5.1f},"*/
 #define AIRMAR_HIST_ENTRY_JSON "{\"sec\": %u, \"speed\": %4.1f, \"gust\": %4.1f, \"dir\": %5.1f},"
@@ -422,10 +431,12 @@ tempest_process(struct lws *wsi, void *user)
     tempest_hist_last_minute = this_minute;
     lwsl_user("tempest_process new minute seconds %u index %d ", tv.tv_sec, index);
 
+    /*
     unsigned long altm = airmar_last_timestamp / 60;
     if (this_minute > (altm + 1)) {
       lwsl_warn("no airmar data for %d minutes", this_minute - altm);
     }
+    */
   }
 
   if (new_publication & SUBSCRIBE_TEMPEST_WIND) {
@@ -704,7 +715,7 @@ airmar_process(struct lws *wsi, void *user)
   if ((n = (int)read(vhd->airmar_fd, buf, sizeof(buf))) <= 0) {
     lwsl_err("Reading from %s failed %d: %s\n", airmarfn, errno, strerror(errno));
     airmar_bad_read++;
-    return 1;
+    return 0;
   }
     
   buf[n] = 0;
@@ -736,6 +747,14 @@ airmar_process(struct lws *wsi, void *user)
    * $WIMWD,314.1,T,299.1,M,4.1,N,2.1,M*58
    * $WIMWV,199.4,R,4.0,N,A*22
    * $WIMWV,200.8,T,4.0,N,A*2B
+   */
+
+  /* Sentences from the Airmar 110WX
+   * $WIMDA,29.6983,I,1.0057,B,13.2,C,,,,,,,,,,,,,,*3C
+   * $YXXDR,C,,C,WCHR,C,,C,WCHT,C,,C,HINX,P,1.0057,B,STNP*48
+   * $WIMWV,234.6,R,5.8,N,A*2D
+   * $WIMWV,248.0,R,5.4,N,A*2C
+   * $WIMDA,29.6983,I,1.0057,B,13.2,C,,,,,,,,,,,,,,*3C
    */
 
   speed = -1;
@@ -788,7 +807,7 @@ airmar_process(struct lws *wsi, void *user)
 	new_publication |= SUBSCRIBE_AIRMAR_WIND;
       }
 
-    }else {
+    } else {
       lwsl_user("$WIMWV Bad Parse %d %c %c %s", r, awa_ref, aws_unit, buf);
     }
   }
@@ -815,9 +834,15 @@ airmar_process(struct lws *wsi, void *user)
   // Return if this wasn't the sentence we're using for wind source
   if (new_publication == SUBSCRIBE_NONE) return 0;
 
-  //lwsl_user("airmar dir %3.0f @ %.1f\n", dir, speed);
+  //lwsl_notice("airmar dir %3.0f @ %4.1f %7.1fmb %4.1fF\n", dir, speed, airmar_last_samples.baro, airmar_last_samples.temp);
 
   airmar_recent_idx = (airmar_recent_idx + 1) % AIRMAR_RECENT;
+
+#ifdef AIRMAR_DEBUG
+  long airmar_last_sec = airmar_recent[airmar_recent_idx].sec;
+  lwsl_notice("Replacing entry [%d] %d seconds old", airmar_recent_idx, this_second - airmar_last_sec);
+#endif
+  
   airmar_recent[airmar_recent_idx].sec = this_second;
   airmar_recent[airmar_recent_idx].speed = speed;
   airmar_recent[airmar_recent_idx].dir = dir;
@@ -831,11 +856,23 @@ airmar_process(struct lws *wsi, void *user)
   float aws_avg = 0.0, gust = 0.0, awa_avg = 0.0, awa_bias = 0.0;
   int south_count = 0;
   int sample_count = 0;
+  int gust_idx;
+  long gust_age;
+
   for (int i = 0; i < AIRMAR_RECENT; i++) {
-    if (airmar_recent[i].sec <= (this_second - 120)) continue;
+    if (airmar_recent[i].sec <= (this_second - ONE_MINUTE)) continue;
     sample_count++;
     aws_avg += airmar_recent[i].speed;
-    gust = (airmar_recent[i].speed > gust) ? airmar_recent[i].speed : gust;
+
+    //gust = (airmar_recent[i].speed > gust) ? airmar_recent[i].speed : gust;
+    if (airmar_recent[i].speed > gust) {
+#ifdef AIRMAR_DEBUG
+      lwsl_notice("Gust entry %3d (%3d ago) %4.1f > %4.1f", i, this_second - airmar_recent[i].sec, airmar_recent[i].speed, gust);
+#endif
+      gust = airmar_recent[i].speed;
+      gust_idx = i;
+      gust_age = this_second - airmar_recent[i].sec;
+    }
 
     float s = airmar_recent[i].dir;
     awa_avg += s;
@@ -843,6 +880,24 @@ airmar_process(struct lws *wsi, void *user)
     if ((s > 90.0) && (s <= 270.0)) south_count++;
   }
   aws_avg /= sample_count;
+
+  // Debugging - if this new sample is the highest of the most recent, save its values including the sentence
+  if (gust_idx == airmar_recent_idx) {
+#ifdef AIRMAR_DEBUG
+    lwsl_notice("New high gust index %d sample count %d", gust_idx, sample_count);
+#endif
+    airmar_debug_last_highwind_idx = gust_idx;
+    airmar_debug_last_highwind_sec = this_second;
+    airmar_debug_last_highwind_speed = speed;
+    strcpy(airmar_debug_last_highwind_sentence, (const char *)&buf);
+    if (!strncmp(&airmar_debug_last_highwind_sentence[strlen(airmar_debug_last_highwind_sentence) - 2], "\r\n", 2)) {
+      airmar_debug_last_highwind_sentence[strlen(airmar_debug_last_highwind_sentence) - 2] = 0;
+    }
+  } else {
+#ifdef AIRMAR_DEBUG
+    lwsl_notice("Old high gust index %d sample_count %d", gust_idx, sample_count);
+#endif
+    }
 
   if (south_count > (sample_count/2))
     awa_avg /= sample_count; /* More than half are south-ish */
@@ -854,8 +909,13 @@ airmar_process(struct lws *wsi, void *user)
 
   airmar_high_gust = (gust > airmar_high_gust) ? gust : airmar_high_gust;
   airmar_last_good_sample = this_second;
-  
-  sprintf(airmar_wind_msg, "{\"event\": \"airmar_update\", \"speed\": %4.1f, \"speed_avg\": %4.1f, \"gust\": %4.1f, \"dir\": %3.0f, \"dir_avg\": %3.0f}", speed, aws_avg, gust, dir, awa_avg);
+
+  if ((this_second - airmar_debug_last_highwind_sec < ONE_MINUTE) &&
+      (airmar_debug_last_highwind_speed > AIRMAR_DEBUG_THRESHHOLD)) {
+    sprintf(airmar_wind_msg, "{\"event\": \"airmar_update\", \"speed\": %4.1f, \"speed_avg\": %4.1f, \"gust\": %4.1f, \"dir\": %3.0f, \"dir_avg\": %3.0f, \"gust_idx\": %d, \"gust_age\": %d, \"debug_age\": %3d, \"debug_idx\": %3d, \"debug_speed\": %4.1f, \"debug_sentence\": \"%s\"}", speed, aws_avg, gust, dir, awa_avg, gust_idx, gust_age, this_second - airmar_debug_last_highwind_sec, airmar_debug_last_highwind_idx, airmar_debug_last_highwind_speed, airmar_debug_last_highwind_sentence);
+  } else {
+    sprintf(airmar_wind_msg, "{\"event\": \"airmar_update\", \"speed\": %4.1f, \"speed_avg\": %4.1f, \"gust\": %4.1f, \"dir\": %3.0f, \"dir_avg\": %3.0f, \"gust_idx\": %d, \"gust_age\": %d}", speed, aws_avg, gust, dir, awa_avg, gust_idx, gust_age);
+  }
   airmar_wind_len = strlen(airmar_wind_msg);
 
   //lwsl_user("airmar samples %d south_count %d %s\n", sample_count, south_count, airmar_wind_msg);
