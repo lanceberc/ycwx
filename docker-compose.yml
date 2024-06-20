@@ -1,0 +1,15 @@
+version: '2.4'
+services:
+
+    ycwx:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      container_name: ycwx
+      volumes:
+      - ./:/docker/
+      environment:
+        - "PS1=[ycwx $$(whoami):$$(pwd)] $$ "
+      ports:
+        - 8082:80
+        - 5678:5678

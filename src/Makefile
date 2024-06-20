@@ -4,8 +4,9 @@ sensord: sensord.c
 	cc -g -O -o sensord sensord.c -lwebsockets -lcjson
 
 clean:
-	rm airmard sensord tempestd
+	rm sensord
 
 install: sensord
-	-mv ~/bin/sensord ~/bin/sensord.running
+	mkdir -p ~/bin
+	touch ~/bin/sensord && mv ~/bin/sensord ~/bin/sensord.running
 	cp sensord ~/bin
