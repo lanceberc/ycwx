@@ -157,6 +157,8 @@ regions["CA-GFS"] = { "top": 42.0, "left": -136.0, "right": -112.0, "bottom": 30
 regions["LIS"] = { "top": 41.5, "left": -74.2, "right": -71.5, "bottom": 40.50, "forecasts": 19, "model": "HRRR", "vars": ["UGRD", "VGRD", "GUST"] }
 regions["NYBOS"] = { "top": 42.6, "left": -74.2, "right": -70.00, "bottom": 40.00, "forecasts": 19, "model": "HRRR", "vars": ["UGRD", "VGRD", "GUST"] }
 regions["NYBOS-NAM"] = { "top": 42.6, "left": -74.2, "right": -70.00, "bottom": 40.00, "forecasts": 49, "model": "NAM", "vars": ["UGRD", "VGRD", "GUST"] }
+regions["Jeddah"] = { "top": 26.0, "left": 35, "right": 43, "bottom": 18.0, "forecasts": 41, "model": "GFS", "vars": ["UGRD", "VGRD", "GUST"] }
+
 # A certificate used by NESDIS or Python expired changed 2021-10;  I've tried updating the certificates
 # Python uses by updating the conda environment but it didn't fix the problem.
 # We do something stupid to work around this - if there's a verification error disable verification for
@@ -294,7 +296,7 @@ def fetchNOMADS(reg, ts, force):
                         retcode = subprocess.check_call(cmd, shell=True)
                         
                         # If this was the last forecast for a model run
-                        logging.info("Downloaded forecast %d of %d" % (forecasthour + 1, r["forecasts"]))
+                        logging.info("Downloaded forecast %d of %d" % (forecast + 1, r["forecasts"]))
                         if forecast == r["forecasts"] - 1:
                             latest = "%s/%s/%s" % (tifroot, reg, "latest.json")
                             try:

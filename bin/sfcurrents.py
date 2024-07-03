@@ -527,7 +527,7 @@ if __name__ == '__main__':
     # tide -l "Golden Gate Bridge, 0.46 nmi E of (depth 30 ft), California Current" -in y -b "2022-07-05 00:00" -e "2022-07-07 00:00"
     # tide -l "Golden Gate Bridge, 0.46 nmi E of (depth 30 ft), California Current" -in y -b "2022-07-05 00:00" -e "2022-07-07 00:00" -m r
 
-    cmd = 'tide -l "LOCATION" -in y -b "BEGIN" -e "END" -m r -s 00:06'
+    cmd = 'export HFILE_PATH=/usr/local/share/xtide; tide -l "LOCATION" -in y -b "BEGIN" -e "END" -m r -s 00:06'
     cmd = cmd.replace("LOCATION", args.location)
     cmd = cmd.replace("BEGIN", begin_date)
     cmd = cmd.replace("END", end_date)
@@ -567,7 +567,7 @@ if __name__ == '__main__':
                 
     logging.debug("Points %r" % (current_points))
     
-    cmd = 'tide -l "LOCATION" -b "BEGIN" -e "END" -in y -df "%Y-%m-%d" -tf "%H:%M"'
+    cmd = 'export HFILE_PATH=/usr/local/share/xtide; tide -l "LOCATION" -b "BEGIN" -e "END" -in y -df "%Y-%m-%d" -tf "%H:%M"'
     cmd = cmd.replace("LOCATION", args.location)
     cmd = cmd.replace("BEGIN", begin_date)
     cmd = cmd.replace("END", end_date)

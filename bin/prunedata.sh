@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo `date` "Prune Data"
+echo "Prune Data"
 df /
 bash /home/stfyc/bin/prunemp4.sh
 
@@ -8,7 +8,6 @@ bash /home/stfyc/bin/prunemp4.sh
 find /home/stfyc/www/html/data/SFBOFS -ctime +1 | xargs rm
 find /home/stfyc/www/html/data/SFBOFS -ctime +1 -type d -empty | xargs rmdir
 df /
-echo `date` "Prune Data Complete"
 
 if [ -d /wx ]
 then

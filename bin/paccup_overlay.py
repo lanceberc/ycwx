@@ -407,8 +407,8 @@ regions["EastPacificGLM"] = {
     ],
 }
 
-regions["PacCup"] = {
-    "arg": "paccup",
+regions["PacCup2020"] = {
+    "arg": "paccup2020",
     "tz": "PDT",
     "start": "2020-07-02T18:00:00 +0000",
     "end": "2020-07-12T23:04:00 +0000",
@@ -431,6 +431,58 @@ regions["PacCup"] = {
     "size": (1280, 720),
     "gpxfn": "2020-07-12T1600_fogmachine.gpx",
     "title": "fogmachine - Virtual Pacific Cup",
+    "POIs": [
+        ((-122.4797, 37.8182), "Golden Gate"),
+        ((-120.4532, 34.4424), "Pt Conception"),
+        ((-157.7643, 21.4621), "Kaneohe"),
+    ],
+}
+
+regions["CAHI"] = {
+    "arg": "CAHI",
+    "tz": "America/Los_Angeles",
+    "start": "2024-06-29T18:00:00 +0000",
+    "end": "2024-08-01T00:00:00 +0000",
+    "area": (-161.00, 19.00, -117.00, 40.00), # lat/long of ll, ur of image
+    "satellite": "GOES-18",
+    #"satroot": "GOES/NESDIS_GOES-West",
+    "satroot": "GOES/NESDIS_CONUS-West-500m",
+    "res": "500m",
+    "sector": "CONUS",
+    #"satroot": "GOES/NESDIS_CONUS-West",
+    #"res": "1k",
+    #"sector": "CONUS",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "size": FullHD,
+    #"gpxfn": "2020-07-12T1600_fogmachine.gpx",
+    "title": "California - Hawaii",
+    "POIs": [
+        ((-122.4797, 37.8182), "Golden Gate"),
+        ((-120.4532, 34.4424), "Pt Conception"),
+        ((-157.7643, 21.4621), "Kaneohe"),
+    ],
+}
+
+regions["CAHI-GLM"] = {
+    "arg": "CAHI-GLM",
+    "tz": "America/Los_Angeles",
+    "start": "2024-06-29T18:00:00 +0000",
+    "end": "2024-08-01T00:00:00 +0000",
+    "area": (-161.00, 19.00, -117.00, 40.00), # lat/long of ll, ur of image
+    "satellite": "GOES-18",
+    #"satroot": "GOES/NESDIS_GOES-West",
+    "satroot": "GOES/NESDIS_GOES-West_GLM_2k",
+    "res": "2k",
+    "sector": "FD",
+    #"satroot": "GOES/NESDIS_CONUS-West",
+    #"res": "1k",
+    #"sector": "CONUS",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "size": FullHD,
+    #"gpxfn": "2020-07-12T1600_fogmachine.gpx",
+    "title": "California - Hawaii",
     "POIs": [
         ((-122.4797, 37.8182), "Golden Gate"),
         ((-120.4532, 34.4424), "Pt Conception"),
@@ -937,6 +989,90 @@ regions["EastSmoke"] = {
     "satroot": "GOES/NESDIS_CONUS-East",
     "res": "1k",
     "sector": "CONUS",
+    "model": "HRRR",
+    "gribroot": "NOAA/HRRR/cahrrr",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "barbreduce": 20,
+    "barblen": 4.0,
+    "alpha": 30.0,
+    "size": (1920, 1080),
+    #"lonlat": "auto",
+    "POIs": [
+    ],
+}
+
+regions["EastEclipse"] = {
+    "arg": "easteclipse",
+    "title": "Eclipse",
+    "tz": "America/Los_Angeles",
+    "start": "2024-04-08T00:00:00 -0700",
+    "end":   "2100-03-01T00:00:00 -0700",
+    #"night_exclude": ("0300", "1400"),
+    #37.755611, -88.614887
+    #49.39155526666467, -59.57910196142553
+    "area": (-110.00, 20.00, -50.00, 49.00), # lat/long of ll, ur
+    "adjust": "bottom", # CONUS side
+    "satellite": "GOES-16",
+    "satroot": "GOES/NESDIS_CONUS-East",
+    "res": "1k",
+    "sector": "CONUS",
+    "model": "HRRR",
+    "gribroot": "NOAA/HRRR/cahrrr",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "barbreduce": 20,
+    "barblen": 4.0,
+    "alpha": 30.0,
+    "size": (1920, 1080),
+    #"lonlat": "auto",
+    "POIs": [
+    ],
+}
+
+regions["2024_Eclipse"] = {
+    "arg": "eclipse",
+    "title": "Solar Eclipse",
+    "tz": "America/Los_Angeles",
+    "start": "2024-04-08T09:00:00 -0700",
+    "end":   "2024-04-08T20:50:00 -0700",
+    #"night_exclude": ("0300", "1400"),
+    #37.755611, -88.614887
+    #49.39155526666467, -59.57910196142553
+    "area": (-125.00, 20.00, -65.00, 45.00), # lat/long of ll, ur
+    "adjust": "bottom", # CONUS side
+    "satellite": "GOES-16",
+    "satroot": "GOES/NESDIS_CONUS-East",
+    "res": "1k",
+    "sector": "CONUS",
+    "model": "HRRR",
+    "gribroot": "NOAA/HRRR/cahrrr",
+    "srs": "anti_mercator",
+    "wind": "none",
+    "barbreduce": 20,
+    "barblen": 4.0,
+    "alpha": 30.0,
+    "size": (1920, 1080),
+    #"lonlat": "auto",
+    "POIs": [
+    ],
+}
+
+regions["2024-SolarEclipse-FD"] = {
+    "arg": "eclipsefd",
+    "title": "Solar Eclipse",
+    "tz": "America/Los_Angeles",
+    "start": "2024-04-08T16:00:00 +0000",
+    "end":   "2100-03-01T00:00:00 -0700",
+    #"night_exclude": ("0300", "1400"),
+    #37.755611, -88.614887
+    #49.39155526666467, -59.57910196142553
+    "area": (-140.00, 20.00, -50.00, 49.00), # lat/long of ll, ur
+    "adjust": "bottom", # CONUS side
+    "satellite": "GOES-16",
+    "satroot": "GOES/NESDIS_GOES-East",
+    "res": "2k",
+    "sector": "FD",
     "model": "HRRR",
     "gribroot": "NOAA/HRRR/cahrrr",
     "srs": "anti_mercator",

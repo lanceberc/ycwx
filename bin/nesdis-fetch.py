@@ -99,6 +99,7 @@ imageProcess["CONUS-West-500m"] = [
     "%s/bin/paccup_overlay.py -region baydelta500m -since 1h" % (binroot),
     "%s/bin/paccup_overlay.py -region eddy500mhrrr -since 3d" % (binroot),
     "%s/bin/paccup_overlay.py -region eddy500m -since 1h" % (binroot),
+    "%s/bin/paccup_overlay.py -region CAHI -since 1d" % (binroot),
 ]
 
 imageProcess["GOES-West"] = [
@@ -108,18 +109,18 @@ imageProcess["GOES-West"] = [
 
 imageProcess["CONUS-West_GLM_1k"] = [
     "%s/bin/paccup_overlay.py -region baydeltaglm -since 30m" % (binroot),
+    "%s/bin/paccup_overlay.py -region westcoastglm -since 4d" % (binroot),
 ]
 if hasWx:
     imageProcess["CONUS-West_GLM_1k"] = [
         #"%s/bin/paccup_overlay.py -region baydeltaglm" % (binroot),
-        "%s/bin/paccup_overlay.py -region westcoastglm" % (binroot),
         "%s/bin/paccup_overlay.py -region cacoast" % (binroot),
         "%s/bin/paccup_overlay.py -region eddy -since 8d" % (binroot),
     ]
     
 imageProcess["GOES-West_GLM_2k"] = [
-    #"%s/bin/paccup_overlay.py -region eastpacificglm" % (binroot),
-    "%s/bin/paccup_overlay.py -region westcoastglm" % (binroot),
+    "%s/bin/paccup_overlay.py -region eastpacificglm" % (binroot),
+    #"%s/bin/paccup_overlay.py -region westcoastglm" % (binroot),
     "%s/bin/paccup_overlay.py -region pacific" % (binroot),
 ]
 

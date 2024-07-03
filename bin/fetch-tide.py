@@ -181,7 +181,7 @@ if __name__ == '__main__':
     now += datetime.timedelta(days = 2)
     end_date = now.strftime("%Y-%m-%d 00:00")
     
-    cmd = '/usr/local/bin/tide -l "LOCATION" -in y -b "BEGIN" -e "END" -m r -s 00:06'
+    cmd = 'export HFILE_PATH=/usr/local/share/xtide; /usr/local/bin/tide -l "LOCATION" -in y -b "BEGIN" -e "END" -m r -s 00:06'
     cmd = cmd.replace("LOCATION", location)
     cmd = cmd.replace("BEGIN", begin_date)
     cmd = cmd.replace("END", end_date)
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     now += datetime.timedelta(days = 2)
     end_date = now.strftime("%Y-%m-%d 00:00")
     
-    cmd = '/usr/local/bin/tide -l "LOCATION" -b "BEGIN" -e "END" -in y -df "%Y-%m-%d" -tf "%H:%M"'
+    cmd = 'export HFILE_PATH=/usr/local/share/xtide; /usr/local/bin/tide -l "LOCATION" -b "BEGIN" -e "END" -in y -df "%Y-%m-%d" -tf "%H:%M"'
     cmd = cmd.replace("LOCATION", location)
     cmd = cmd.replace("BEGIN", begin_date)
     cmd = cmd.replace("END", end_date)

@@ -69,6 +69,14 @@ regions = {
         "goes": "16",
         "prefix": "EastSmoke",
     },
+    "eclipse": {
+        "goes": "16",
+        "prefix": "2024-SolarEclipse",
+    },
+    "CAHI" : {
+        "goes": "18",
+        "prefix": "CAHI",
+    },
 }
 
 def find_sources(region):
@@ -243,5 +251,5 @@ if __name__ == '__main__':
                 f.write('    "fn": "%s"\n' % (ofile));
                 f.write("}\n");
 
-    os.remove("%s-files.txt" % (o))
+    #os.remove("%s-files.txt" % (o))
     logging.info("Output in %s" % (ofile))
