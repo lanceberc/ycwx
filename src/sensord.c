@@ -20,7 +20,11 @@
 
 #define HAS_TEMPEST 1
 #define HAS_AIRMAR 1
-// Until the Airmar is working again, don't bother checking and trying to reboot it
+
+// Our sensor is not pointed north - add SENSOR_OFFSET to each reading
+#define SENSOR_OFFSET -25.0
+
+// The hardware for power-cycling the Airmar using the Pi's IO ports has been removed
 #define CHECK_AIRMAR 0
 
 // 8000 + 0183 - why not?
@@ -101,9 +105,6 @@ char *airmarfn;
 #define AIRMAR_APPARENT 2
 
 #define SOURCE AIRMAR_APPARENT
-
-// Our sensor is not pointed north - add SENSOR_OFFSET to each reading
-#define SENSOR_OFFSET -25.0
 
 /* should the buffer be in the vhd? */
 #define AIRMAR_RECENT 120
@@ -219,7 +220,7 @@ unsigned int tempest_init(struct lws *wsi, void *user)
   }
   tempest_wind_msg = &tempest_wind_msgbuf[LWS_PRE];
   tempest_hist_msg = &tempest_hist_msgbuf[LWS_PRE];
-  lwsl_notice("LWS_CALLBACK_PROTOCOL_INIT: tempest socket fd %d\n", fd);
+  lwsl_notice("tempest_init: tempest socket fd %d\n", fd);
 
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -683,7 +684,7 @@ unsigned int airmar_init(struct lws *wsi, void *user)
     
     return 1;
   }
-  lwsl_notice("LWS_CALLBACK_PROTOCOL_INIT: airmar %s socket fd %d\n", airmarfn, fd);
+  lwsl_notice("airmar_init: airmar %s socket fd %d\n", airmarfn, fd);
   return 0;
 }
 
@@ -721,12 +722,14 @@ airmar_process(struct lws *wsi, void *user)
   unsigned int this_minute = this_second / 60;
   airmar_last_timestamp = this_second;
     
-  if (airmar_last_timestamp - airmar_first_timestamp < 5) {
+  if (airmar_last_timestamp - airmar_first_timestamp < 2) {
+    /* print first N seconds of data at log level "notice" */
     lwsl_notice("airmar_process read (%d) %s", n, buf);
     lwsl_hexdump_level(LLL_NOTICE, buf, (unsigned int)n);
   } else {
-    lwsl_user("airmar_process read (%d) %s", n, buf);
-    lwsl_hexdump_level(LLL_DEBUG, buf, (unsigned int)n);
+    /* print later input at log level "debug" */
+    //lwsl_user("airmar_process read (%d) %s", n, buf);
+    //lwsl_hexdump_level(LLL_DEBUG, buf, (unsigned int)n);
   }
   
   /* Regular sentences from the Airmar PB-200
@@ -939,7 +942,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 
   switch (reason) {
   case LWS_CALLBACK_PROTOCOL_INIT:
-    lwsl_user("LWS_CALLBACK_PROTOCOL_INIT: wsi %p\n", wsi);
+    lwsl_notice("LWS_CALLBACK_PROTOCOL_INIT: wsi %p\n", wsi);
     vhd = lws_protocol_vh_priv_zalloc(lws_get_vhost(wsi),
 				      lws_get_protocol(wsi),
 				      sizeof(struct per_vhost_data__wind));
@@ -953,6 +956,7 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
     break;
 
   case LWS_CALLBACK_PROTOCOL_DESTROY:
+    lwsl_notice("LWS_CALLBACK_PROTOCAL_DESTROY: wsi %p\n", wsi);
     if (vhd->tempest_sock != -1)
       close(vhd->tempest_sock);
     if (vhd->airmar_fd != -1)
@@ -961,14 +965,15 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 
   case LWS_CALLBACK_ESTABLISHED:
     /* add ourselves to the list of websocket clients */
-    lwsl_user("LWS_CALLBACK_ESTABLISHED: wsi %p\n", wsi);
+    lwsl_notice("LWS_CALLBACK_ESTABLISHED: wsi %p\n", wsi);
     lws_ll_fwd_insert(pss, pss_list, vhd->pss_list);
     pss->wsi = wsi;
+    //pss->last = vhd->current;
     break;
 
   case LWS_CALLBACK_CLOSED:
     /* remove ourselves from the client list */
-    lwsl_user("LWS_CALLBACK_CLOSED: wsi %p\n", wsi);
+    lwsl_notice("LWS_CALLBACK_CLOSED: wsi %p\n", wsi);
     lws_ll_fwd_remove(struct per_session_data__wind, pss_list, pss, vhd->pss_list);
     break;
 
@@ -1030,8 +1035,10 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 
   case LWS_CALLBACK_RECEIVE:
     /* A client is sending us something - probably a subscription request */
-    //((char *)in)[len] = 0; // Not zero terminated!
-    lwsl_debug("LWS_CALLBACK_RECEIVE cJSON (len %d) %s\n", len, in);
+    //((char *)in)[len+1] = 0; // Not zero terminated! - But adding a \0 breaks libwebsockets somehow.
+    // Could copy to a static buffer and zero terminate it I suppose
+    //lwsl_debug("LWS_CALLBACK_RECEIVE cJSON (len %d) %s\n", len, in);
+    lwsl_notice("LWS_CALLBACK_RECEIVE cJSON (len %d) %s\n", len, in);
     json = cJSON_ParseWithLength(in, len);
     if (json == NULL) {
       lwsl_err("LWS_CALLBACK_RECEIVE cJSON couldn't parse (len %d) %s\n", len, in);
@@ -1171,9 +1178,16 @@ callback_wind(struct lws *wsi, enum lws_callback_reasons reason,
 }
 
 static struct lws_protocols protocols[] = {
-  { "wind", callback_wind, sizeof(struct per_session_data__wind), 0, 0, NULL, 0 },
+  /*  { "wind", callback_wind, sizeof(struct per_session_data__wind), 0, 0, NULL, 0 }, */
+  { "wind", callback_wind, sizeof(struct per_session_data__wind), 65535, 0, NULL, 0 },
   LWS_PROTOCOL_LIST_TERM
 };
+
+/*
+ * this sets a per-vhost, per-protocol option name:value pair
+ * the effect is to set this protocol to be the default one for the vhost,
+ * ie, selected if no Protocol: header is sent with the ws upgrade.
+ */
 
 static int interrupted;
 
@@ -1224,8 +1238,8 @@ int main(int argc, const char **argv)
     logs = atoi(p);
 
   lws_set_log_level(logs, NULL);
-  lwsl_user("LWS Serve up wind from WeatherFlow Tempest & Airmar NMEA-0183 wind instruments");
-  lwsl_user("LWS log level 0x%x (%d)", logs, logs);
+  lwsl_notice("LWS Serve up wind from WeatherFlow Tempest & Airmar NMEA-0183 wind instruments");
+  lwsl_notice("LWS log level 0x%x (%d)", logs, logs);
 
   signal(SIGINT, sigint_handler);
 
