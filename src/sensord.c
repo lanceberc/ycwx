@@ -111,7 +111,7 @@ char *airmarfn;
 
 // Define gusts as average over the last N samples - 4 should be 2 seconds
 #define AIRMAR_WINDSPEED_SECONDS 120
-#define AIRMAR_GUST_SAMPLES 6
+#define AIRMAR_GUST_SAMPLES 8
 #define AIRMAR_GUST_WINDOW 30
 /*#define AIRMAR_GUST_DEBUG 1*/
 
@@ -841,7 +841,7 @@ airmar_process(struct lws *wsi, void *user)
   int south_count = 0;
   int sample_count = 0;
   for (int i = 0; i < AIRMAR_RECENT; i++) {
-    if (airmar_recent[i].sec <= (this_second - AIRMAR_WINDSPEED_SECONDS)) continue;
+    if ((this_second - airmar_recent[i].sec) > AIRMAR_WINDSPEED_SECONDS) continue;
     sample_count++;
     aws_avg += airmar_recent[i].speed;
 
@@ -856,7 +856,15 @@ airmar_process(struct lws *wsi, void *user)
   }
   aws_avg /= sample_count;
   
-  // Now look for the highest average GUST_SAMPLES window in the GUST_SECONDS history
+  if (south_count > (sample_count/2))
+    awa_avg /= sample_count; /* More than half are south-ish */
+  else {
+    //lwsl_notice("south %d awa %.1f awa_bias %.2f / %d = avg %.0f", south_count, awa, awa_bias, RECENT_BUF, awa_bias/RECENT_BUF);
+    awa_avg = (awa_bias / sample_count) - 180.0; /* More than half are north-ish */
+    awa_avg = (awa_avg >= 0.0) ? awa_avg : awa_avg + 360.0;
+  }
+
+  // Now look for the highest average GUST_SAMPLES window in the GUST_WINDOW history
   int start_sec = airmar_recent[airmar_recent_idx].sec;
   int start_idx = airmar_recent_idx;
 #ifdef AIRMAR_GUST_DEBUG
@@ -875,15 +883,20 @@ airmar_process(struct lws *wsi, void *user)
 	gust_total += airmar_recent[idx].speed;
 	gust_sample_count++;
       }
-      gust_total /= gust_sample_count;
-      if (gust_total > gust) {
-	gust = gust_total;
+    }
+    gust_total /= gust_sample_count;
+    if ((gust_sample_count == AIRMAR_GUST_SAMPLES) && (gust_total > gust)) {
+      gust = gust_total;
 #ifdef AIRMAR_GUST_DEBUG
-	if (gust_debug) {
-	  lwsl_info("AIRMAR_GUST %d %.1f", start_idx, gust);
+      if (gust_debug) {
+	char gust_s[1024];
+	gust_s[0] = 0;
+	for (int j = 0; j < gust_sample_count; j++) {
+	  sprintf(&gust_s[strlen(gust_s)], "%.1f ", airmar_recent[(start_idx-j) % AIRMAR_RECENT].speed);
 	}
-#endif
+	lwsl_info("AIRMAR_GUST [%d] %d %.1f: %s", start_idx, gust_sample_count, gust, gust_s);
       }
+#endif
     }
     start_idx = (start_idx - 1) % AIRMAR_RECENT;
   }
@@ -892,14 +905,6 @@ airmar_process(struct lws *wsi, void *user)
       lwsl_info("AIRMAR_GUST_FINISH %.1f", gust);
     }
 #endif
-
-  if (south_count > (sample_count/2))
-    awa_avg /= sample_count; /* More than half are south-ish */
-  else {
-    //lwsl_notice("south %d awa %.1f awa_bias %.2f / %d = avg %.0f", south_count, awa, awa_bias, RECENT_BUF, awa_bias/RECENT_BUF);
-    awa_avg = (awa_bias / sample_count) - 180.0; /* More than half are north-ish */
-    awa_avg = (awa_avg >= 0.0) ? awa_avg : awa_avg + 360.0;
-  }
 
   airmar_high_gust = (gust > airmar_high_gust) ? gust : airmar_high_gust;
   airmar_last_good_sample = this_second;
