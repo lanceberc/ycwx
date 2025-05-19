@@ -865,40 +865,49 @@ airmar_process(struct lws *wsi, void *user)
   }
 
   // Now look for the highest average GUST_SAMPLES window in the GUST_WINDOW history
-  int start_sec = airmar_recent[airmar_recent_idx].sec;
-  int start_idx = airmar_recent_idx;
 #ifdef AIRMAR_GUST_DEBUG
-  int gust_debug = ((airmar_recent[airmar_recent_idx].sec % 10) == 0) && AIRMAR_GUST_DEBUG;
+  int gust_debug = ((this_second % 1) == 0) && AIRMAR_GUST_DEBUG;
   if (gust_debug) {
-    lwsl_info("AIRMAR_GUST_START");
+    lwsl_info("AIRMAR_GUST_START idx %d @ %ld", airmar_recent_idx, this_second);
   }
 #endif
-    
-  while (airmar_recent[airmar_recent_idx].sec - airmar_recent[start_idx].sec < AIRMAR_GUST_WINDOW) {
+
+  int start_idx = airmar_recent_idx;     
+  while (this_second - airmar_recent[start_idx].sec < AIRMAR_GUST_WINDOW) {
     int gust_sample_count = 0;
     int gust_total = 0;
     for (int i = 0; i < AIRMAR_GUST_SAMPLES; i++) {
-      int idx = (start_idx - i) % AIRMAR_RECENT;
-      if (start_sec - airmar_recent[idx].sec < AIRMAR_GUST_WINDOW) {
+      int idx = (start_idx + AIRMAR_RECENT - i) % AIRMAR_RECENT;
+      if (this_second - airmar_recent[idx].sec < AIRMAR_GUST_WINDOW) {
 	gust_total += airmar_recent[idx].speed;
 	gust_sample_count++;
-      }
-    }
-    gust_total /= gust_sample_count;
-    if ((gust_sample_count == AIRMAR_GUST_SAMPLES) && (gust_total > gust)) {
-      gust = gust_total;
+      } else {
 #ifdef AIRMAR_GUST_DEBUG
-      if (gust_debug) {
-	char gust_s[1024];
-	gust_s[0] = 0;
-	for (int j = 0; j < gust_sample_count; j++) {
-	  sprintf(&gust_s[strlen(gust_s)], "%.1f ", airmar_recent[(start_idx-j) % AIRMAR_RECENT].speed);
+	if (gust_debug) {
+	  lwsl_info("AIRMAR_GUST out of window recent %d start %d delta %d (%d - %d)", airmar_recent_idx, start_idx, this_second - airmar_recent[idx].sec, this_second, airmar_recent[idx].sec);
 	}
-	lwsl_info("AIRMAR_GUST [%d] %d %.1f: %s", start_idx, gust_sample_count, gust, gust_s);
-      }
 #endif
+	break;
+      }
     }
-    start_idx = (start_idx - 1) % AIRMAR_RECENT;
+
+    if (gust_sample_count == AIRMAR_GUST_SAMPLES) {
+      gust_total /= gust_sample_count;
+      if (gust_total > gust) {
+	gust = gust_total;
+#ifdef AIRMAR_GUST_DEBUG
+	if (gust_debug || (gust == 0.0)) {
+	  char gust_s[1024];
+	  gust_s[0] = 0;
+	  for (int j = 0; j < gust_sample_count; j++) {
+	    sprintf(&gust_s[strlen(gust_s)], "%.1f ", airmar_recent[(start_idx + AIRMAR_RECENT - j) % AIRMAR_RECENT].speed);
+	  }
+	  lwsl_info("AIRMAR_GUST [%d] %d %.1f: %s", start_idx, gust_sample_count, gust, gust_s);
+	}
+#endif
+      }
+    }
+    start_idx = (start_idx + AIRMAR_RECENT - 1) % AIRMAR_RECENT;
   }
 #ifdef AIRMAR_GUST_DEBUG
     if (gust_debug) {
