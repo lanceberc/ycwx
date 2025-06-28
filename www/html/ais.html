@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta name="viewport" content="width=device-width", initial-scale="1.0">
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html">
+  <title>Local AIS</title>
+  <head>
+    <style>
+      html, body {
+	  height: 100%;
+	  width: 100%;
+	  margin: 0;
+	  display: flex;
+      }
+    </style>
+
+    <link rel="stylesheet" href="leaflet.css" crossorigin=""/>
+    <script src="leaflet.js" crossorigin=""></script>
+
+    <!-- https://github.com/BenPortner/leaflet-burgermenu -->
+    <link rel="stylesheet" href="./leaflet-burgermenu.css"/>
+    <link rel="stylesheet" href="./ais.css"/>
+    
+    <script src="./lib/date.format.js"></script>
+  </head>
+
+  <script type="module">
+    import { AIS } from "./ais.js";
+
+    function initialize() {
+	let queryString = window.location.search;
+	const urlParams = new URLSearchParams(queryString);
+	let wsurls = ["/ais/"];
+	const both = urlParams.get('both'); // Kludge for testing
+	if (both) {
+	    wsurls.push('wss://wx.stfyc-wx.com/ais/');
+	}
+	const ais = new AIS(wsurls, 'aismap', [37.832, -122.435], 14.5);
+    }
+
+    // could also try 'load' or 'DOMContentLoaded'
+    window.addEventListener('DOMContentLoaded', initialize);
+  </script>
+  
+  <body lang="en">
+    <div id="aismap" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom ais-container" tabindex="0">
+    </div>
+  </body>
+</html>
