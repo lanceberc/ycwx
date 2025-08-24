@@ -232,7 +232,8 @@ WFForecast.prototype.render = function() {
     }
     
     // Link to WeatherFlow and the Tempest
-    if (!kioskMode) {
+    //if (!kioskMode) {
+    if (true) {
 	const url = "https://tempestwx.com/station/" + this.stationID;
 	footer = div.append("div")
 	    .classed("wf-footer", true)

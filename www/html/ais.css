@@ -1,3 +1,7 @@
+:root {
+    --ais-label-font-size: 2rem;
+}
+
 .ais-container {
     flex-grow: 1;
     flex-basis: max-content;
@@ -8,7 +12,7 @@
 }
 .vessel-label-span {
     font-family: Arial;
-    font-size: 2.0rem; /* value change dynamically in ais.js */
+    font-size: var(--ais-label-font-size);
     line-height: 1.0;
     padding: 0.1em;
     background-color: #ffffff80;

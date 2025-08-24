@@ -44,23 +44,9 @@ L.Control.LatestTimestamp = L.Control.extend(
     }
 )
 
-function changeCSSproperty(selector, size) {
-    const now = new Date();
-    const time = now.format("HH:MM");
-    
+function changeLabelFontSize(size) {
     if (size in fontSizes) {
-	// Look though document style sheets for the selector - .vessel-label-span lives in ais.css
-	// This is causing some cross-origin errors that we catch
-	for (let ss = 0; ss < document.styleSheets.length; ss++) {
-	    try {
-		const prop = [...document.styleSheets[ss].cssRules].find((r) => r.selectorText === selector,);
-		if (prop)
-		    prop.style.setProperty("font-size", fontSizes[size]);
-	    }
-	    catch({name, error}) {
-		console.debug(`ais: ${time} error accessing styleSheet[${ss}] '${name}' '${error}'`);
-	    }
-	}
+	document.documentElement.style.setProperty("--ais-label-font-size", fontSizes[size]);
     }
 }
 
@@ -245,10 +231,10 @@ class AIS {
 
 	let queryString = window.location.search;
 	const urlParams = new URLSearchParams(queryString);
-	const fontSize = urlParams.get('font');
-	if (fontSize) changeCSSproperty(".vessel-label-span", fontSize);
+	const fontSize = fontSizes[urlParams.get('aisfont')];
+	if (fontSize) changeLabelFontSize(fontSize);
 
-	let bm  = urlParams.get('base');
+	let bm  = urlParams.get('aischart');
 	if (!(bm in basemaps)) bm = "chart";
 	SetBasemap(null, ais, bm);
 
@@ -285,10 +271,10 @@ class AIS {
 		{
 		    title: "Font Size",
 		    menuItems: [
-			{ title: "Extra Large", onClick: () => { changeCSSproperty(".vessel-label-span", "xl"); }, },
-			{ title: "Large", onClick: () => { changeCSSproperty(".vessel-label-span", "l"); }, },
-			{ title: "Medium", onClick: () => { changeCSSproperty(".vessel-label-span", "m"); }, },
-			{ title: "Small", onClick: () => { changeCSSproperty(".vessel-label-span", "s"); }, },
+			{ title: "Extra Large", onClick: () => { changeLabelFontSize("xl"); }, },
+			{ title: "Large", onClick: () => { changeLabelFontSize("l"); }, },
+			{ title: "Medium", onClick: () => { changeLabelFontSize("m"); }, },
+			{ title: "Small", onClick: () => { changeLabelFontSize("s"); }, },
 		    ],
 		},
 		{

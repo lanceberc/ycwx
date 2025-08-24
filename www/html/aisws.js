@@ -62,8 +62,8 @@ class AISwebsocket {
 	this.socket.addEventListener('error', (e) => {
 	    const now = new Date();
 	    const time = now.format("HH:MM");
-	    const s = "";
-	    for (const f in e) s+= `[${f}]='${e[f]}']`;
+	    let s = "";
+	    for (const f in e) s += `[${f}]='${e[f]}']`;
 	    console.error(`AISwebsocket: ${time} messege error '${aisws.url}' ${s}`);
 	});
 	

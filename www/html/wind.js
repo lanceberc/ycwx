@@ -37,7 +37,7 @@ function windMessage(json) {
     windCallback(json.data);
 }
 
-function windInitialize(callback) {
+function windInitialize(windURL, callback) {
     if (windURL == "") {
 	/* XXX GROSS KLUDGE ALERT HACK - if the hostname starts with a digit assume it's on the local net
 	 * and use a straight web socket (ws://) otherwise use a secure websocket (wss://)

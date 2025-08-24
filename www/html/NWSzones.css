@@ -1,0 +1,27 @@
+:root {
+    --nws-zone-scroll-height: 1200px;
+    --nws-zone-scroll-time: 30s;
+    --nws-afd-scroll-height: 1200px;
+    --nws-afd-scroll-time: 30s;
+}
+
+@keyframes nws-scroll-y {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-100%); }
+}
+
+.nws-zone-scroll {
+    animation: var(--nws-zone-scroll-time) linear infinite nws-scroll-y;
+}
+
+.nws-afd-scroll {
+    animation: var(--nws-afd-scroll-time) linear infinite nws-scroll-y;
+}
+
+.nws-zone-container {
+    height: var(--nws-zone-scroll-height);
+}
+
+.nws-afd-container {
+    height: var(--nws-afd-scroll-height);
+}
