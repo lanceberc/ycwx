@@ -11,7 +11,7 @@ let nwsAFDs = [];
 const nwsZoneText = {};
 const nwsAFDText = {};
 
-function nwsZoneFetch() {
+export function nwsZoneFetch() {
     console.log("NWSzones fetch text forecasts");
     for (let z of nwsZones) {
 	let url = "data/nwsZones/" + z + ".html"
@@ -125,7 +125,7 @@ let nwsRO = new ResizeObserver(elements => {
     }
 });
 
-function nwsZoneInitialize(zones, afds) {
+export function nwsZoneInitialize(zones, afds) {
     nwsZones = zones;
     nwsAFDs = afds;
 

@@ -170,6 +170,14 @@ const cloudTopsConfig = {
 		'layers': 'show:21',
 	    },
 	},
+	{
+	    type: "WMS",
+	    //url: 'https://geonode.state.gov/geoserver/ows',
+	    url: 'https://services.geodata.state.gov/geoserver/ows',
+	    params: {
+		'layers': 'lsib:LSIB', // Large Scale International Boundries
+	    },
+	},
     ],
 }
 
@@ -197,10 +205,19 @@ const SSTConfig = {
 	    cache_defeat: 6 * 60 * 60,
 	},
 	{
-	    type: "WMS",
-	    url: 'https://geonode.state.gov/geoserver/ows',
+	    type: "ArcGISRest",
+	    url: 'https://carto.nationalmap.gov/arcgis/rest/services/govunits/MapServer',
+	    attributions: "",
 	    params: {
-		'layers': 'geonode:LSIB', // Large Scale International Boundries
+		'layers': 'show:21',
+	    },
+	},
+	{
+	    type: "WMS",
+	    //url: 'https://geonode.state.gov/geoserver/ows',
+	    url: 'https://services.geodata.state.gov/geoserver/ows',
+	    params: {
+		'layers': 'lsib:LSIB', // Large Scale International Boundries
 	    },
 	},
     ],
@@ -228,10 +245,19 @@ const SSTanomalyConfig = {
 	    cache_defeat: 6 * 60 * 60,
 	},
 	{
-	    type: "WMS",
-	    url: 'https://geonode.state.gov/geoserver/ows',
+	    type: "ArcGISRest",
+	    url: 'https://carto.nationalmap.gov/arcgis/rest/services/govunits/MapServer',
+	    attributions: "",
 	    params: {
-		'layers': 'geonode:LSIB', // Large Scale International Boundries
+		'layers': 'show:21', // State boundries
+	    },
+	},
+	{
+	    type: "WMS",
+	    //url: 'https://geonode.state.gov/geoserver/ows',
+	    url: 'https://services.geodata.state.gov/geoserver/ows',
+	    params: {
+		'layers': 'lsib:LSIB', // Large Scale International Boundries
 	    },
 	},
     ],
@@ -259,10 +285,19 @@ const GlobalWindConfig = {
 	    cache_defeat: 6 * 60 * 60,
 	},
 	{
-	    type: "WMS",
-	    url: 'https://geonode.state.gov/geoserver/ows',
+	    type: "ArcGISRest",
+	    url: 'https://carto.nationalmap.gov/arcgis/rest/services/govunits/MapServer',
+	    attributions: "",
 	    params: {
-		'layers': 'geonode:LSIB', // Large Scale International Boundries
+		'layers': 'show:21',
+	    },
+	},
+	{
+	    type: "WMS",
+	    //url: 'https://geonode.state.gov/geoserver/ows',
+	    url: 'https://services.geodata.state.gov/geoserver/ows',
+	    params: {
+		'layers': 'lsib:LSIB', // Large Scale International Boundries
 	    },
 	},
     ],
@@ -290,10 +325,19 @@ const GlobalWaveConfig = {
 	    cache_defeat: 6 * 60 * 60,
 	},
 	{
-	    type: "WMS",
-	    url: 'https://geonode.state.gov/geoserver/ows',
+	    type: "ArcGISRest",
+	    url: 'https://carto.nationalmap.gov/arcgis/rest/services/govunits/MapServer',
+	    attributions: "",
 	    params: {
-		'layers': 'geonode:LSIB', // Large Scale International Boundries
+		'layers': 'show:21',
+	    },
+	},
+	{
+	    type: "WMS",
+	    //url: 'https://geonode.state.gov/geoserver/ows',
+	    url: 'https://services.geodata.state.gov/geoserver/ows',
+	    params: {
+		'layers': 'lsib:LSIB', // Large Scale International Boundries
 	    },
 	},
     ],

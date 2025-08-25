@@ -1,4 +1,5 @@
 import { AIS } from "./ais.js";
+import { nwsZoneInitialize, nwsZoneFetch } from "./NWSzones.js";
 
 const magnetic_declination = +13; // Actually 13.2 or so
 
@@ -7,46 +8,36 @@ const recent_history_hours = 6;
 let curScene = 0;
 let curSceneTime;
 let curProgram = 0;
-
-let windURL = "";
+let schedule;
 
 window.mode = "Carousel";
 
-/*
-const colorSchemes = [
-    [ "#844D36", // rust
-      "#474853", // plum
-      "#86B3D1", // steel blue
-      "#AAADA0", // light coffee
-      "#8E8268", // earth?
+const schedules = {
+    "test": [
+	{ "start": 0, "program": "Test" },
+	{ "start": 30, "program": "Test" },
     ],
-];
-*/
-
-const testSchedule = [
-    { "start": 0, "program": "Test" },
-    { "start": 30, "program": "Test" },
-];
-
-const productionSchedule = [
-    { "start": 0, "program": "Local" },
-    { "start": 6, "program": "Images" },
-    { "start": 12, "program": "Time Lapse" },
-    { "start": 18, "program": "Local" },
-    { "start": 24, "program": "Images" },
-    { "start": 30, "program": "Local" },
-    { "start": 36, "program": "Images" },
-    { "start": 42, "program": "Time Lapse" },
-    { "start": 48, "program": "Local" },
-    { "start": 54, "program": "Images" },
-];
-
-const interactiveSchedule = [
-    { "start": 0, "program": "All" },
-    { "start": 30, "program": "All" },
-];
-
-let schedule = productionSchedule;
+    "production": [
+	{ "start": 0, "program": "Local" },
+	{ "start": 6, "program": "Images" },
+	{ "start": 12, "program": "Time Lapse" },
+	{ "start": 18, "program": "Local" },
+	{ "start": 24, "program": "Images" },
+	{ "start": 30, "program": "Local" },
+	{ "start": 36, "program": "Images" },
+	{ "start": 42, "program": "Time Lapse" },
+	{ "start": 48, "program": "Local" },
+	{ "start": 54, "program": "Images" },
+    ],
+    "interactive": [
+	{ "start": 0, "program": "All" },
+	{ "start": 30, "program": "All" },
+    ],
+    "rbbs": [
+	{ "start": 0, "program": "RBBS" },
+	{ "start": 28, "program": "RBBS" },
+    ],
+};
 
 const programs = {
     "Local": [ // 6:00
@@ -101,6 +92,18 @@ const programs = {
 	{ "div": "video-WestCoast", "label": "24h West Coast", "duration": 60},
 	{ "div": "video-BayDelta", "label": "6h Bay/Delta", "duration": 60 },
     ],
+    "RBBS": [ // 4:00
+	{ "div": "", "label": "Conditions", "duration": 0 },
+	{ "div": "localWind", "label": "Wind", "duration": 30 },
+	{ "div": "NOAAObservationsScene", "label": "Observations", "duration": 30 },
+	{ "div": "sfTides", "label": "Tide & Current", "duration": 30 },
+	{ "div": "", "label": "Forecasts", "duration": 0 },
+	{ "div": "WeatherFlowStFYCScene", "label": "City Forecast", "duration": 30 },
+	{ "div": "ZoneForecasts", "label": "NWS Forecasts", "duration": 60 },
+	{ "div": "", "label": "Images", "duration": 0 },
+	{ "div": "overlay-BayDelta", "label": "Bay/Delta", "duration": 30 },
+	{ "div": "video-BayDelta", "label": "6h Bay/Delta", "duration": 30 },
+    ],
     "All": [
 	{ "div": "", "label": "Local", "duration": 0 },
 	{ "div": "localWind", "label": "Wind", "duration": 30 },
@@ -134,7 +137,6 @@ const programs = {
 	{ "div": "SSTanomalyScene", "label": "SST Anomaly", "duration": 30 },
 	{ "div": "GlobalWindScene", "label": "Wind", "duration": 30 },
 	{ "div": "GlobalWaveScene", "label": "Waves", "duration": 30 },
-	/* { "div": "vesselFinderScene", "label": "Local AIS", "duration": 30 }, */
 	{ "div": "", "label": "Meta", "duration": 0 },
 	{ "div": "linksScene", "label": "Links", "duration": 30 },
 	{ "div": "aboutScene", "label": "About", "duration": 30 },
@@ -1489,7 +1491,7 @@ function dispatch() {
     // Every 10 minutes - Skew it so it's not right on the hour
     if (!((minute+4) % 10)) {
 	// Doesn't happen very often
-	fetchNWS();
+	nwsZoneFetch();
     }
 
     if (minute > 30) {
@@ -1526,14 +1528,6 @@ function initializeScene(newScene) {
     
     d3.select("#" + scenes[curScene].div).classed("show", true);
 
-    if (scenes[curScene].div == "vesselFinderScene") {
-	let el = document.getElementById(scenes[curScene].div);
-	if ( el === undefined ) {
-	    el = document.documentElement;
-	}
-	wastedSize = el.offsetHeight;
-	$(window).trigger('resize');
-    }
     curSceneTime = time;
     console.log(`initializeScene program: ${schedule[curProgram].program} scene: ${scenes[curScene].div} time left: ${(curSceneTime + scenes[curScene].duration) - time}`);
 }
@@ -1653,8 +1647,6 @@ function visibilityChange() {
     }
 }
 
-let kioskMode = false;
-
 export function initialize() {
     console.log("Initializing wx page");
 
@@ -1662,12 +1654,19 @@ export function initialize() {
     let queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
 
+    for (const [key, value] of urlParams) {
+	console.debug(`Initialize: query '${key}' = '${value}'`)
+    }
+
     d3.select(".highWindThreshhold").html(highWindThreshhold);
     d3.select(".highWindDuration").html(Math.floor(highWindDuration/1000));
 
-    if (href.indexOf("?kiosk") == -1) {
+    let k = urlParams.get('kiosk');
+    let s = urlParams.get('schedule');
+    if (k == null) {
 	console.log("interactive mode");
-	schedule = interactiveSchedule;
+	if (!(s in schedules)) s = "interactive";
+	schedule = schedules[s];
 	initializeProgram(0);
 	d3.select("#mode-button")
 	    .attr("style", "display: inline-grid")
@@ -1677,9 +1676,8 @@ export function initialize() {
 	rotateScene();
     } else {
 	console.log("Kiosk mode");
-	kioskMode = true;
-	schedule = productionSchedule;
-	//schedule = testSchedule;
+	if (!(s in schedules)) s = "production";
+	schedule = schedules[s];
 	initializeProgram(0);
 	setCarouselMode("Carousel");
 	curScene = scenes.length - 1;
@@ -1719,6 +1717,7 @@ export function initialize() {
     wfstfyc = new WFForecast("wf-stfyc", "74155", "stfyc");
     wftinsley = new WFForecast("wf-tinsley", "42921", "tinsley");
 
+    let windURL = "";
     if (typeof local_windURL !== 'undefined') {
 	windURL = local_windURL;
     }
@@ -1762,11 +1761,6 @@ export function initialize() {
     d3.selectAll("#scene-pull-down-enable")
 	.on('click', handleScenePullDownClick);
 
-    //let windModel = new WindModel("KarlHRRR", "Karl", kioskMode);
-    //d3.select("#KarlHRRR-canvas").classed("wx-image", true);
-    //windModel = new WindModel("KarlNAM", "KarlNAM", kioskMode);
-    //d3.select("#KarlNAM-canvas").classed("wx-image", true);
-
     let aisurls = ["/ais/"];
     const aissources = urlParams.get('aissources'); // Kludge for testing
     
@@ -1777,4 +1771,3 @@ export function initialize() {
     console.debug(`Setting AIS sources to ${aisurls}`);
     const ais = new AIS(aisurls, 'aischart', [37.832, -122.435], 14.3);
 }
-
