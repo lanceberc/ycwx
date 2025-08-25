@@ -1,6 +1,7 @@
 let windSocket = null;
 let windSocketInitializing = false;
 let windCallback = null;
+let windURL = null; // KLUDGE: should be a per-instance variable
 
 // Convenience functions for scaling elements to the window size
 function vh(v) {
@@ -24,7 +25,7 @@ function windClose(e) {
     console.log("windClose() websocket closed - sleeping for a minute");
     setTimeout(function() {
 	console.log("windClose() trying to reopen websocket");
-	windInitialize(null);
+	windInitialize(windURL, null);
     }, 60 * 1000);
 }
 
@@ -51,7 +52,8 @@ function windMessage(json) {
     windCallback(json.data);
 }
 
-export function windInitialize(windURL, callback) {
+export function windInitialize(url, callback) {
+    windURL = url;
     if (windURL == "") {
 	/* XXX GROSS KLUDGE ALERT HACK - if the hostname starts with a digit assume it's on the local net
 	 * and use a straight web socket (ws://) otherwise use a secure websocket (wss://)
@@ -62,8 +64,6 @@ export function windInitialize(windURL, callback) {
 	    windURL = "wss://" + location.hostname + "/wind/";
 	}
 	console.log("Setting windURL to " + windURL);
-    } else {
-	console.log("Passed windURL " + windURL);
     }
     if (windSocketInitializing == null) {
 	windSocketInitializing = new Date().now;
@@ -79,7 +79,7 @@ export function windInitialize(windURL, callback) {
     if (callback != null)
 	windCallback = callback;
     
-    console.log("windInitialize()");
+    console.log(`windInitialize(): ${windURL}`);
     try {
 	windSocket = new WebSocket(windURL);
     }

@@ -1,3 +1,7 @@
+/* wx.js
+ * Bind together the pieces that make up the weather kiosk
+ */
+
 import { AIS } from "./ais.js";
 import { nwsZoneInitialize, nwsZoneFetch } from "./NWSzones.js";
 import { windInitialize, windPlotHistory, windStartStopHistory } from "./wind.js";
@@ -7,7 +11,7 @@ import { cloudTopsConfig, nationalRadarConfig, nationalRadar2Config, localRadarC
 import { WFForecast } from "./wfforecast.js";
 import { NWSscrape } from "./NWSscrape.js";
 
-const magnetic_declination = +13; // Actually 13.2 or so
+const magnetic_declination = +13; // Actually 13.2 or so - should be in local_config.js?
 
 const recent_history_hours = 6;
 
@@ -16,13 +20,9 @@ let curSceneTime;
 let curProgram = 0;
 let schedule;
 
-window.mode = "Carousel";
+window.mode = "Carousel"; // Global variabl
 
 const schedules = {
-    "test": [
-	{ "start": 0, "program": "Test" },
-	{ "start": 30, "program": "Test" },
-    ],
     "production": [
 	{ "start": 0, "program": "Local" },
 	{ "start": 6, "program": "Images" },
@@ -42,6 +42,10 @@ const schedules = {
     "rbbs": [
 	{ "start": 0, "program": "RBBS" },
 	{ "start": 28, "program": "RBBS" },
+    ],
+    "test": [
+	{ "start": 0, "program": "Test" },
+	{ "start": 30, "program": "Test" },
     ],
 };
 

@@ -38,7 +38,6 @@
     <script src="wm.js"></script>
     <link rel="stylesheet" href="wm.css">
     -->
-    
   </head>
 
   <body id="body" class="wx" lang="en">
@@ -96,71 +95,9 @@
 	
 	<div id="content" class="wx-content">
 
-<!--
-	  <div id="sfLocal" class="wx-scene">
-	    <div class="obs-grid">
-	      <div class="obs-cell">
-		<div id="sfLocalNOAA" style="flex: 1 1 auto; width: 1800px; height: 1000px; max-width: 100%; max-height: 100%"></div>
-	      </div>
-	    </div>
-	  </div>
--->
-
-<!--
-	  <div id="sfLocalObservations" class="wx-scene">
-	    <div class="ol-flex-fit" style="flex-direction: column;">
-	      <div class="obs-grid">
-		<div class="obs-cell">
-		  <div class="label">Local Observations</div>
-		  <div id="sfLocalObservationsTable" class="obs-table"></div>
-		</div>
-	      </div>
-	      <div class="ol-flex-fit" style="flex-direction: column;">
-		<div class="label">Local Radar & Warnings</div>
-		<div class="ol-flex-fit">
-		  <div id="localRadar" class="ol-flex-fit">
-		    <div id="localRadarLabel" class="ol-label">Local NEXRAD Radar</div>
-		  </div>
-		</div>
-	      </div>
-	    </div>
-	  </div>
--->
-
 	  <div id="NOAAObservationsScene" class="wx-scene">
 	    <div id="NOAAObservations" class="ol-flex-fit">
 	      <div id="NOAAObservationsLabel" class="ol-label">NOAA Observations</div>
-	    </div>
-	  </div>
-
-	  <div id="KarlHRRRScene" class="wx-scene">
-	    <div id="KarlHRRR" class="wx-image wx-relative"></div>
-	  </div>
-
-	  <div id="KarlNAMScene" class="wx-scene">
-	    <div id="KarlNAM" class="wx-image wx-relative"></div>
-	  </div>
-
-	  <div id="ZoneForecasts" class="wx-scene">
-	    <div id="nws-2" class="nws-column-2">
-	      <div class="wx-cell" style="overflow: hidden">
-		<div class="grid-container" style="vertical-align: top">
-		  <div id="nws-zoneForecasts" class="nws-column">
-		    <div id="nws-2-zone-container" class="nws-zone-container nws-scroll-container"></div>
-		  </div>
-		  <div id="nws-afd" class="nws-column">
-		    <div id="nws-2-afd-container" class="nws-afd-container nws-scroll-container"></div>
-		  </div>
-		</div>
-	      </div>
-	    </div>
-	    <div id="nws-1" class="nws-scroll-container nws-column-1">
-	      <div class="grid-container" style="vertical-align: top">
-		<div class="nws-column">
-		  <div class="nws-zone-container"></div>
-		  <div class="nws-afd-container"></div>
-		</div>
-	      </div>
 	    </div>
 	  </div>
 
@@ -188,6 +125,29 @@
 	    </div>
 	  </div>
 	  
+	  <div id="ZoneForecasts" class="wx-scene">
+	    <div id="nws-2" class="nws-column-2">
+	      <div class="wx-cell" style="overflow: hidden">
+		<div class="grid-container" style="vertical-align: top">
+		  <div id="nws-zoneForecasts" class="nws-column">
+		    <div id="nws-2-zone-container" class="nws-zone-container nws-scroll-container"></div>
+		  </div>
+		  <div id="nws-afd" class="nws-column">
+		    <div id="nws-2-afd-container" class="nws-afd-container nws-scroll-container"></div>
+		  </div>
+		</div>
+	      </div>
+	    </div>
+	    <div id="nws-1" class="nws-scroll-container nws-column-1">
+	      <div class="grid-container" style="vertical-align: top">
+		<div class="nws-column">
+		  <div class="nws-zone-container"></div>
+		  <div class="nws-afd-container"></div>
+		</div>
+	      </div>
+	    </div>
+	  </div>
+
 	  <div id="sfTides" class="wx-scene">
 	    <div class="tides-grid">
 	      <div class="tides-cell">
@@ -272,13 +232,30 @@
 	    <div id="currentMap" class="ol-flex-fit" width="1280" height="720"></div>
 	  </div>
 -->
-	  
+
+<!--
 	  <div id="nationalRadarScene" class="wx-scene">
 	    <div id="nationalRadar" class="ol-flex-fit">
 	      <div id="nationalRadarLabel" class="ol-label">National Radar</div>
 	    </div>
 	  </div>
+-->
 
+	  <div id="WeatherFlowStFYCScene" class="wx-scene">
+	    <div class="label">WeatherFlow 72 Hour Forecast</div>
+	    <div id="wf-stfyc"></div>
+	  </div>
+
+	  <div id="WeatherFlowTinsleyScene" class="wx-scene">
+	    <div class="label">WeatherFlow 72 Hour Forecast</div>
+	    <div id="wf-tinsley"></div>
+	  </div>
+	  
+	  <div id="aisScene" class="wx-scene ais-container">
+	    <div class="label">Local AIS</div>
+	    <div id="aischart" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom ais-container" tabindex="0"></div>
+	  </div>
+	  
 	  <div id="nationalRadar2Scene" class="wx-scene">
 	    <div id="nationalRadar2" class="ol-flex-fit">
 	      <div id="nationalRadar2Label" class="ol-label">National Radar, Warnings, Watches, Advisories</div>
@@ -315,52 +292,47 @@
 	    </div>
 	  </div>
 
-	  <div id="WeatherFlowStFYCScene" class="wx-scene">
-	    <div class="label">WeatherFlow 72 Hour Forecast</div>
-	    <div id="wf-stfyc"></div>
-	  </div>
-
-	  <div id="WeatherFlowTinsleyScene" class="wx-scene">
-	    <div class="label">WeatherFlow 72 Hour Forecast</div>
-	    <div id="wf-tinsley"></div>
-	  </div>
-	  
 <!--
-	  <div id="WeatherFlowStFYCScene" class="wx-scene">
-	    <iframe src="https://tempestwx.com/station/74155/" class="wxFlow-frame" title="StFYC WeatherFlow Forecast" loading="lazy" allow="fullscreen"></iframe>
-	  </div>
-
-	  <div id="WeatherFlowTinsleyScene" class="wx-scene" width="1280" height="720" loading="lazy" allow="fullscreen">
-	    <iframe src="https://tempestwx.com/station/42921/" class="wxFlow-frame" title="StFYC WeatherFlow Forecast"></iframe>
-	  </div>
--->
-<!--
-	  <div id="vesselFinderScene" class="wx-scene">
+	  <div id="sfLocal" class="wx-scene">
 	    <div class="obs-grid">
 	      <div class="obs-cell">
-		<div id="vesselFinder" class="obs-cell">
-		  <script type="text/javascript">
-		    {
-			var width="100%";         // width in pixels or percentage
-			var height="1000";         // height in pixels
-			var latitude="37.8400";     // center latitude (decimal degrees)
-			var longitude="-122.4150";    // center longitude (decimal degrees)
-			var zoom="13";             // initial zoom (between 3 and 18)
-			var names=true;
-		    }
-		  </script>
-		  <script type="text/javascript" src="https://www.vesselfinder.com/aismap.js" defer=""></script>
+		<div id="sfLocalNOAA" style="flex: 1 1 auto; width: 1800px; height: 1000px; max-width: 100%; max-height: 100%"></div>
+	      </div>
+	    </div>
+	  </div>
+-->
+
+<!--
+	  <div id="sfLocalObservations" class="wx-scene">
+	    <div class="ol-flex-fit" style="flex-direction: column;">
+	      <div class="obs-grid">
+		<div class="obs-cell">
+		  <div class="label">Local Observations</div>
+		  <div id="sfLocalObservationsTable" class="obs-table"></div>
+		</div>
+	      </div>
+	      <div class="ol-flex-fit" style="flex-direction: column;">
+		<div class="label">Local Radar & Warnings</div>
+		<div class="ol-flex-fit">
+		  <div id="localRadar" class="ol-flex-fit">
+		    <div id="localRadarLabel" class="ol-label">Local NEXRAD Radar</div>
+		  </div>
 		</div>
 	      </div>
 	    </div>
 	  </div>
-	  -->
+-->
 
-	  <div id="aisScene" class="wx-scene ais-container">
-	    <div class="label">Local AIS</div>
-	    <div id="aischart" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom ais-container" tabindex="0"></div>
+<!--
+	  <div id="KarlHRRRScene" class="wx-scene">
+	    <div id="KarlHRRR" class="wx-image wx-relative"></div>
 	  </div>
-	  
+
+	  <div id="KarlNAMScene" class="wx-scene">
+	    <div id="KarlNAM" class="wx-image wx-relative"></div>
+	  </div>
+-->
+
 	  <div id="linksScene" class="wx-scene">
 	    <div id="links" class="text-scene">
 	      <h3>Weather Sites</h3>
