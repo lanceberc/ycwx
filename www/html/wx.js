@@ -1,4 +1,5 @@
 /* wx.js
+ *
  * Bind together the pieces that make up the weather kiosk
  */
 
@@ -10,15 +11,17 @@ import { GIS } from "./gis.js";
 import { cloudTopsConfig, nationalRadarConfig, nationalRadar2Config, localRadarConfig, NOAAObservationsConfig, SSTConfig, SSTanomalyConfig, GlobalWindConfig, GlobalWaveConfig } from "./gisConfig.js";
 import { WFForecast } from "./wfforecast.js";
 import { NWSscrape } from "./NWSscrape.js";
+import { fetchTidesAndCurrents } from "./tidesCurrents.js";
+import { fetchTempestHistory, fetchTempestForecast, fetchTempestCurrent, plotTempestWindForecast, tempestCheck, initializeTempestStreams } from "./tempest.js";
 
 const magnetic_declination = +13; // Actually 13.2 or so - should be in local_config.js?
-
-const recent_history_hours = 6;
 
 let curScene = 0;
 let curSceneTime;
 let curProgram = 0;
 let schedule;
+let wfstfyc;
+let wftinsley;
 
 window.mode = "Carousel"; // Global variabl
 
@@ -160,10 +163,10 @@ const programs = {
 let scenes = [];
 
 // Conversion routines for Tempest defaults - only the forecast API converts units, the others return defaults
-function c2f(d) { return ((parseFloat(d) * (9.0/5.0)) + 32.0); }
-function mb2mb(d) { return(parseFloat(d)); }
-function m2kts(d) { return(parseFloat(d) * 1.94384); }
-function t2m(d) { return(parseFloat(d) + magnetic_declination); }
+function c2f(d) { return ((parseFloat(d) * (9.0/5.0)) + 32.0); } // celcius to farenheit
+function mb2mb(d) { return(parseFloat(d)); } // millibars
+function m2kts(d) { return(parseFloat(d) * 1.94384); } // meters/second to knots
+function t2m(d) { return(parseFloat(d) + magnetic_declination); } // true to magnetic
 
 // Convenience functions for scaling elements to the window size
 function vh(v) {
@@ -179,377 +182,6 @@ function vw(v) {
 function vmin(v) { return Math.min(vh(v), vw(v)); }
 function vmax(v) { return Math.max(vh(v), vw(v)); }
 
-// Tempest forecasts are implemented at objects
-let wfstfyc;
-let wftinsley;
-
-const tempestFieldMap = {
-    //Don't use the Tempest for anything except Tinsley temperature now that the Airmar works and seems to be more accurate
-    "temperature": { "field": "air_temperature", "convert": c2f, "precision": 1 },
-    //"pressure": {"field": "sea_level_pressure", "convert": mb2mb, "precision": 0 },
-    //"wind": { "field": "wind_avg", "convert": m2kts, "precision": 1 },
-    //"gust": { "field": "wind_gust", "convert": m2kts, "precision": 0 },
-    //"direction": {"field": "wind_direction", "convert": t2m, "precision": 0 },
-};
-
-const tempestStations = {
-    "St. Francis Yacht Club": {
-	"nickname": "stfyc",
-	"station_id": "74155",
-	"device_id": "198898",
-	"lat": "37.80737",
-	"lon": "-122.44625",
-	"observations" : {},
-	"json": "",
-	"forecast": "",
-	"lastTime": 0,
-    },
-    "Tinsley Island": {
-	"nickname": "tinsley",
-	"station_id": "42921",
-	"device_id": "131674",
-	"lat": "38.03598",
-	"lon": "-121.49423",
-	"observations" : {},
-	"json": "",
-	"lastTime": 0,
-    },
-}
-
-const tempestDeviceMap = {
-    "198898": "St. Francis Yacht Club",
-    "131674": "Tinsley Island",
-}
-
-const tempestStationMap = {
-    "74155": "St. Francis Yacht Club",
-    "42921": "Tinsley Island",
-}
-
-const tempestHistoryURL=`https://swd.weatherflow.com/swd/rest/observations?api_key=&device_id=&bucket=b&time_start=&time_end=&_=`;
-function fetchTempestHistory(station) {
-    const ts_now = Math.floor(Date.now()/1000)
-    let url = tempestHistoryURL.replace("&device_id=", "&device_id=" + tempestStations[station].device_id);
-    url = url.replace("api_key=", "api_key=" + weatherFlow_apikey);
-    url = url.replace("&time_start=", "&time_start=" + (ts_now - 6*60*60));
-    url = url.replace("&time_end=", "&time_end=" + ts_now);
-    url = url.replace("&_=", "&_=" + ts_now);
-    console.log("Fetching history URL: " + url);
-    d3.json(url)
-	.then(
-	    function(json) {
-		tempestStations[station].history_json = json;
-		tempestStations[station].observations = json.obs;
-		//plotTempestWindHistory(station);
-	    },
-	    function(error) {
-		console.log("Couldn't fetch Tempest data from url: " + url);
-	    }
-	);
-}
-
-const tempestForecastURL="https://swd.weatherflow.com/swd/rest/better_forecast?api_key=&build=44&station_id=&lat=38.03598&lon=-121.49423&units_temp=f&units_wind=kts&units_pressure=mb&units_distance=mi&units_precip=in&units_other=imperial&units_direction=mph&_=";
-function fetchTempestForecast(station) {
-    const nonce = Date.now()
-    let url = tempestForecastURL.replace("station_id=", "station_id=" + tempestStations[station].station_id)
-    url = url.replace("api_key=", "api_key=" + weatherFlow_apikey);
-    url = url.replace("&_=", "&_=" + nonce)
-    d3.json(url)
-	.then(
-	    function(json) {
-		tempestStations[station].forecast_json = json;
-		tempestStations[station].forecast = json.current_conditions;
-		if ("forecast" in tempestStations[json.location_name]) {
-		    plotTempestWindForecast(json.location_name);
-		}
-	    },
-	    function(error) {
-		console.log("Couldn't fetch Tempest data from url: " + url);
-	    }
-	);
-}
-
-const tempestCurrentURL="https://swd.weatherflow.com/swd/rest/observations/location?api_key=&build=44&location_id=&_=";
-function fetchTempestCurrent(station) {
-    const nonce = Date.now()
-    let url = tempestCurrentURL.replace("location_id=", "location_id=" + tempestStations[station].station_id)
-    url = url.replace("api_key=", "api_key=" + weatherFlow_apikey);
-    url = url.replace("&_=", "&_=" + nonce)
-    console.log("fetchTempestCurrent " + station);
-    d3.json(url)
-	.then(
-	    function(json) {
-		console.log("fetchTempestCurrent " + station + " response");
-		if (json.obs.length > 0) {
-		    const obs = json.obs[0];
-		    let ts = new Date(obs.timestamp * 1000)
-		    console.log("Tempest " + station + " observation message dated " + ts);
-		    tempestStations[station].current = obs;
-		    tempestStations[station].lastTime = obs.timestamp;
-		    for (const [field, f] of Object.entries(tempestFieldMap)) {
-			if (f.field in obs) {
-			    let val = f.convert(obs[f.field]).toFixed(f.precision);
-			    console.log("fetchTempestCurrent setting " + "." + field + "-span-" + tempestStations[station].nickname + " to " + val);
-			    d3.selectAll("." + field + "-span-" + tempestStations[station].nickname).html(val);
-			    // Kludge - update the anemometer gust value
-			    /* Wind now cumes from Race Deck anemometer
-			       if (tempestStations[station].nickname == "stfyc" && field == "gust") {
-			       console.log("fetchTempestCurrent " + station + " update gust " + val);
-			       anemometer.update(0, val);
-			       }
-			    */
-			}
-		    }
-		}
-	    })
-	.catch(error => {
-	    console.log("Couldn't fetch Tempest data from url: " + url);
-	});
-}
-
-function plotTempestWindHistory(station) {
-    let svg, x, y, start, end;
-    let data;
-
-    if ((!("history_json" in tempestStations[station])) || (!("obs" in tempestStations[station].history_json))) {
-	return;
-    }
-    const obs = tempestStations[station].history_json["obs"];
-    if (obs == null) {
-	console.log("plotTempestWindHistory(): no observations for " + station);
-	return;
-    }
-
-    data = [];
-    start = obs[0][0];
-    end = obs[obs.length-1][0];
-    extent = end - start;
-    max_extent = (recent_history_hours * 60 * 60)
-    if (extent > max_extent) {
-	start = end - max_extent;
-    }
-
-    obs.forEach(function(e, i) {
-	if ((e[0] >= start) && (e[0] <= end)) {
-	    data.push([new Date(e[0] * 1000), e[2], e[3]]);
-	}
-    });
-
-    start = new Date(start * 1000);
-    end = new Date(end * 1000);
-
-    d3.select(".wind-history-recent").selectAll("*").remove();
-    d3.select(".wind-history-recent").remove();
-
-    // The closer width & height are to the actual size, the better off we are
-    cr = d3.select("#wind-history-recent").node().getBoundingClientRect();
-    let width = 640;
-    let height = 360;
-    if ((cr.width > 0) && (cr.height > 0)) { // Values can be zero because it's a flex and nothing may have been rendered in row
-	width = cr.width;
-	height = cr.height - 20; // Kludge - space for title
-    }
-    let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
-
-    svg = d3.select("#wind-history-recent")
-	.append("svg")
-	.classed("wind-plot", true)
-	.classed("wind-history-recent", true)
-	.attr("viewBox",
-	      -margin.left + " " +
-	      -margin.top + " " +
-	      (width + margin.left + margin.right) + " " +
-	      (height + margin.top + margin.bottom))
-	.attr("preserveAspectRatio", "none")
-    //.attr("width", width).attr("height", height)
-	.append("g")
-	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
-    x = d3.scaleTime()
-	.domain([start, end])
-	.range([0, width]);
-
-    y = d3.scaleLinear()
-	.domain([0, 30])
-	.range([height, 0]);
-
-    // x-axis
-    svg.append("g")
-	.attr("transform", "translate(0," + height + ")")
-	.classed("label", true)
-	.call(d3.axisBottom(x));
-
-    // y-axis
-    svg.append("g")
-	.classed("label", true)
-	.call(d3.axisLeft(y)
-	      .tickArguments([5]));
-
-    // y-axis gridlines
-    svg.append("g")			
-	.attr("class", "grid")
-	.call(d3.axisLeft(y)
-	      .ticks([5])
-	      .tickSize(-width)
-	      .tickFormat("")
-	     );
-    
-    // wind_avg
-    svg.append("path")
-	.datum(data)
-	.classed("wind-plot-wind-avg", true)
-	.attr("d", d3.area()
-	      .x(function(d) { return x(d[0]) })
-	      .y1(function(d) { return y(d[1]) })
-	      .y0(function(d) { return y(0) })
-	      .curve(d3.curveBasis)
-	     );
-
-    // wind_gust
-    svg.append("path")
-	.datum(data)
-	.classed("wind-plot-wind-gust", true)
-	.attr("d", d3.line()
-	      .x(function(d) { return x(d[0]) })
-	      .y(function(d) { return y(d[2]) })
-	      .curve(d3.curveBasis)
-	     );
-}
-
-let wind24Rect = { "width": 0, "height": 0 };
-let wind120Rect = { "width": 0, "height": 0 };
-let windsNeedRender = false;
-
-function plotTempestWindForecast(station) {
-    let svg, x, y, start, end;
-    let X, Y1, Y2;
-    const now = Date.now()
-
-    if (!("forecast_json" in tempestStations[station])) {
-	windsNeedRender = false;
-	return;
-    }
-
-    let data = [];
-    const forecast = tempestStations[station].forecast_json["forecast"]["hourly"];
-    forecast.map((d, i) => {
-	const ts = d.time * 1000;
-	if (ts >= now) {
-	    data.push([new Date(ts), d.wind_avg, d.wind_gust]);
-	}
-    });
-    
-    let element = "wind-forecast120"
-    let id = "#" + element;
-    d3.select(id).selectAll("*").remove();
-
-    const node = d3.select(id).node();
-    const parentNode = node.parentNode;
-    const parent2Node = parentNode.parentNode;
-    const cr = node.getBoundingClientRect();
-    const pcr = parentNode.getBoundingClientRect();
-    const p2cr = parent2Node.getBoundingClientRect();
-    const labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
-    if ((cr.width == 0) && (cr.height == 0)) {
-	return;
-    }
-
-    let newWidth, newHeight;
-    newWidth = (cr.width != 0) ? cr.width : pcr.right - pcr.left;
-    newHeight = (cr.height != 0) ? cr.height : (pcr.bottom - pcr.top) - (labelcr.bottom - labelcr.top);
-    
-    let width = wind120Rect.width;
-    let height = wind120Rect.height;
-    if ((newWidth == width) && (newHeight == height)) {
-	console.log(`plotTempestForecast wind120 width (${width} x ${height}) unchanged`);
-    } else {
-	width = newWidth;
-	height = newHeight;
-	wind120Rect.width = width;
-	wind120Rect.height = height;
-    }
-    console.log(`plotTempestForecast wind120 ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
-
-    let margin;
-    if (p2cr.height < p2cr.width) {
-	margin = { left: vw(1.25), top: vh(0.5), right: vw(0.0), bottom: vh(3.50) };
-    } else {
-	margin = { left: vw(3.00), top: vh(0.5), right: vw(0.0), bottom: vh(3.50) };
-    }
-
-    svg = d3.select("#wind-forecast120")
-	.append("svg")
-	.classed("wind-plot", true)
-	.classed("wind-forecast120", true)
-	.attr("viewBox", -margin.left + " " + -margin.top + " " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
-	.attr("preserveAspectRatio", "none")
-	.attr("width", width - (margin.left + margin.right)).attr("height", height - (margin.top + margin.bottom))
-	.append("g")
-	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
-    start = new Date(now);
-    end = new Date(now + (120 * 60 * 60 * 1000));
-    
-    x = d3.scaleTime()
-	.domain([start, end])
-	.range([0, width]);
-    
-    y = d3.scaleLinear()
-	.domain([0, 30])
-	.range([height, 0]);
-
-    // x-axis
-    svg.append("g")
-	.attr("transform", "translate(0," + height + ")")
-	.classed("wind-axis-label", true)
-	.call(d3.axisBottom(x));
-
-    // y-axis
-    svg.append("g")
-	.classed("wind-axis-label", true)
-	.call(d3.axisLeft(y)
-	      .tickArguments([5]));
-
-    // y-axis gridlines
-    svg.append("g")			
-	.attr("class", "grid")
-	.call(d3.axisLeft(y)
-	      .ticks([5])
-	      .tickSize(-width)
-	      .tickFormat("")
-	     );
-
-    // wind_avg
-    svg.append("path")
-	.datum(data)
-	.classed("wind-plot-wind-avg", true)
-	.attr("d", d3.area()
-	      .x(function(d) { return x(d[0]) })
-	      .y1(function(d) { return y(d[1]) })
-	      .y0(function(d) { return y(0) })
-	      .curve(d3.curveBasis)
-	     );
-
-    // wind_gust
-    svg.append("path")
-	.datum(data)
-	.classed("wind-plot-wind-gust", true)
-	.attr("d", d3.area()
-	      .x(function(d) { return x(d[0]) })
-	      .y1(function(d) { return y(d[2]) })
-	      .y0(function(d) { return y(0) })
-	      .curve(d3.curveBasis)
-	     );
-};
-
-let tidesRO = new ResizeObserver(elements => {
-    plotTides();
-});
-
-let currentsRO = new ResizeObserver(elements => {
-    plotCurrents();
-});
-
 let windRO = new ResizeObserver(elements => {
     windPlotHistory("wind-history-recent", windHistory, (highWindMode == true) ? 50 : 30);
     windStartStopHistory(elements[0]);
@@ -564,128 +196,6 @@ let highWindCurScene = null;
 // defined in local_config.js
 // let highWindThreshhold = 25;
 // let highWindDuration = 60 * 1000; // One minute
-
-let tempestSocket = null;
-let tempestSocketInitializing = false;
-
-function tempestError(e) {
-    console.log("tempestMessage error ");
-}
-
-function tempestClose(e) {
-    console.log("tempestClose() websocket closed - sleeping");
-    setTimeout(function() {
-	console.log("tempestClose() trying to reopen websocket");
-	initializeTempestStreams();
-    }, 60 * 1000); // try again in a minute
-}
-
-function tempestCheck() {
-    if (tempestSocket.readyState != 1) {
-	console.log("tempestCheck() ready state: " + tempestSocket.readyState);
-    }
-
-    if (tempestSocket.readyState == 3) {
-	initializeTempestStreams();
-    }
-}
-
-// https://weatherflow.github.io/Tempest/api/ws.html
-const obs_stMap = {
-    //"wind": 2,
-    //"gust": 3,
-    "direction": 4,
-    "temp": 7,
-}
-
-function tempestMessage(raw) {
-    const message = JSON.parse(raw.data);
-    // console.log("tempestMessage type " + message.type + " msg " + raw.data);
-    if (message.type == "obs_st") {
-	//console.log("tempestMessage type " + message.type + " msg " + raw.data);
-	let ts = message.obs[0][0];
-	let device_id = message.device_id;
-	let station = tempestStations[tempestDeviceMap[device_id]];
-	let nickname = station.nickname;
-	// console.log("tempestMessage (" + nickname + ") type " + message.type + " msg " + raw.data);
-	station.lastTime = ts;
-	const now = Math.floor(Date.now() / 1000);
-	if (now < ts + tempestValidTimespan) {
-	    for (const [f, i] of Object.entries(obs_stMap)) {
-		if (f in tempestFieldMap) {
-		    const fm = tempestFieldMap[f];
-		    const val = fm.convert(message.obs[0][i]).toFixed(fm.precision);
-		    console.log("tempestMessage Setting " + "." + f + "-span-" + nickname + " to " + val);
-		    d3.selectAll("." + f + "-span-" + nickname).html(val);
-		    /*
-		      if (nickname == "stfyc" && f == "gust") { // Kludge
-		      anemometer.update(0, val);
-		      }
-		    */
-		}
-	    }
-	} else {
-	    const nts = new Date(ts * 1000);
-	    console.log("Tempest " + nickname + " stale obs_st message dated " + nts);
-	}
-    } else if (message.type == "rapid_wind") {
-	let device_id = message.device_id;
-	let station = tempestStations[tempestDeviceMap[device_id]];
-	let nickname = station.nickname;
-	/*
-	  let fm = tempestFieldMap["wind"];
-	  let wind = fm.convert(message.ob[1]).toFixed(fm.precision);
-
-	  if (nickname == "stfyc") { // Kludge
-	  //d3.selectAll(".stfyc-anemometer-value-1").each(function(e, i) { this.value = wind; d3.select(this).on('change')(this); } );
-	  anemometer.update(1, wind);
-	  }
-	*/
-	if ("direction" in tempestFieldMap) {
-	    fm = tempestFieldMap["direction"];
-	    let direction = fm.convert(message.ob[2]).toFixed(fm.precision);
-	    //d3.selectAll(".wind-span-" + nickname).html(wind);
-	    d3.selectAll(".tempest-direction-span-" + nickname).html(direction);
-	}
-    } else if (message.type == "connection_opened") {
-    } else {
-	console.log("tempestMessage unknown message type: " + message.type);
-    }
-}
-
-function initializeTempestStreams() {
-    if (tempestSocketInitializing == null) {
-	tempestSocketInitializing = new Date().now;
-    } else {
-	let now = Date.now();
-	if (now - tempestSocketInitializing < (60 * 1000)) {
-	    console.log("initializeTempestStreams() in process");
-	    return;
-	}
-	tempestSocketInitializing = new Date().now;
-    }
-    
-    console.log("initializeTempestStreams()");
-    const url = "wss://swd.weatherflow.com/swd/data?api_key=&app=web".replace("api_key=", "api_key=" + weatherFlow_apikey);
-    tempestSocket = new WebSocket(url);
-    tempestSocket.addEventListener('onerror', tempestError);
-    tempestSocket.addEventListener('onclose', tempestClose);
-    tempestSocket.addEventListener('message', tempestMessage);
-    tempestSocket.addEventListener('open', function(e) {
-	// Request StFYC events + rapid_wind
-	let device_id = tempestStations["St. Francis Yacht Club"].device_id;
-	let station_id = tempestStations["St. Francis Yacht Club"].station_id;
-	tempestSocket.send(JSON.stringify({"type": "listen_start", "device_id": device_id}));
-	tempestSocket.send(JSON.stringify({"type": "listen_rapid_start", "device_id": device_id}));
-	tempestSocket.send(JSON.stringify({"type": "listen_start_events", "station_id": station_id}));
-	// Request Tinsley events for tempurature
-	station_id = tempestStations["Tinsley Island"].station_id;
-	device_id = tempestStations["Tinsley Island"].device_id;
-	tempestSocket.send(JSON.stringify({"type": "listen_start", "device_id": device_id}));
-	tempestSocket.send(JSON.stringify({"type": "listen_rapid_start", "device_id": device_id}));
-	tempestSocket.send(JSON.stringify({"type": "listen_start_events", "station_id": station_id}));
-    });
-}
 
 var windHistory = null;
 
@@ -776,6 +286,8 @@ const NWSscrapeSites = [
     },
 ];
 
+let localObsRadarStations = {};
+
 function scrapeCallback(observations) {
     const now = new Date();
     const tzOffset = now.getTimezoneOffset() / 60; // getTimeZoneOffset() is in minutes
@@ -815,508 +327,11 @@ function scrapeCallback(observations) {
     }
 }
 
-let localObsRadarStations = {};
-
-// Tempest stations are a bit flakey - if the Tempest is down, use NOAA data
-const tempestValidTimespan = 60 * 60; /* secs a tempest observation is valid - after that use NOAA */
-const backupFields = [
-    { "stid": "FTPC1", "tempest": "St. Francis Yacht Club", "tempestField": "temp", "localField": "temp", "precision": 1 },
-    // Fort Point and Pier 1 don't have baromoters - there's probably a better choice than the buoy
-    { "stid": "46026", "tempest": "St. Francis Yacht Club", "tempestField": "tempest-baro", "localField": "pressure", "precision": 0 },
-];
-
-
-const noaaTideStation = "9414290";
-const minTide = -1.5;
-const maxTide = 6.5;
-let tideData = null;
-
-let tideRect = { "width": 0, "height": 0};
-
-function plotTides() {
-    if (tideData == null) {
-	return;
-    }
-    const tides = tideData.tides;
-    const hilo = tideData.hilo;
-
-    const element = "tide-forecast-" + noaaTideStation;
-    // The closer width & height are to the actual size, the better off we are
-    let pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
-    let cr = d3.select("#" + element).node().getBoundingClientRect();
-    let labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
-    if ((cr.width == 0) && (cr.height == 0)) {
-	return;
-    }
-    let width = tideRect.width;
-    let height = tideRect.height;
-    if (cr.width == tideRect.width) {
-	console.log(`plotTides width (${tideRect.width} x ${tideRect.height}) unchanged`);
-    } else {
-	width = cr.width;
-	height = cr.height;
-	height = pcr.height - labelcr.height;
-	let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
-	if ((aheight < height) || (pcr.height == labelcr.height)) {
-	    height = aheight;
-	}
-	tideRect.width = width;
-	tideRect.height = height;
-    }
-    console.log(`plotTides ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
-
-    let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
-
-    let X = tides.map(function(d) { return(Date.parse(d.t)) });
-    let Y = tides.map(function(d) { return(d.v) });
-    let data = X.map(function(e, i) {
-	return [e, Y[i]];
-    });
-    const start = X[0];
-    const end = X[X.length-1];
-
-    d3.select("." + element).selectAll("*").remove();
-    d3.select("." + element).remove();
-    let svg = d3.select("#" + element)
-	.append("svg")
-	.classed("tide-svg", true)
-	.classed(element, true)
-	.attr("viewBox",
-	      -margin.left + " " +
-	      -margin.top + " " +
-	      (width + margin.left + margin.right) + " " +
-	      (height + margin.top + margin.bottom))
-	.attr("preserveAspectRatio", "none")
-	.attr("width", width).attr("height", height)
-	.append("g")
-	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
-    const x = d3.scaleTime()
-	.domain([new Date(start), new Date(end)])
-	.range([0, width]);
-
-    const y = d3.scaleLinear()
-	.domain([minTide, maxTide])
-	.range([height, 0]);
-
-    // x-axis
-    svg.append("g")
-	.attr("transform", "translate(0," + height + ")")
-	.classed("tide-plot-x-axis", true)
-	.call(d3.axisBottom(x));
-
-    // y-axis
-    svg.append("g")
-	.classed("tide-plot-y-axis", true)
-	.call(d3.axisLeft(y)
-	      .tickArguments([parseInt((maxTide - minTide) - 1)]));
-
-    // y-axis gridlines
-    svg.append("g")			
-	.classed("tide-plot-grid", true)
-	.call(d3.axisLeft(y)
-	      .tickSize(-width)
-	      .tickFormat("")
-	      .ticks([parseInt((maxTide - minTide) - 1)])
-	     );
-    
-    // Tide height
-    svg.append("path")
-	.datum(data)
-	.classed("tide-plot-tide", true)
-	.attr("d", d3.area()
-	      .x(function(d) { return x(d[0]) })
-	      .y1(function(d) { return y(d[1]) })
-	      .y0(function(d) { return y(minTide) })
-	      .curve(d3.curveBasis)
-	     );
-
-    // Highs & Lows
-    const hl = [];
-    for (const i in hilo) {
-	const item = hilo[i];
-	const t = (new Date(item.t)).getTime();
-	if ((t > start) && (t < end)) {
-	    hl.push(t);
-	}
-    }
-    svg.append("g")			
-	.classed("tide-plot-grid", true)
-	.call(d3.axisBottom(x)
-	      .tickSize(height)
-	      .tickFormat("")
-	      .tickValues(hl)
-	     );
-
-    // Now
-    const now = Date.now();
-    svg.append("path")
-	.datum([[now, minTide], [now, maxTide]])
-	.classed("tide-plot-now", true)
-	.attr("d", d3.line()
-	      .x(function(d) { return x(d[0]) })
-	      .y(function(d) { return y(d[1]) })
-	     );
-
-    X = hilo.map(function(d) { return(Date.parse(d.t)); });
-    Y = hilo.map(function(d) { return(d.v); });
-    data = [];
-    for (const i in X) {
-	if ((X[i] > start) && (X[i] < end)) {
-	    let label = (parseFloat(hilo[i].v).toFixed(1) + "ft @" + hilo[i].t.slice(11));
-	    data.push([X[i], parseFloat(Y[i]), label, hilo[i].type]);
-	}
-    }
-
-    // Keep the labels on the chart during extreme tide events
-    function labelClamp(y) {
-	const labelMax = maxTide - 0.5;
-	const labelMin = minTide + 0.8;
-	if (y > labelMax) {
-	    return(labelMax);
-	}
-	if (y < labelMin) {
-	    return(labelMin);
-	}
-	return(y);
-    }
-    
-    // High/Low Labels
-    svg.append("g")
-	.classed("tide-plot-label-group", true)
-	.selectAll('text')
-	.data(data)
-	.enter()
-	.append("g")
-	.attr("opacity", 1)
-	.classed("tide-plot-label", true)
-	.classed("events-label", true)
-	.attr("transform", function(d, i) {
-	    return("translate(" + x(d[0]) + ", " + y(labelClamp(d[1])) + ")")
-	})
-	.append('text')
-	.classed("tide-plot-label-item", true)
-	.classed("events-text", true)
-	.attr("text-anchor", "middle")
-	.attr("dx", 0)
-	.attr("dy", function(d, i) { return(d[3] == "H" ? "-0.45em" : "1.3em") } )
-	.text(function(d, i) { return(d[2]); });
-
-    d3.selectAll(".tide-plot-label-item").each(function(e, i) {
-	let label = d3.select(this);
-	let parent = this.parentNode;
-	let bbox = label.node().getBBox();
-	d3.select(parent).insert("rect", ":first-child")
-	    .attr("x", function(d, i){return bbox.x})
-	    .attr("y", function(d, i){return bbox.y})
-	    .attr("dx", 0)
-	    .attr("dy", function(d,i) { return(data[i][3] == "H" ? "-0.4em" : "1.3em") } )
-	    .attr("width", function(d){return bbox.width})
-	    .attr("height", function(d){return bbox.height})
-	    .classed("tide-plot-label-background", true);
-    });
-}
-
-const days = [
-    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-];
-
-const noaaCurrentStation = "SFB1203_18";
-const minCurrent = -4.5;
-const maxCurrent = 4.5;
-
-let currentRect = { "width": 0, "height": 0};
-
-function plotCurrents() {
-    if (tideData == null) {
-	return;
-    }
-    
-    const current_data = tideData.current_points;
-    const current_events = tideData.current_info.events; // See what I did there?
-
-    const t = new Date();
-    let year = t.getFullYear().toString();
-    let month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
-    let date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
-    const start_string = `${year}-${month}-${date} 00:00`;
-    const start = new Date(start_string);
-
-    t.setTime(t.getTime() + (2 * 24 * 60 * 60 * 1000));
-    year = t.getFullYear().toString();
-    month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
-    date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
-    const end_string = `${year}-${month}-${date} 00:00`;
-    const end = new Date(end_string);
-
-    const plot_events = [];
-    current_events.forEach(function(e, i) {
-	if ((e.e == "Max Flood") || (e.e == "Max Ebb")) {
-	    plot_events.push(e);
-	}
-    });
-
-    let element = ".current-events-table-" + noaaCurrentStation;
-    d3.selectAll(element).remove();
-
-    let today = current_events[0].t.slice(0,10);
-
-    let current_tables = [{},{}];
-    for (let i in [0, 1]) {
-	let t0 = new Date(today + " 00:00");
-	let t = new Date();
-	const oneDay = (i * 24 * 60 * 60 * 1000);
-	t.setTime(t0.getTime() + oneDay);
-	year = t.getFullYear().toString();
-	month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
-	date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
-	const head_string = days[t.getDay()] + `, ${year}-${month}-${date}`;
-
-	let table = d3.select("#current-events-content-" + noaaCurrentStation).append("div")
-	    .classed("current-events-table", true)
-	    .classed("current-events-table-" + noaaCurrentStation, true)
-	    .classed("events-text", true);
-
-	let header = table.append("div")
-	    .classed("current-events-table-header", true)
-	header.append("div")
-	    .classed("current-events-table-cell", true)
-	    .html(head_string);
-	
-	let body = table.append("dev")
-	    .classed("current-events-table-body", true)
-	current_tables[i].body = body;
-    }
-    
-    current_events.forEach(function(e) {
-	const d = e.t.slice(0,10);
-	const i = (d == today) ? 0 : 1;
-
-	const v = (e.e.search("Slack") == -1) ? e.e : "Slack";
-	const water = (e.e.search("Slack") != -1) || (e.e.search("Max") != -1);
-	let row = current_tables[i].body.append("div")
-	    .classed("current-events-table-row", true)
-	row.append("div")
-	    .classed("current-events-table-cell", true)
-	    .classed("current-events-table-water", water)
-	    .classed("current-events-table-astral", !water)
-	    .html(e.t.slice(10));
-	row.append("div")
-	    .classed("current-events-table-cell", true)
-	    .classed("current-events-table-water", water)
-	    .classed("current-events-table-astral", !water)
-	    .html(v);
-    });
-
-    element = "current-forecast-" + noaaCurrentStation;
-    let pcr = d3.select("#" + element).node().parentNode.getBoundingClientRect();
-    let cr = d3.select("#" + element).node().getBoundingClientRect();
-    let labelcr = d3.select("#" + element + "-label").node().getBoundingClientRect();
-    if ((cr.width == 0) && (cr.height == 0)) {
-	return;
-    }
-
-    let width = currentRect.width;
-    let height = currentRect.height;
-    if (cr.width == currentRect.width) {
-	console.log(`plotCurrents width (${currentRect.width} x ${currentRect.height}) unchanged`);
-    } else {
-	width = cr.width;
-	height = cr.height;
-	height = pcr.height - labelcr.height;
-	let aheight = width * (9.0 / 16.0); // 16:9 aspect ratio
-	if ((aheight < height) || (pcr.height == labelcr.height)) {
-	    height = aheight;
-	}
-	currentRect.width = width;
-	currentRect.height = height;
-    }
-    console.log(`plotCurrents ${cr.width} x ${cr.height} -> ${width} x ${height} parent ${pcr.width} x ${pcr.height} label ${labelcr.width} x ${labelcr.height}`);
-    
-    let margin = { left: vw(1.25), top: vh(0.5), right: vw(1), bottom: vh(3.00) };
-    let X = current_data.map(function(d) { return(Date.parse(d[0])) });
-    let Y = current_data.map(function(d) { return(d[1]) });
-    let data = X.map(function(e, i) {
-	return [e, Y[i]];
-    });
-
-    d3.select("#" + element).selectAll("*").remove();
-    //d3.select("." + element).remove();
-    let svg = d3.select("#" + element)
-	.append("svg")
-	.classed("tide-svg", true)
-	.classed(element, true)
-	.attr("viewBox",
-	      -margin.left + " " +
-	      -margin.top + " " +
-	      (width + margin.left + margin.right) + " " +
-	      (height + margin.top + margin.bottom))
-	.attr("preserveAspectRatio", "none")
-	.attr("width", width).attr("height", height)
-	.append("g")
-	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
-    const x = d3.scaleTime()
-	.domain([start, end])
-	.range([0, width]);
-
-    const y = d3.scaleLinear()
-	.domain([minCurrent, maxCurrent])
-	.range([height, 0]);
-
-    // x-axis
-    svg.append("g")
-	.attr("transform", "translate(0," + height + ")")
-	.classed("tide-plot-x-axis", true)
-	.call(d3.axisBottom(x));
-
-    // y-axis
-    svg.append("g")
-	.classed("tide-plot-y-axis", true)
-	.call(d3.axisLeft(y)
-	      .tickArguments([parseInt((maxCurrent - minCurrent) - 1)]));
-
-    // y-axis gridlines
-    svg.append("g")			
-	.classed("tide-plot-grid", true)
-	.call(d3.axisLeft(y)
-	      .tickSize(-width)
-	      .tickFormat("")
-	      .ticks([parseInt((maxCurrent - minCurrent) - 1)])
-	     );
-    
-    // Current speed
-    svg.append("path")
-	.datum(data)
-	.classed("tide-plot-tide", true)
-	.attr("d", d3.area()
-	      .x(function(d) { return x(d[0]) })
-	      .y1(function(d) { return y(d[1]) })
-	      .y0(function(d) { return y(0) })
-	      .curve(d3.curveBasis)
-	     );
-
-    // Max flow & slack grid lines
-    const event_times = [];
-    for (const i in plot_events) {
-	const item = plot_events[i];
-	const t = new Date(item.t);
-	if ((t > start) && (t < end)) {
-	    event_times.push(t);
-	}
-    }
-    svg.append("g")			
-	.classed("tide-plot-grid", true)
-	.call(d3.axisBottom(x)
-	      .tickSize(height)
-	      .tickFormat("")
-	      .tickValues(event_times)
-	     );
-
-    // Max flow & slack labels
-    X = plot_events.map(function(d) { return(Date.parse(d.t)); });
-    Y = plot_events.map(function(d) { return(d.v); });
-    data = [];
-    for (const i in X) {
-	if ((X[i] > start) && (X[i] < end)) {
-	    let label = (parseFloat(plot_events[i].v).toFixed(1) + "kt @" + plot_events[i].t.slice(11));
-	    data.push([X[i], parseFloat(Y[i]), label, plot_events[i].e]);
-	}
-    }
-    
-    // Now
-    const now = Date.now();
-    svg.append("path")
-	.datum([[now, minCurrent], [now, maxCurrent]])
-	.classed("tide-plot-now", true)
-	.attr("d", d3.line()
-	      .x(function(d) { return x(d[0]) })
-	      .y(function(d) { return y(d[1]) })
-	     );
-
-    // Labels are drawn over Now line
-    svg.append("g")
-	.classed("tide-plot-label-group", true)
-	.selectAll('text')
-	.data(data)
-	.enter()
-	.append("g")
-	.attr("opacity", 1)
-	.classed("tide-plot-label", true)
-	.classed("events-text", true)
-	.attr("transform", function(d, i) {
-	    return("translate(" + x(d[0]) + ", " + y(d[1]) + ")")
-	})
-	.append('text')
-	.classed("current-plot-label-item", true)
-	.classed("events-text", true)
-	.attr("text-anchor", "middle")
-	.attr("dx", 0)
-	.attr("dy", function(d, i) { return(d[3] == "Max Flood" ? "-0.45em" : "1.3em") } )
-	.text(function(d, i) { return(d[2]); });
-
-    d3.selectAll(".current-plot-label-item").each(function(e, i) {
-	let label = d3.select(this);
-	let parent = this.parentNode;
-	let bbox = label.node().getBBox();
-	d3.select(parent).insert("rect", ":first-child")
-	    .attr("x", function(d, i){return bbox.x})
-	    .attr("y", function(d, i){return bbox.y})
-	    .attr("dx", 0)
-	    .attr("dy", function(d,i) { return(data[i][3] == "Max Flood" ? "-0.4em" : "1.3em") } )
-	    .attr("width", function(d){return bbox.width})
-	    .attr("height", function(d){return bbox.height})
-	    .classed("current-plot-label-background", true);
-    });
-}
-
-function fetchTidesAndCurrents() {
-    const url = "data/NOAA/tides.json";
-    d3.json(url)
-	.then(
-	    function(json) {  tideData = json; plotTides(); plotCurrents(); },
-	    function(error) { console.log("Couldn't fetch tides from url: " + url) }
-	);
-}
-
-/* The NOAA web server's CORS setting prevents using the data directly in a web page.
-   const noaaTideURL = 'https://tidesandcurrents.noaa.gov/api/datagetter?station=&begin_date=&end_date=&applications=StFYC&product=predictions&datum=MLLW&units=english&time_zone=lst_ldt&format=json';
-
-   function fetchTidesAndCurrents() {
-   t = new Date();
-   let year = t.getFullYear().toString();
-   let month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
-   let date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
-   const hour = t.getHours();
-   const minute = t.getMinutes();
-   const begin_date = year + month + date;
-   t.setTime(t.getTime() + (24 * 60 * 60 * 1000));
-   year = t.getFullYear().toString();
-   month = (t.getMonth() < 9 ? "0" : "") + (t.getMonth()+1).toString();
-   date = (t.getDate() < 10 ? "0" : "") + t.getDate().toString();
-   const end_date =  year + month + date;
-   
-   let url = noaaTideURL.replace("station=", "station=" + noaaTideStation)
-   url = url.replace("begin_date=", "begin_date=" + begin_date)
-   url = url.replace("end_date=", "end_date=" + end_date);
-   let tides = "";
-   let currents = "";
-   
-   d3.json(url)
-   .then(
-   function(json) { tides = json },
-   function(error) { console.log("Couldn't fetch tides from url: " + url) }
-   );
-   url = url + "&interval=hilo";
-   d3.json(url)
-   .then(
-   function(json) { currents = json },
-   function(error) { console.log("Couldn't fetch currents from url: " + url) }
-   );
-   graphTidesAndCurrents(tides, currents);
-   }
-*/
-
+/*
+ * NOAA creates a set of small png charts from the SFBOFS.
+ * We've tried using a GIS page with the current data, but it's not really worth
+ * the effort since the time step is one hour - too coarse for a 6-hour tide cycle.
+ */
 function setCurrentChartURL() {
     // Advance one hour from now and construct forecast URL
     t = new Date()
@@ -1452,9 +467,11 @@ function dispatch() {
 	rotateScene(); // Called once per second
     }
 
+    /* 
     if (windsNeedRender) {
 	plotTempestWindForecast("St. Francis Yacht Club");
     }
+    */
 
     const minutes = Math.floor(time/60);
     if (minutes == lastMinute) {
@@ -1668,6 +685,7 @@ export function initialize() {
 	console.debug(`Initialize: query '${key}' = '${value}'`)
     }
 
+    // Fill in values in the "about" scene
     d3.select(".highWindThreshhold").html(highWindThreshhold);
     d3.select(".highWindDuration").html(Math.floor(highWindDuration/1000));
 
@@ -1700,9 +718,6 @@ export function initialize() {
     // Catch resize events for anemometer graphs because I'm too lame to get the svgs to scale
     windRO.observe(document.querySelector("#localWind"));
 
-    tidesRO.observe(document.querySelector(".tides-graph"));
-    currentsRO.observe(document.querySelector(".currents-graph"));
-
     anemometer = new Gauge('anemometer-stfyc', {
 	classRoot: "anemometer-stfyc",
 	maxValue: 30, // in knots
@@ -1726,7 +741,7 @@ export function initialize() {
 
     wfstfyc = new WFForecast("wf-stfyc", "74155", "stfyc");
     wftinsley = new WFForecast("wf-tinsley", "42921", "tinsley");
-
+    
     let windURL = "";
     if (typeof local_windURL !== 'undefined') {
 	windURL = local_windURL;
@@ -1778,6 +793,6 @@ export function initialize() {
 	aisurls = ['wss://wx.stfyc-wx.com/ais/', 'wss://sdr.stfyc-wx.com/ais/'];
     }
 
-    console.debug(`Setting AIS sources to ${aisurls}`);
+    console.debug(`Initialize: AIS sources ${aisurls}`);
     const ais = new AIS(aisurls, 'aischart', [37.832, -122.435], 14.3);
 }
