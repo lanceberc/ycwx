@@ -1,5 +1,11 @@
 import { AIS } from "./ais.js";
 import { nwsZoneInitialize, nwsZoneFetch } from "./NWSzones.js";
+import { windInitialize, windPlotHistory, windStartStopHistory } from "./wind.js";
+import { Gauge } from "./gauge.js";
+import { GIS } from "./gis.js";
+import { cloudTopsConfig, nationalRadarConfig, nationalRadar2Config, localRadarConfig, NOAAObservationsConfig, SSTConfig, SSTanomalyConfig, GlobalWindConfig, GlobalWaveConfig } from "./gisConfig.js";
+import { WFForecast } from "./wfforecast.js";
+import { NWSscrape } from "./NWSscrape.js";
 
 const magnetic_declination = +13; // Actually 13.2 or so
 
@@ -74,7 +80,7 @@ const programs = {
 	//{ "div": "overlay-BayDelta", "label": "Bay/Delta", "duration": 20 },
 	{ "div": "", "label": "National", "duration": 0 },
 	{ "div": "cloudTopsScene", "label": "IR Cloud Tops", "duration": 25 },
-	{ "div": "nationalRadarScene", "label": "National Radar", "duration": 30 },
+	{ "div": "nationalRadar2Scene", "label": "National Radar", "duration": 30 },
 	{ "div": "", "label": "Pacific", "duration": 0 },
 	{ "div": "SSTScene", "label": "SST", "duration": 20 },
 	{ "div": "SSTanomalyScene", "label": "SST Anomaly", "duration": 30 },
@@ -129,7 +135,7 @@ const programs = {
 	{ "div": "video-BayDelta", "label": "6h Bay/Delta", "duration": 30 },
 	// { "div": "purpleAir", "label": "StFYC Air Quality", "duration": 30 },
 	{ "div": "", "label": "National", "duration": 0 },
-	/*{ "div": "nationalRadarScene", "label": "National Radar", "duration": 30 },*/
+	//{ "div": "nationalRadarScene", "label": "National Radar", "duration": 30 },
 	{ "div": "nationalRadar2Scene", "label": "National Radar", "duration": 30 },
 	{ "div": "cloudTopsScene", "label": "IR Cloud Tops", "duration": 30 },
 	{ "div": "", "label": "North Pacific", "duration": 0 },
@@ -143,7 +149,7 @@ const programs = {
     ],
     "Test": [
 	{ "div": "sfTides", "label": "Tide & Current", "duration": 300 },
-	{ "div": "sfLocalObservations", "label": "Local Obs", "duration": 30 },
+	{ "div": "aisScene", "label": "AIS", "duration": 300 },
     ],
 }
 
@@ -1735,11 +1741,11 @@ export function initialize() {
     d3.interval(dispatch, 1 * 1000);
     document.addEventListener("visibilitychange", visibilityChange);
 
-    const cloudTops = new GIS(cloudTopsConfig);
-    const nationalRadar = new GIS(nationalRadarConfig);
-    const nationalRadar2 = new GIS(nationalRadar2Config);
-    const localRadar = new GIS(localRadarConfig);
     const localObsRadar = new GIS(NOAAObservationsConfig);
+    //const nationalRadar = new GIS(nationalRadarConfig);
+    const nationalRadar2 = new GIS(nationalRadar2Config);
+    //const localRadar = new GIS(localRadarConfig);
+    const cloudTops = new GIS(cloudTopsConfig);
     const sst = new GIS(SSTConfig);
     const sstanomaly = new GIS(SSTanomalyConfig);
     const globalwind = new GIS(GlobalWindConfig);

@@ -16,7 +16,7 @@ function vw(v) {
 function vmin(v) { return Math.min(vh(v), vw(v)); }
 function vmax(v) { return Math.max(vh(v), vw(v)); }
 
-function Gauge(container, configuration) {
+export function Gauge(container, configuration) {
     this.container = container;
     this.id = "#" + container;
 
@@ -78,7 +78,7 @@ Gauge.prototype.render = function() {
 	return deg * Math.PI / 180;
     }
 
-    config = this.config;
+    let config = this.config;
 
     if (typeof this.rendering === 'undefined') {
 	this.rendering = false;
@@ -228,7 +228,7 @@ Gauge.prototype.render = function() {
 
     // Pointer(s)
     for (let i = 0; i < config.pointers.length; i++) {
-	p = config.pointers[i];
+	const p = config.pointers[i];
 	const pointerHeadLength = Math.round(radius * p.pointerHeadLengthPercent);
 	const pointerWidth = Math.round(radius * p.pointerWidthPercent);
 	const pointerTailLength = Math.round(radius * p.pointerTailPercent);

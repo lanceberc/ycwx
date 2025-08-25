@@ -93,7 +93,7 @@ $$
   
 */
 
-class NWSscrape {
+export class NWSscrape {
 
     constructor (cc, cb) {
 

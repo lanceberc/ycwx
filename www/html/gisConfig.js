@@ -4,7 +4,7 @@ const crossorigin='';
 //const crossorigin = "anonymous";
 
 // wx.html adds a layer created in Javascript for the observation text boxes
-const NOAAObservationsConfig = {
+export const NOAAObservationsConfig = {
     container: "NOAAObservations",
     label: "NOAAObservationsLabel",
     center: [-122.43, 37.82], // San Francisco
@@ -39,7 +39,7 @@ const NOAAObservationsConfig = {
     ],
 }
 
-const nationalRadarConfig = {
+export const nationalRadarConfig = {
     container: "nationalRadar",
     label: "nationalRadarLabel",
     center: [-97.95, 38.91], // Longitude, latitude - Middle of Kansas,
@@ -62,7 +62,7 @@ const nationalRadarConfig = {
     ],
 }
 
-const nationalRadar2Config = {
+export const nationalRadar2Config = {
     container: "nationalRadar2",
     label: "nationalRadar2Label",
     center: [-97.95, 38.91], // Longitude, latitude - Middle of Kansas,
@@ -111,7 +111,7 @@ const nationalRadar2Config = {
     ],
 }
 
-const localRadarConfig = {
+export const localRadarConfig = {
     container: "localRadar",
     label: "localRadarLabel",
     center: [-122.43, 37.82], // San Francisco
@@ -144,7 +144,7 @@ const localRadarConfig = {
     ],
 }
 
-const cloudTopsConfig = {
+export const cloudTopsConfig = {
     container: "cloudTops",
     label: "cloudTopsLabel",
     center: [-97.95, 38.91], // Longitude, latitude - Middle of Kansas
@@ -181,7 +181,7 @@ const cloudTopsConfig = {
     ],
 }
 
-const SSTConfig = {
+export const SSTConfig = {
     container: "SST",
     label: "SSTLabel",
     center: [-143, 34.5], // Mid-Pacific
@@ -223,7 +223,7 @@ const SSTConfig = {
     ],
 }
 
-const SSTanomalyConfig = {
+export const SSTanomalyConfig = {
     container: "SSTanomaly",
     label: "SSTanomalyLabel",
     center: [-143, 37.5], // Mid-Pacific
@@ -263,7 +263,7 @@ const SSTanomalyConfig = {
     ],
 }
 
-const GlobalWindConfig = {
+export const GlobalWindConfig = {
     container: "GlobalWind",
     label: "GlobalWindLabel",
     center: [-143, 34.5], // Mid-Pacific
@@ -303,7 +303,7 @@ const GlobalWindConfig = {
     ],
 }
 
-const GlobalWaveConfig = {
+export const GlobalWaveConfig = {
     container: "GlobalWave",
     label: "GlobalWaveLabel",
     center: [-143, 34.5], // Mid-Pacific
@@ -380,7 +380,7 @@ const currentMapConfig = {
 // basemap: "arcgis-light-gray"
 
 // https://nowcoast.noaa.gov/help/#!section=rest-layer-ids
-nowCoastElements = [
+const nowCoastElements = [
     {
 	container: "nationalRadar-ArcGIS",
 	timeStopService: "radar_meteo_imagery_nexrad_time",

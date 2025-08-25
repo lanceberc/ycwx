@@ -4,7 +4,7 @@
 const gisRenderId = null;
 const gisContainerMap = {};
 
-class GIS {
+export class GIS {
 
     constructor(config) {
 

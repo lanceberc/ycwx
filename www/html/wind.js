@@ -2,6 +2,20 @@ let windSocket = null;
 let windSocketInitializing = false;
 let windCallback = null;
 
+// Convenience functions for scaling elements to the window size
+function vh(v) {
+    const h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    return (v * h) / 100;
+}
+
+function vw(v) {
+    const w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    return (v * w) / 100;
+}
+
+function vmin(v) { return Math.min(vh(v), vw(v)); }
+function vmax(v) { return Math.max(vh(v), vw(v)); }
+
 function windError(e) {
     console.log("windMessage error");
 }
@@ -37,7 +51,7 @@ function windMessage(json) {
     windCallback(json.data);
 }
 
-function windInitialize(windURL, callback) {
+export function windInitialize(windURL, callback) {
     if (windURL == "") {
 	/* XXX GROSS KLUDGE ALERT HACK - if the hostname starts with a digit assume it's on the local net
 	 * and use a straight web socket (ws://) otherwise use a secure websocket (wss://)
@@ -93,7 +107,7 @@ function windInitialize(windURL, callback) {
 
 let windHistoryRect = { width: 0, height: 0 };
 
-function windPlotHistory(e, history, maxRange) {
+export function windPlotHistory(e, history, maxRange) {
     let svg, x, y, start, end;
     let data, id;
 
@@ -211,7 +225,7 @@ function windPlotHistory(e, history, maxRange) {
 	     );
 }
 
-function windStartStopHistory(e) {
+export function windStartStopHistory(e) {
     const cr = e.target.getBoundingClientRect();;
     if (windSocket == null) {
 	return;

@@ -7,28 +7,30 @@
     
     <script src="local_config.js"></script>
     <script src="data/lib/date.format.js"></script>
-    
+
+    <!-- D3 for graphing -->
     <script src="lib/d3.v7.js"></script>
-    <!-- <script src="lib/jquery-3.6.0.min.js" defer=""></script> -->
     
-    <!-- Open Layers -->
+    <!-- Open Layers for GIS -->
     <script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
 
-    <script src="gauge.js"></script>
-    <script src="wind.js"></script>
-    <!-- <script src="NowCOAST.js"  defer=""></script> -->
-    <!-- <script src="currentMap.js"  defer=""></script> -->
-    <script src="gis.js" defer=""></script>
-    <script src="gisConfig.js" defer=""></script>
-
-    <!-- Weatherflow forecasts -->
-    <link rel="stylesheet" href="wfforecast.css">
-    <script src="wfforecast.js"></script>
-
-    <!-- NWS text forecasts -->
-    <link rel="stylesheet" href="NWSzones.css">
+    <!-- Leaflet for AIS -->
+    <link rel="stylesheet" href="leaflet.css" crossorigin=""/>
+    <script src="leaflet.js" crossorigin=""></script>
+    <!-- https://github.com/BenPortner/leaflet-burgermenu -->
+    <link rel="stylesheet" href="./leaflet-burgermenu.css"/>
     
+    <link rel="stylesheet" href="wfforecast.css"> <!-- Weatherflow forecasts -->
+    <link rel="stylesheet" href="NWSzones.css"> <!-- NWS text forecasts -->
+    <link rel="stylesheet" href="ais.css"/>
+    <link rel="stylesheet" href="wx.css">
+    
+    <script type="module">
+      import { initialize } from "./wx.js";
+      document.addEventListener("DOMContentLoaded", initialize);
+    </script>
+
     <!-- Wind Models (GFS, NAM, HRRR) -->
     <!--
     <script src="lib/topojson.min.js"></script>
@@ -37,25 +39,6 @@
     <link rel="stylesheet" href="wm.css">
     -->
     
-    <!-- NWS observations from scraping a Monterey text page -->
-    <script src="NWSscrape.js"></script>
-
-    <link rel="stylesheet" href="leaflet.css" crossorigin=""/>
-    <script src="leaflet.js" crossorigin=""></script>
-
-    <!-- https://github.com/BenPortner/leaflet-burgermenu -->
-    <link rel="stylesheet" href="./leaflet-burgermenu.css"/>
-    <link rel="stylesheet" href="./ais.css"/>
-    
-    <!-- https://github.com/makinacorpus/Leaflet.GeometryUtil - needed by arrowheads -->
-    <script src="leaflet.geometryutil.js"></script>
-
-    <link rel="stylesheet" href="wx.css">
-
-    <script type="module">
-      import { initialize } from "./wx.js";
-      document.addEventListener("DOMContentLoaded", initialize);
-    </script>
   </head>
 
   <body id="body" class="wx" lang="en">
@@ -122,7 +105,8 @@
 	    </div>
 	  </div>
 -->
-	  
+
+<!--
 	  <div id="sfLocalObservations" class="wx-scene">
 	    <div class="ol-flex-fit" style="flex-direction: column;">
 	      <div class="obs-grid">
@@ -141,6 +125,7 @@
 	      </div>
 	    </div>
 	  </div>
+-->
 
 	  <div id="NOAAObservationsScene" class="wx-scene">
 	    <div id="NOAAObservations" class="ol-flex-fit">

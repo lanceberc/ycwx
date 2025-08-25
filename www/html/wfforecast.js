@@ -5,7 +5,7 @@ let WFContainerMap = {};
 
 const WFupdateFrequency = 10 * 60 * 1000; // 10 minutes
 
-function WFForecast(container, stationID, nickname) {
+export function WFForecast(container, stationID, nickname) {
     function startStop(container) {
 	const visible = (document.visibilityState === 'visible');
 	const c = document.querySelector("#" + container);
@@ -138,7 +138,7 @@ WFForecast.prototype.render = function() {
 						       	" UV " + cc.uv);
 
     // hourly forecasts - 3 rows for 72 hours
-    for (row = 0; row < 3; row++) {
+    for (let row = 0; row < 3; row++) {
 	const h = div.append("div").classed("wf-hourly-forecast", true);
 
 	// Header column
@@ -235,7 +235,7 @@ WFForecast.prototype.render = function() {
     //if (!kioskMode) {
     if (true) {
 	const url = "https://tempestwx.com/station/" + this.stationID;
-	footer = div.append("div")
+	const footer = div.append("div")
 	    .classed("wf-footer", true)
 	    .html('<a href="' + url + '" target="_blank">' + d.location_name + "'s Tempest Weather Station</a>");
     }
