@@ -1,0 +1,143 @@
+<span class="about-h2">About the Content</span>
+<p>
+  "Everybody talks about the weather but nobody does anything about it" - <a href="https://quoteinvestigator.com/2010/04/23/everybody-talks-about-the-weather/">Charles Dudley Warner</a>
+</p>
+<hr>
+<div><img src="/images/current_conditions.jpg" class="about-image"></div>
+<span class="about-h3">Current Conditions</span>
+<p>
+  The current conditions shown at the top of the page come directly from sensors at StFYC and Tinsley Island.
+</p>
+<p>
+  An <a href="https://airmar.com/productdescription.html?id=160">Airmar PB-200</a> above the Race Office has
+  an ultrasonic doppler-based anemometer, thermometer, barometer, and several other sensors. It sends data once
+  per second via NMEA-0183 to a computer over a RS-422 4800 Baud serial line (read and interpreted by bespoke StFYC
+  software).
+</p>
+<p>
+  A <a href="https://weatherflow.com/tempest-weather-system/">WeatherFlow Tempest</a> weather station above the
+  Clippership Room and another on Tinsley Island have sensors for wind, rain, sunlight, temperature,
+  barometric pressure, and lightning. Wind data is sent via WiFi every three seconds to a local system and WeatherFlow's
+  network while other data is sent once per minute. Tinsley data comes via WeatherFlow's cloud-based APIs.
+</p>
+<p>
+  We use the Airmar for wind and the Tempests for temperature and barometric pressure. If the Tempests are not providing
+  data the system falls back to nearby NOAA sites and there will be an asterisk next to the readings.
+</p>
+<hr>
+<div><img src="/images/wind.jpg" class="about-image"></div>
+<span class="about-h3">Wind</span>
+<p>
+  Current wind and recent wind history are from the Airmar above the Race Office. Wind strength is averaged over the
+  last two minutes and gusts are the highest 1-second reading in the past two minutes.
+</p>
+<p>
+  If a gust has been over <span class="highWindThreshhold"></span>kts in the last <span class="highWindDuration"></span> seconds
+  the display will switch to the wind display and the wind history graph's Y-axis increases to 45kts.
+</p>
+<p>
+  As of this writing the Airmar wind strength seems to be fairly accurate when the wind is above ~5kts while the Tempest
+  always reads low. Neither give accurate wind direction. Inaccuracies are probably due to sensor location and may be
+  addressed in the future by putting the Airmar on a taller mast.
+</p>
+<p>
+  Wind forecasts are from <a href="https://weatherflow.com">WeatherFlow</a>.
+</p>
+<hr>
+<div><img src="/images/observations.jpg" class="about-image"></div>
+<span class="about-h3">Observations</span>
+<p>
+  Current weather observations come from <a href="https://synopticdata.com/">Synoptic Data</a> which is contracted
+  by the US Government to gather weather data from many sources and make it available for free via a web API. This
+  database does not seem to be updated as frequently as the sensor sites so it may be a bit stale.
+</p>
+<p>
+  Local radar and warnings are from NOAA's <a href="https://radar.weather.gov/">NEXRAD</a> composite
+  system and the National Weather Service (NWS).
+</p>
+<hr>
+<div><img src="/images/tide+current.jpg" class="about-image"></div>
+<span class="about-h3">Tides & Currents</span>
+<p>
+  Tidal data is from <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=9414290">NOAA's tide station at Ft Point</a>
+  which has been in operation since the Civil War. Currents are
+  <a href="https://tidesandcurrents.noaa.gov/ofs/ofs_station.html?stname=E%20of%20Golden%20Gate%20Bridge&ofs=sfb&stnid=SFB1203&subdomain=en">
+    modeled at a point just inside the Golden Gate Bridge</a> by NOAA's Operational Forecast System (OFS).
+  Beware - the local tide book uses a point just outside the GG Bridge close to Pt Diablo.
+  Some current timings and astronomical data come from the <a href="https://flaterco.com/xtide/">XTide</a>
+  program which implements NOAA's harmonic tidal model.
+</p>
+<hr>
+<span class="about-h3">SFBay Currents</span>
+<p>(Not Currently Active)</p>
+<p>
+  The SF Bay current graphics are from NOAA's
+  <a href="https://tidesandcurrents.noaa.gov/ofs/sfbofs/sfbofs_info.html">SF Bay Operational Forecast System (OFS or SFBOFS)</a>
+  which runs a numerical model of bay tides/currents every six hours and produces hourly forecasts.
+</p>
+<hr>
+<div><img src="/images/nws_forecast.jpg" class="about-image"></div>
+<span class="about-h3">NWS Forecasts</span>
+<p>
+  Text forecasts for the Bay Area and nearby waters are produced by the National Weather Service (NWS)
+  <a href="https://www.weather.gov/mtr/">SF Bay Weather Field Office (WFO)</a> in
+  Monterey which develops and runs some of the Navy's weather models.
+</p>
+<hr>
+<div><img src="/images/forecast.jpg" class="about-image"></div>
+<span class="about-h3">WeatherFlow Forecasts</span>
+<p>
+  <a href="https://weatherflow.com/">WeatherFlow</a> combines the data it gathers from customer weather stations with NOAA
+  models to produce forecasts tailored to customer locations and different activities. They also
+  run the popular sports weather web sites and apps
+  <a href="https://sailflow.com/">SailFlow</a>,
+  <a href="https://wx.iwindsurf.com/">iWindSurf</a>, and
+  <a href="https://wx.ikitesurf.com/">iKiteSurf</a>. WeatherFlow uses the data from the Tempest weather stations at the
+  <a href="https://tempestwx.com/station/74155/">City clubsite</a> and
+  <a href="https://tempestwx.com/station/42921/">Tinsley Island</a> as input for the custom local forcasts.
+</p>
+<hr>
+<div><img src="/images/sfc_analysis.jpg" class="about-image"></div>
+<span class="about-h3">Surface Analysis</span>
+<p>
+  The surface analysis chart is produced by human forecasters at
+  <a href="ocean.weather.gov">NOAA's Ocean Prediction Center (OPC)</a>. They have other predictive charts
+  for the North Pacific (and elsewhere) that go out ~96 hours.
+</p>
+<hr>
+<div><img src="/images/sat_image.jpg" class="about-image"></div>
+<span class="about-h3">Satellite Images & Time-lapse Movies</span>
+<p>
+  GOES-WEST (aka GOES-18) satellite images come from the
+  <a href="https://www.nesdis.noaa.gov/">National Environmental Data and Information Service (NESDIS)</a>
+  repository. Raw images are processed (reprojected to Mercator, cropped, etc) using
+  <a href="https://github.com/lanceberc/GOES/blob/master/GOES_GDAL.ipynb">locally-developed image processing code</a>.
+  The <a href="https://rammb-slider.cira.colostate.edu/?sat=goes-17">GeoColor algorithm</a> used to color the images was developed at
+  <a href="https://www.cira.colostate.edu/">CIRA/RAAMB</a>.
+</p>
+<p>
+  Time-lapse MPEG movies are created locally from the satellite images using <a href="https://ffmpeg.org/">FFmpeg</a>.
+</p>
+<hr>
+<span class="about-h3">National Radar & Warnings, Cloud Tops</span>
+<p>
+  NOAA has made an effort  to make its various data and forecast products available on
+  the Internet in many forms. The National Radar map overlays recent NEXRAD radar mosaics on top of current hazard,
+  watch, and warning areas. More information is available from NOAA's
+  <a href="https://nowcoast.noaa.gov">NowCOAST</a> and
+  <a href="https://www.wrh.noaa.gov/map/?&zoom=14&scroll_zoom=false&center=39.198404895765826,-120.23180007934572&boundaries=false,false,false,false,false,false,false,false,false&tab=observation&obs=true&obs_type=air_temp&obs_popup=true&obs_density=10&obs_provider=ALL">Weather & Hazards</a> data viewers.
+</p>
+<hr>
+<span class="about-h3">Data Ingestion and Processing</span>
+<p>
+  All data is ingested and processed on a <a href="https://www.raspberrypi.org/">Raspberry Pi 4</a>
+  at StFYC which also runs the web & websocket servers that provide these pages.
+  <a href="https://www.github.com/lanceberc/ycwx">Scripts and programs</a> are written in C, bash, Python, and Go.
+</p>
+<hr>
+<span class="about-h3">Web Page, Map Display and Graphing</span>
+<p>
+  These web pages are written using a combination of raw HTML, CSS, and Javascript (aka ECMAscript) with help from the
+  <a href="d3js.org":>D3</a> graphing and data manipulation package and the <a href="https://openlayers.org/">OpenLayers</a> &
+  <a href="https://www.arcgis.com/">ESRI ArcGIS</a> mapping packages.
+</p>

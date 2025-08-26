@@ -795,4 +795,12 @@ export function initialize() {
 
     console.debug(`Initialize: AIS sources ${aisurls}`);
     const ais = new AIS(aisurls, 'aischart', [37.832, -122.435], 14.3);
+
+    for (const el of document.querySelectorAll('.text-scene')) {
+	const fn = el.getAttribute('w3-include-html');
+	if (fn)
+	    fetch(fn)
+	    .then(response => response.text())
+	    .then(text => el.innerHTML = text);
+    }
 }

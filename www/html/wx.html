@@ -6,7 +6,6 @@
     <title>StFYC Weather Information</title>
     
     <script src="local_config.js"></script>
-    <script src="data/lib/date.format.js"></script>
 
     <!-- D3 for graphing -->
     <script src="lib/d3.v7.js"></script>
@@ -20,11 +19,15 @@
     <script src="leaflet.js" crossorigin=""></script>
     <!-- https://github.com/BenPortner/leaflet-burgermenu -->
     <link rel="stylesheet" href="./leaflet-burgermenu.css"/>
-    
+
+    <!-- Style sheets for wx scenes -->
     <link rel="stylesheet" href="wfforecast.css"> <!-- Weatherflow forecasts -->
     <link rel="stylesheet" href="NWSzones.css"> <!-- NWS text forecasts -->
     <link rel="stylesheet" href="ais.css"/>
     <link rel="stylesheet" href="wx.css">
+
+    <!-- date formatting -->
+    <script src="data/lib/date.format.js"></script>
     
     <script type="module">
       import { initialize } from "./wx.js";
@@ -333,201 +336,14 @@
 	  </div>
 -->
 
+	  <!-- text-scene HTML is inserted by initialize() -->
 	  <div id="linksScene" class="wx-scene">
-	    <div id="links" class="text-scene">
-	      <h3>Weather Sites</h3>
-	      <a href="https://wx.stfyc-wx.com/links.html">Additional StFYC Weather Links</a> - Central & SoCal, images & time-lapses, special events.<br>
-	      <a href="https://weather.gov/mtr">NWS Bay Area</a> - The Weather Field Office (WFO) in Monterey<br>
-	      <a href="https://nowcoast.noaa.gov">NOAA nowCOAST</a> - CONUS-focused weather w/ many overlays<br>
-	      <a href="https://tropicaltidbits.com">Tropical Tidbits</a> - Dr Levi Cowen's site with weather models and his excellent storm analysis when appropriate.<br>
-	      <a href="https://windy.com">Windy</a> - Excellent display of current weather and models.<br>
-	      <a href="https://l-36.com/weather.php?lat=37.82&lon=-122.48&point1=Sausalito,+CA&point2=Marine+Location+Near+Sausalito,+CA&tide1=San+Francisco,+California+(2)+(expired+1998-12-31)&tide2=San+Francisco+Bay+Entrance+(Golden+Gate),+California+Current&lat_long1=37.82,-122.48&radar=MUX&radar2=DAX&station=mtr&ports=9414290&rss=ftpc1&rss2=tibc1&rss3=46237&airport=KSFO&geos=west/wc&lat_long2=37.82,-122.48&yd10=on&zone1=PZZ530&zone2=PZZ500&v=0.50">L-36 Golden Gate</a> - Weather from Lapworth 36 owners<br>
-	      <a href="https://www.wunderground.com/">Weather Underground</a> - Started by Dr Jeff Masters, it was a great grass-roots weather site until it was purchased first by The Weather Channel, then by IBM.<br>
-	      <a href="https://sailflow.com/map#37.831,-122.453,12,1">SailFlow SF Bay</a> - San Francisco site for SailFlow, a part of WeatherFlow. They also do iWindSurf, iKiteSurf, FishWeather, and WindAlert.<br>
-	      <a href="https://sailflow.com/spot/411">Sail Flow Anita Rock</a> - Live data, recent history, and weather forecasts.<br>
-	      <a href="https://www.weathernerds.org/">Weather Nerds</a> - 'Nuf said.<br>
-	      <a href="https://weather.cod.edu/satrad/">COD Satellite & Radar</a> - College of DuPage Weather Site.<br>
-	      <h3>NOAA/NWS Weather</h3>
-	      <a href="https://weather.gov">NWS Main Page</a> - The National Weather Service<br>
-	      <a href="https://weather.gov/mtr">NWS Bay Area</a> - The Weather Field Office (WFO) in Monterey<br>
-	      <a href="http://www.wrh.noaa.gov/map/?&zoom=5&scroll_zoom=false&center=40,-97&boundaries=false,false,false,false,false,false,false,false,false,false,false&tab=layers&hazard=true&hazard_type=all&hazard_opacity=60&elements=temp,wind,gust&temp_filter=-80,130&gust_filter=0,150&rh_filter=0,100&elev_filter=-300,14000&precip_filter=0.01,30&obs_popup=false&obs_density=60&obs_provider=ALL&radar=true&radar_min=20&radar_loop=false&radar_opacity=70">NWS US Map</a> - The Continental US (CONUS) w/ radar & warning area overlays.<br>
-	      <a href="https://weather.gov/ncep">NCEP Main Page</a> - The National Center for Environmental Prediction<br>
-	      <a href="https://www.wpc.ncep.noaa.gov">WPC Main Page</a> - The Weather Prediction Center<br>
-	      <a href="https://ocean.weather.gov">OPC Main Page</a> - The Ocean Prediction Center<br>
-	      <a href="https://spc.noaa.gov">SPC Main Page</a> - The Storm Prediction Center<br>
-	      <a href="https://ocean.weather.gov/Pac_tab.php">NOAA OPC Pacific</a> - Ocean Prediction Center North Pacific.<br>
-	      <a href="https://www.weather.gov/marine/radiofax_charts">NOAA Radiofax</a> - Old School Radiofax Charts as broadcast over shortwave.<br>
-	      <a href="https://www.ospo.noaa.gov/Products/ocean/sst/contour/">OSPO SST</a> - Sea Surface Temperature from satellite observations.<br>
-	      <a href="https://www.ospo.noaa.gov/data/sst/contour/californ.c.gif">SST California Coast</a> - Local SST Analysis.<br>
-	      <a href="https://www.ndbc.noaa.gov/">NDBC</a> - The National Data Buoy Center<br>
-	      <a href="https://www.ndbc.noaa.gov/station_page.php?station=46026">NDBC SF Approach</a> - Buoy 46026 north of the Light Bucket<br>
-
-	      <h3>NOAA/NWS Modeling</h3>
-	      <a href="https://www.emc.ncep.noaa.gov/">NOAA NCEP</a> - The National Center for Environmental Prediction<br>
-	      <a href="https://www.mmm.ucar.edu/models/wrf">NCAR WRF</a> - National Center for Atmospheric Reaerch WRF model<br>
-	      <a href="https://nomads.ncep.noaa.gov/">NOMADS</a> - NOAA Operational Model Archive and Distribution System - the model repository<br>
-	      
-	      <h3>Tides & Currents</h3>
-	      <a href="https://tidesandcurrents.noaa.gov/">NOAA's Tides & Currents</a> - <br>
-	      <a href="https://tidesandcurrents.noaa.gov/tide_predictions.html">NOAA Tide Predictions</a> - <br>
-	      <a href="https://tidesandcurrents.noaa.gov/ports/index.html?port=sf">NOAA PORTS </a> - San Francisco Bay<br>
-	      <a href="https://tidesandcurrents.noaa.gov/ofs/sfbofs/sfbofs.html">NOAA OFS</a> - SF Bay Operational Forecast System<br>
-
-	      <h3>Satellite Images</h3>
-	      <a href="https://www.star.nesdis.noaa.gov/goes/conus.php?sat=G17">GOES West PACUS</a> - NOAA's repository at NESDIS STAR<br>
-	      <a href="https://rammb-slider.cira.colostate.edu/?sat=goes-17&sec=conus&x=7269&y=3770&z=4&angle=0&im=12&ts=1&st=0&et=0&speed=130&motion=loop&maps%5Bborders%5D=white&lat=0&p%5B0%5D=geocolor&opacity%5B0%5D=1&pause=20220527120617&slider=-1&hide_controls=0&mouse_draw=0&follow_feature=0&follow_hide=0&s=rammb-slider&draw_color=FFD700&draw_width=6">GeoColor GOES West image of Bay Area</a> - From RAMMB / CIRA at Colorado St University<br>
-	      
-	      <h3>Data Sources</h3>
-	      <a href="https://coastwatch.pfeg.noaa.gov/erddap/index.html"></a>NOAA Oceanographic Data - A meta-server fronting many NOAA live and historical data sets<br>
-	      <a href=""></a> - <br>
+	    <div class="text-scene" w3-include-html="links.html">
 	    </div>
 	  </div>
 	  
 	  <div id="aboutScene" class="wx-scene">
-	    <div class="text-scene">
-	      <span class="about-h2">About the Content</span>
-	      <p>
-		"Everybody talks about the weather but nobody does anything about it" - <a href="https://quoteinvestigator.com/2010/04/23/everybody-talks-about-the-weather/">Charles Dudley Warner</a>
-	      </p>
-	      <hr>
-	      <div><img src="/images/current_conditions.jpg" class="about-image"></div>
-	      <span class="about-h3">Current Conditions</span>
-	      <p>
-		The current conditions shown at the top of the page come directly from sensors at StFYC and Tinsley Island.
-	      </p>
-	      <p>
-		An <a href="https://airmar.com/productdescription.html?id=160">Airmar PB-200</a> above the Race Office has
-		an ultrasonic doppler-based anemometer, thermometer, barometer, and several other sensors. It sends data once
-		per second via NMEA-0183 to a computer over a RS-422 4800 Baud serial line (read and interpreted by bespoke StFYC
-		software).
-	      </p>
-	      <p>
-		A <a href="https://weatherflow.com/tempest-weather-system/">WeatherFlow Tempest</a> weather station above the
-		Clippership Room and another on Tinsley Island have sensors for wind, rain, sunlight, temperature,
-		barometric pressure, and lightning. Wind data is sent via WiFi every three seconds to a local system and WeatherFlow's
-		network while other data is sent once per minute. Tinsley data comes via WeatherFlow's cloud-based APIs.
-	      </p>
-	      <p>
-		We use the Airmar for wind and the Tempests for temperature and barometric pressure. If the Tempests are not providing
-		data the system falls back to nearby NOAA sites and there will be an asterisk next to the readings.
-	      </p>
-	      <hr>
-	      <div><img src="/images/wind.jpg" class="about-image"></div>
-	      <span class="about-h3">Wind</span>
-	      <p>
-		Current wind and recent wind history are from the Airmar above the Race Office. Wind strength is averaged over the
-		last two minutes and gusts are the highest 1-second reading in the past two minutes.
-	      </p>
-	      <p>
-		If a gust has been over <span class="highWindThreshhold"></span>kts in the last <span class="highWindDuration"></span> seconds
-		the display will switch to the wind display and the wind history graph's Y-axis increases to 45kts.
-	      </p>
-	      <p>
-		As of this writing the Airmar wind strength seems to be fairly accurate when the wind is above ~5kts while the Tempest
-		always reads low. Neither give accurate wind direction. Inaccuracies are probably due to sensor location and may be
-		addressed in the future by putting the Airmar on a taller mast.
-	      </p>
-	      <p>
-		Wind forecasts are from <a href="https://weatherflow.com">WeatherFlow</a>.
-	      </p>
-	      <hr>
-	      <div><img src="/images/observations.jpg" class="about-image"></div>
-	      <span class="about-h3">Observations</span>
-	      <p>
-		Current weather observations come from <a href="https://synopticdata.com/">Synoptic Data</a> which is contracted
-		by the US Government to gather weather data from many sources and make it available for free via a web API. This
-		database does not seem to be updated as frequently as the sensor sites so it may be a bit stale.
-	      </p>
-	      <p>
-		Local radar and warnings are from NOAA's <a href="https://radar.weather.gov/">NEXRAD</a> composite
-		system and the National Weather Service (NWS).
-	      </p>
-	      <hr>
-	      <div><img src="/images/tide+current.jpg" class="about-image"></div>
-	      <span class="about-h3">Tides & Currents</span>
-	      <p>
-		Tidal data is from <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=9414290">NOAA's tide station at Ft Point</a>
-		which has been in operation since the Civil War. Currents are
-		<a href="https://tidesandcurrents.noaa.gov/ofs/ofs_station.html?stname=E%20of%20Golden%20Gate%20Bridge&ofs=sfb&stnid=SFB1203&subdomain=en">
-		  modeled at a point just inside the Golden Gate Bridge</a> by NOAA's Operational Forecast System (OFS).
-		Beware - the local tide book uses a point just outside the GG Bridge close to Pt Diablo.
-		Some current timings and astronomical data come from the <a href="https://flaterco.com/xtide/">XTide</a>
-		program which implements NOAA's harmonic tidal model.
-	      </p>
-	      <hr>
-	      <span class="about-h3">SFBay Currents</span>
-	      <p>(Not Currently Active)</p>
-	      <p>
-		The SF Bay current graphics are from NOAA's
-		<a href="https://tidesandcurrents.noaa.gov/ofs/sfbofs/sfbofs_info.html">SF Bay Operational Forecast System (OFS or SFBOFS)</a>
-		which runs a numerical model of bay tides/currents every six hours and produces hourly forecasts.
-	      </p>
-	      <hr>
-	      <div><img src="/images/nws_forecast.jpg" class="about-image"></div>
-	      <span class="about-h3">NWS Forecasts</span>
-	      <p>
-		Text forecasts for the Bay Area and nearby waters are produced by the National Weather Service (NWS)
-		<a href="https://www.weather.gov/mtr/">SF Bay Weather Field Office (WFO)</a> in
-		Monterey which develops and runs some of the Navy's weather models.
-	      </p>
-	      <hr>
-	      <div><img src="/images/forecast.jpg" class="about-image"></div>
-	      <span class="about-h3">WeatherFlow Forecasts</span>
-	      <p>
-		<a href="https://weatherflow.com/">WeatherFlow</a> combines the data it gathers from customer weather stations with NOAA
-		models to produce forecasts tailored to customer locations and different activities. They also
-		run the popular sports weather web sites and apps
-		<a href="https://sailflow.com/">SailFlow</a>,
-		<a href="https://wx.iwindsurf.com/">iWindSurf</a>, and
-		<a href="https://wx.ikitesurf.com/">iKiteSurf</a>. WeatherFlow uses the data from the Tempest weather stations at the
-		<a href="https://tempestwx.com/station/74155/">City clubsite</a> and
-		<a href="https://tempestwx.com/station/42921/">Tinsley Island</a> as input for the custom local forcasts.
-	      </p>
-	      <hr>
-	      <div><img src="/images/sfc_analysis.jpg" class="about-image"></div>
-	      <span class="about-h3">Surface Analysis</span>
-	      <p>
-		The surface analysis chart is produced by human forecasters at
-		<a href="ocean.weather.gov">NOAA's Ocean Prediction Center (OPC)</a>. They have other predictive charts
-		for the North Pacific (and elsewhere) that go out ~96 hours.
-	      </p>
-	      <hr>
-	      <div><img src="/images/sat_image.jpg" class="about-image"></div>
-	      <span class="about-h3">Satellite Images & Time-lapse Movies</span>
-	      <p>
-		GOES-WEST (aka GOES-18) satellite images come from the
-		<a href="https://www.nesdis.noaa.gov/">National Environmental Data and Information Service (NESDIS)</a>
-		repository. Raw images are processed (reprojected to Mercator, cropped, etc) using
-		<a href="https://github.com/lanceberc/GOES/blob/master/GOES_GDAL.ipynb">locally-developed image processing code</a>.
-		The <a href="https://rammb-slider.cira.colostate.edu/?sat=goes-17">GeoColor algorithm</a> used to color the images was developed at
-		<a href="https://www.cira.colostate.edu/">CIRA/RAAMB</a>.
-	      </p>
-	      <p>
-		Time-lapse MPEG movies are created locally from the satellite images using <a href="https://ffmpeg.org/">FFmpeg</a>.
-	      </p>
-	      <hr>
-	      <span class="about-h3">National Radar & Warnings, Cloud Tops</span>
-	      <p>
-		NOAA has made an effort  to make its various data and forecast products available on
-		the Internet in many forms. The National Radar map overlays recent NEXRAD radar mosaics on top of current hazard,
-		watch, and warning areas. More information is available from NOAA's
-		<a href="https://nowcoast.noaa.gov">NowCOAST</a> and
-		<a href="https://www.wrh.noaa.gov/map/?&zoom=14&scroll_zoom=false&center=39.198404895765826,-120.23180007934572&boundaries=false,false,false,false,false,false,false,false,false&tab=observation&obs=true&obs_type=air_temp&obs_popup=true&obs_density=10&obs_provider=ALL">Weather & Hazards</a> data viewers.
-	      </p>
-	      <hr>
-	      <span class="about-h3">Data Ingestion and Processing</span>
-	      <p>
-		All data is ingested and processed on a <a href="https://www.raspberrypi.org/">Raspberry Pi 4</a>
-		at StFYC which also runs the web & websocket servers that provide these pages.
-		<a href="https://www.github.com/lanceberc/ycwx">Scripts and programs</a> are written in C, bash, Python, and Go.
-	      </p>
-	      <hr>
-	      <span class="about-h3">Web Page, Map Display and Graphing</span>
-	      <p>
-		These web pages are written using a combination of raw HTML, CSS, and Javascript (aka ECMAscript) with help from the
-		<a href="d3js.org":>D3</a> graphing and data manipulation package and the <a href="https://openlayers.org/">OpenLayers</a> &
-		<a href="https://www.arcgis.com/">ESRI ArcGIS</a> mapping packages.
-	      </p>
+	    <div class="text-scene" w3-include-html="about.html">
 	    </div>
 	  </div>
 	</div>
