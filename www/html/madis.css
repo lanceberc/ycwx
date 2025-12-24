@@ -1,0 +1,32 @@
+:root {
+    --madis-label-font-size: 2rem;
+}
+
+.madis-container {
+    flex-grow: 1;
+    flex-basis: max-content;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.madis-label-span {
+    font-family: Arial;
+    font-size: var(--ais-label-font-size);
+    line-height: 1.0;
+    padding: 0.1em;
+    background-color: #ffffff80;
+    border-radius: 10%;
+}
+.madis-timestamp-span {
+    background-color: #ffffffcc; /* matches scale control background */
+    color: black;
+}
+.madis-tooltip {
+    font-family: Georgia;
+    font-size: 1.4rem;
+    line-height: 1.1;
+}
+.madis-circle {
+}
