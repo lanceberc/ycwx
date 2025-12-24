@@ -585,7 +585,7 @@ function rotateScene() {
 
 function initializeProgram(p) {
     curProgram = p;
-    let program = schedule[curProgram].program
+    const program = schedule[curProgram].program
     console.log("Rotate Program to " + program);
     scenes = programs[program];
     curSceneTime = 0;
