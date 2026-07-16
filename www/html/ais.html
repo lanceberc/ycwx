@@ -12,6 +12,11 @@
 	  margin: 0;
 	  display: flex;
       }
+      .spacer {
+	  width: 10px;
+	  background: gray;
+      }
+      
     </style>
 
     <link rel="stylesheet" href="leaflet.css" crossorigin=""/>
@@ -27,23 +32,45 @@
   <script type="module">
     import { AIS } from "./ais.js";
 
+    const aissources = { "all": [ "wss://wx.stfyc-wx.com/ais/", "wss://sdr.stfyc-wx.com/ais/", "wss://pcup.stfyc-wx.com/ais/"],
+			 "stfyc": [ "wss://wx.stfyc-wx.com/ais/" ],
+			 "sdr": [ "wss://sdr.stfyc-wx.com/ais/" ],
+			 "pcup": [ "wss://pcup.stfyc-wx.com/ais/" ],
+			 "test": ["wss://sdr.stfyc-wx.com/ais/", "wss://pcup.stfyc-wx.com/ais/" ],
+			 "test-local": [ "ws://sdr1.lan/ais/", "ws://192.168.3.153/ais/" ],
+		       }
+    const aisObjects = [];
+
     function initialize() {
 	let queryString = window.location.search;
 	const urlParams = new URLSearchParams(queryString);
 	let wsurls = ["/ais/"];
-	const both = urlParams.get('both'); // Kludge for testing
-	if (both) {
-	    wsurls.push('wss://wx.stfyc-wx.com/ais/');
+	let source = urlParams.get('aissources'); // Kludge for testing
+	let compare = (urlParams.get('aiscompare') == 'true');
+
+	if (source in aissources) {
+	    wsurls = aissources[source];
 	}
-	const ais = new AIS(wsurls, 'aismap', [37.832, -122.435], 14.5);
+
+	const body = document.getElementById("body");
+	if (compare == true) {
+	    for (let i = 0; i < wsurls.length; i++) {
+		if (i > 0) {
+		    body.insertAdjacentHTML('beforeend', '<div class="spacer"></div>');
+		}
+		body.insertAdjacentHTML('beforeend', `<div id=aismap${i} class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom ais-container" tabindex="${i+1}"></div>`);
+		let ais = new AIS(wsurls[i], [wsurls[i]], `aismap${i}`, [37.832, -122.435], 14.5);
+	    }
+	} else {
+	    body.insertAdjacentHTML('beforeend', '<div id=aismap class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom ais-container" tabindex="1"></div>');
+	    aisObjects.push(new AIS(source, wsurls, 'aismap', [37.832, -122.435], 14.5));
+	}
     }
 
     // could also try 'load' or 'DOMContentLoaded'
     window.addEventListener('DOMContentLoaded', initialize);
   </script>
   
-  <body lang="en">
-    <div id="aismap" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom ais-container" tabindex="0">
-    </div>
+  <body id="body" lang="en">
   </body>
 </html>

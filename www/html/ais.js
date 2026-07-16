@@ -20,6 +20,8 @@ const debugLabel = false;
 const debugVector = false;
 const debugReap = false;
 
+const receiveRatePeriod = 60; // calculate receive rate over this many seconds
+
 let aisDebugID = -1;
 function newDebugID() {
     aisDebugID = aisDebugID + 1;
@@ -215,12 +217,15 @@ function SetBasemap(element, ais, nickname) {
 }
 
 class AIS {
-    constructor(urls, div, latlon, zoom) {
+    constructor(source, urls, div, latlon, zoom) {
 	const now = new Date();
 	const time = now.format("HH:MM");
 
 	const ais = this; // Isn't there a better way to get context into callbacks?
 	
+	this.receiveRateTimeStamps = [];
+
+	this.source = source;
 	this.vessels = {};
 	this.started = false;
 	this.lastReap = Date.now();
@@ -231,7 +236,7 @@ class AIS {
 
 	let queryString = window.location.search;
 	const urlParams = new URLSearchParams(queryString);
-	const fontSize = fontSizes[urlParams.get('aisfont')];
+	const fontSize = urlParams.get('aisfont');
 	if (fontSize) changeLabelFontSize(fontSize);
 
 	let bm  = urlParams.get('aischart');
@@ -331,7 +336,7 @@ class AIS {
 	this.ro.observe(chart);
     }
 
-    // AIS data is sent to the web page via a websocket
+    // AIS data is sent to the web page via a websocket - this is called when data is received
     callback(s) {
 	const now = new Date();
 	const time = now.format("HH:MM");
@@ -339,18 +344,31 @@ class AIS {
 	// console.log("ais: " + s);
 	const j = JSON.parse(s);
 
-	const e = this.tsControl.getContainer();
-	if (e) {
-	    const d = new Date(Date.now());
-	    const ts = d.format("HH:MM:ss.L");
-	    e.innerText = "Last AIS " + ts;
-	}
-
 	const mmsi = j.mmsi;
 	let latlon = null;
 	if (("lat" in j) && ("lon" in j)) latlon = [j.lat, j.lon];
     
 	if (!(mmsi in this.vessels) && latlon) this.vessels[mmsi] = new Vessel(this, mmsi, latlon);
+
+	const e = this.tsControl.getContainer();
+	if (e) {
+	    const ts = Date.now();
+	    const d = new Date(ts);
+
+	    const reapTime = ts - (receiveRatePeriod * 1000);
+	    let reapCount = 0;
+	    while ((reapCount < this.receiveRateTimeStamps.length) && (this.receiveRateTimeStamps[reapCount] < reapTime)) {
+		reapCount++;
+	    }
+	    if (reapCount > 0) {
+		this.receiveRateTimeStamps.splice(0, reapCount);
+	    }
+	    this.receiveRateTimeStamps.push(ts);
+	    //console.log("Recent reap " + reapCount + " length " + this.receiveRateTimeStamps.length);
+	    
+	    const tsString = d.format("HH:MM:ss.L");
+	    e.innerText = this.source + " AIS Targets " + Object.keys(this.vessels).length + " Rate " + (this.receiveRateTimeStamps.length / receiveRatePeriod).toFixed(2)  + " Last AIS " + tsString;
+	}
 
 	const v = this.vessels[mmsi];
 
