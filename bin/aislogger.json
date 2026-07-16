@@ -1,0 +1,17 @@
+{
+    "myId": 5,
+    "myName": "fogmachine",
+    "view_area_description": "Near SF's Embarcadero",
+    "mylat": 37.7883,
+    "mylon": -122.3890,
+    "viewLat": [  37.6096,   37.9722],
+    "viewLon": [-122.9318, -122.1622],
+    "this": "config",
+    "debugMMSIs": [],
+    "UDP_IP": "127.0.0.1",
+    "UDP_PORT": 5005,
+    "URL": "https://pcup.org/aismeter.php",
+    "LOGHOST": "pcup.org",
+    "URL_PATTERN": "https://%s/aismeter.php",
+    "debug": false
+}
