@@ -279,7 +279,7 @@ const NWSscrapeSites = [
 	    "KHAF":  { "nickName": "HMB Airport",        "lat": 37.730, "lon": -122.500, "realLat": 37.5136, "realLon": -122.4996},
 	    "46013": { "nickName": "46013 Bodega Bay",   "lat": 37.880, "lon": -122.650, "realLat": 38.20000, "realLon": -123.30000},
 	    "46026": { "nickName": "46026 SF Buoy",      "lat": 37.800, "lon": -122.650, "realLat": 37.80000, "realLon": -122.80000},
-	    "46012": { "nickName": "46012 HMB Buoy",     "lat": 37.750, "lon": -122.650, "realLat": 37.356, "realLon": -122.881},
+	    "46012": { "nickName": "46012 HMB Buoy",     "lat": 37.720, "lon": -122.650, "realLat": 37.356, "realLon": -122.881},
 	    //"FNDC1": "Farallon Is", // (not reporting)
 	    "TIBC1": { "nickName": "Tiburon Pier",       "lat": 37.892, "lon": -122.500, "realLat": 37.892, "realLon": -122.447,}
 	},
