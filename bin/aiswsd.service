@@ -1,0 +1,13 @@
+[Unit]
+Description=aiswsd - Serve AIS data from AIS-catcher to clients via websockets
+After=ais-catcher.service
+
+[Service]
+ExecStart=/home/stfyc/bin/aiswsd.py
+Restart=always
+RestartSec=10
+StartLimitBurst=0
+User=stfyc
+
+[Install]
+WantedBy=multi-user.target
