@@ -9,9 +9,10 @@ import uuid
 import datetime
 import urllib3
 import sys
-#import logging
+import logging
 
-debugging = False
+logger = logging.getLogger(__name__)
+
 noBatch = False  # log every packet
 noUpcount = True # don't post the upcount log entries since they take a long time
 
@@ -19,11 +20,6 @@ deltaDistance = 0.25 # 1/4 nautical mile
 #deltaDistance = 0.1 # 1/10 nautical mile
 deltaTime = 300 # five minutes - log active targets at least this often
 deltaPow = 2.5 # buckets of three, or 0.3 dB
-
-debugMMSIs = [] # print debug info when these vessels report
-
-#if debugging:
-#    urllib3.disable_warnings()
 
 reapFrequency = 60
 updateFrequency = 600 # print status of active targets every 10 minutes
@@ -48,16 +44,7 @@ lonMax = 0
 
 shipNames = {}
 
-#logger = logging.getLogger(__name__)
-
 recentLogs = 0
-
-def debug(msg):
-    if debugging:
-        print(msg, flush=True, file=sys.stderr)
-
-def info(msg):
-    print(msg, file=sys.stderr)
 
 # There is a pip-installable Haversine library if we care
 def haversine(lat1, lon1, lat2, lon2):
@@ -103,19 +90,19 @@ class Target:
 
     def changed(self, time, distance):
         if self.count == 0:
-            debug("aislogger: changed Count")
+            logger.debug("changed Count")
             return True
             
         if time - self.time > deltaTime:
-            debug("aislogger: changed Time")
+            logger.debug("changed Time")
             return True
 
         if abs(distance - self.distance) > deltaDistance:
-            debug("aislogger: changed Distance")
+            logger.debug("changed Distance")
             return True
 
         #if abs(power - self.power) > deltaPow:
-        #    debug("aislogger: changed Power")
+        #    logger.debug("changed Power")
         #    return True
 
         return False
@@ -125,8 +112,7 @@ class Target:
         self.count+=1
 
     def reset(self, time, lat, lon, distance, bearing):
-        if debugging:
-            debug("aislogger: reset %d rxtime %s -> %s" % (self.mmsi, timeS(self.time), timeS(time)))
+        logger.debug("reset %d rxtime %s -> %s" % (self.mmsi, timeS(self.time), timeS(time)))
         self.time = int(time)
         self.lat = lat
         self.lon = lon
@@ -137,8 +123,6 @@ class Target:
 def postUpdate(msg):
     global recentLogs
     
-    #r = requests.post(URL, params = msg)
-    # r = requests.post(URL, params = msg, verify=(not debugging))
     tries = 0
     recentLogs += 1
     
@@ -148,14 +132,14 @@ def postUpdate(msg):
         e = time.time()
     
         if (e - s) > .5:
-            debug("aislogger: post took %.0fms" % ((e-s) * 1000))
+            logger.debug("post took %.0fms" % ((e-s) * 1000))
     #except NameResolutionError as e:
     except Exception as e:
-        info(("posting update failed", e))
+        logger.warning("posting update failed %r" % (e))
         return
         
     if r.status_code != 200:
-        info("aislogger: post fail: %r %r" % (r, msg))
+        logger.warning("post fail: %r %r" % (r, msg))
 
 def inViewRect(lat, lon):
     return (latMin <= lat <= latMax) and (lonMin <= lon <= lonMax)
@@ -191,7 +175,7 @@ def logTarget(parsed, ts):
     outs["in_view"] = parsed["in_view"]
     outs["rxtime"] = "%d" % (ts)
 
-    debug("aislogger: logHit post: %r" % (outs))
+    logger.debug("logHit post: %r" % (outs))
     r = postUpdate(outs)
 
 def shortHit(parsed, ts):
@@ -212,7 +196,7 @@ def shortHit(parsed, ts):
     outs["source"] = myId
     outs["in_view"]=0 #not in view
 
-    debug("aislogger: Short hit post: %r" % (outs))
+    logger.debug("Short hit post: %r" % (outs))
     postUpdate(outs)
     return 0
 
@@ -221,17 +205,12 @@ if __name__ == '__main__':
     with open("aislogger.json", "r") as jsonfile:
         config = json.load(jsonfile)
 
-    """
     logLevel = logging.INFO
     if "debug" in config and config["debug"]:
         logLevel = logging.DEBUG
-    #FORMAT = '%(asctime)s %(message)s'
+    FORMAT = '%(asctime)s %(message)s'
     logging.basicConfig(level=logLevel)
-    """
 
-    if (debugging == False) and ("debug" in config and config["debug"]):
-        debugging = True
-    
     config["mac"] = (int(uuid.getnode()))
 
     next_update = 0
@@ -257,18 +236,15 @@ if __name__ == '__main__':
         config['json_view'] = json.dumps(config["view_zone"])
     elif "viewLat" in config and "viewLon" in config:
         config['view_zone'] = [[latMin, lonMin], [latMax, lonMin], [latMax, lonMax,], [latMin, lonMax]]
+        config['view_area'] = [[latMin, lonMin], [latMax, lonMin], [latMax, lonMax,], [latMin, lonMax]]
         config['json_view'] = json.dumps([[latMin, lonMin], [latMax, lonMin], [latMax, lonMax,], [latMin, lonMax]])
                 
-    if "debugMMSIs" in config:
-        debugMMSIs = config['debugMMSIs']
-        debug("aislogger: debugMMSIs: %r" % (debugMMSIs))
-
     recentTargets = {}
     recentPackets = 0
 
     lastReap = 0
 
-    debug("aislogger: Config post: %r" % (config))
+    logger.debug("Config post: %r" % (config))
     postUpdate(config)
             
     while True:
@@ -285,7 +261,7 @@ if __name__ == '__main__':
             jParsed = json.loads(dstring)
 
             if not "mmsi" in jParsed:
-                info("aislogger: no mmsi: %r" % jParsed)
+                logger.info("no mmsi: %r" % jParsed)
                 continue
                 
             mmsi = jParsed["mmsi"]
@@ -297,20 +273,7 @@ if __name__ == '__main__':
                 shipNames[mmsi] = jParsed["shipname"]
             shipName = shipNames[mmsi] if mmsi in shipNames else ''
 
-            if mmsi in debugMMSIs:
-                debug("aislogger: Debug target: %r" % (jParsed))
-
-            if debugging and "signalpower" in jParsed and "lat" in jParsed and "lon" in jParsed:
-                #distance = distMins(mylon, jParsed["lon"],mylat, jParsed["lat"])
-                distance = haversine(mylat, mylon, jParsed["lat"], jParsed["lon"])
-                disLog = math.log10(distance)
-                logScalePower = jParsed["signalpower"] + 2*10*disLog
-                if mmsi in recentTargets:
-                    recentTargets[mmsi].append(logScalePower)
-                else:
-                    recentTargets[mmsi] = [logScalePower]
-            else:
-                recentTargets[mmsi] = [0]
+            recentTargets[mmsi] = 0
 
             try:
                 #9669415
@@ -320,9 +283,10 @@ if __name__ == '__main__':
                     power = jParsed["signalpower"] #use unscaled log power
                     distance = haversine(mylat, mylon, lat, lon)
                     bearing = get_bearing(mylat, mylon, lat, lon)
-                    debug("aislogger: mmsi %s %s lat %6.2f lon %6.2f power %6.2f distance %.2f" % (mmsi, shipName, lat, lon, power, distance))
-                    
-                    if inViewRect(lat, lon):
+                    logger.debug("mmsi %s %s lat %6.2f lon %6.2f power %6.2f distance %.2f" % (mmsi, shipName, lat, lon, power, distance))
+
+                    # Why bother checking if in view?
+                    if True or inViewRect(lat, lon):
                         jParsed["in_view"] = 1
 
                         if mmsi in targets:
@@ -339,17 +303,17 @@ if __name__ == '__main__':
                                 if (target.count > 1):
                                     if (not noUpcount):
                                         update = {"command": "upcount", "mmsi": mmsi, "source": myId, "rxtime": target.time, "count": target.count }
-                                        debug("aislogger: upcount %d %s %r" % (mmsi, shipName, update))
+                                        logger.debug("upcount %d %s %r" % (mmsi, shipName, update))
                                         postUpdate(update)
                                     else:
-                                        debug("aislogger: upcount %d %s %d" % (mmsi, shipName, target.count))
+                                        logger.debug("upcount %d %s %d" % (mmsi, shipName, target.count))
                                     
                                     target.reset(rxtime, lat, lon, distance, bearing)
                                 target.avg(power)
                                 logTarget(jParsed, rxtime) # log 1st hit of this sequence
                             else:
                                 target.avg(power) # average the power in
-                                debug("aislogger: mmsi %s %s count %d" % (mmsi, shipName, target.count))
+                                logger.debug("mmsi %s %s count %d" % (mmsi, shipName, target.count))
                         else:
                             target = Target(mmsi, rxtime, lat, lon, distance, bearing)
                             target.avg(power)
@@ -359,11 +323,11 @@ if __name__ == '__main__':
                                 target.reset(rxtime, lat, lon, distance, bearing)
                     
             except Exception as e:
-                print("contains error ", e, jParsed)
+                logger.warning("contains error %r %r" % (e, jParsed))
                 raise
 
         if now - lastReap > reapFrequency: # log the last hits for targets that we haven't seen for a while
-            debug("aislogger: reaping")
+            logger.debug("reaping")
             keys = list(targets.keys())
             keys.sort()
             
@@ -374,24 +338,27 @@ if __name__ == '__main__':
                         shipName = shipNames[k] if k in shipNames else ''
                         if (not noUpcount):
                             update = {"command": "upcount", "mmsi": k, "source": myId, "rxtime": t.time, "count": t.count }
-                            debug("aislogger: reaping %d %s upcount %r" % (k, shipName, update))
+                            logger.debug("reaping %d %s upcount %r" % (k, shipName, update))
                             postUpdate(update)
                         else:
-                            debug("aislogger: reaping %d %s upcount %d" % (k, shipName, t.count))
+                            logger.debug("reaping %d %s upcount %d" % (k, shipName, t.count))
                         t.reset(t.time, t.lat, t.lon, t.distance, t.bearing)
 
-            debug("Setting lastReap %s -> %s" % (timeS(lastReap), timeS(now)))
+            logger.debug("Setting lastReap %s -> %s" % (timeS(lastReap), timeS(now)))
             lastReap = now
 
         if now > next_update:
+            logger.debug("Config post: %r" % (config))
+            postUpdate(config)
+            
             next_update = now + updateFrequency
-
-            info("aislogger: Recent Packets %d Targets %d Rate %.2f/s" % (recentPackets, len(recentTargets), recentPackets/updateFrequency))
-            info("aislogger: Recent Logs %d Rate %.2f/s" % (recentLogs, recentLogs/updateFrequency))
 
             keys = list(targets.keys())
             keys.sort()
-            info("aislogger: %s total targets %d" % (timeS(now), len(keys)))
+            logger.info("%s total targets %d" % (timeS(now), len(keys)))
+            logger.info("Recent Packets %d Targets %d Rate %.2f/s" % (recentPackets, len(recentTargets), recentPackets/updateFrequency))
+            logger.info("Recent Logs %d Rate %.2f/s" % (recentLogs, recentLogs/updateFrequency))
+
             dd = 0
             ac = 0
             for k in keys:
@@ -400,11 +367,9 @@ if __name__ == '__main__':
                     ac += 1;
                     if (t.count > 0) or (now - t.time < deltaTime):
                         dd += 1;
-                    line = "aislogger: "
                     shipName = shipNames[k] if k in shipNames else ''
-                    line += "%9s %8s count %2d %5.2fnm @ %3.0f %s" % (k, timeS(t.time), t.count, t.distance, t.bearing, shipName)
-                    info(line)
-            info("aislogger: %d active %d recent" % (ac, dd))
+                    logger.info("%9s %8s count %2d %5.2fnm @ %3.0f %s" % (k, timeS(t.time), t.count, t.distance, t.bearing, shipName))
+            logger.info("Active %d Recent %d" % (ac, dd))
 
             recentTargets = {}
             recentPackets = 0

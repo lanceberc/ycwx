@@ -3,12 +3,12 @@ Description=aislogger service - send ais data to pcup database
 After=aiscatcher.service
 
 [Service]
-ExecStart=/usr/bin/python aislogger.py
-WorkingDirectory=/home/stfyc/src/aislogger
+WorkingDirectory=/home/stfyc/bin
+ExecStart=/home/stfyc/bin/aislogger.py
 Restart=always
 RestartSec=10
 StartLimitBurst=0
-User=nobody
+User=stfyc
 
 [Install]
 WantedBy=multi-user.target
