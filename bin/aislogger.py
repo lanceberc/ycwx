@@ -32,6 +32,7 @@ URL = "" # where to post vessel reports
 UDP_IP = ""   # NMEA server ip address
 UDP_PORT = "" # NMEA server port
 myId = "" # My id as assigned by pcup
+myIP = ""
 
 sock = {}
 
@@ -73,6 +74,20 @@ def get_bearing(lat1, lon1, lat2, lon2):
     compass_bearing = (initial_bearing + 360) % 360
     
     return compass_bearing
+
+# Kludgey way to find local IP from StackOverflow
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
 
 def timeS(t):
     return datetime.datetime.fromtimestamp(t).strftime('%H:%M:%S')
@@ -205,6 +220,8 @@ if __name__ == '__main__':
     with open("aislogger.json", "r") as jsonfile:
         config = json.load(jsonfile)
 
+    myIP = get_ip()
+
     logLevel = logging.INFO
     if "debug" in config and config["debug"]:
         logLevel = logging.DEBUG
@@ -212,6 +229,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logLevel)
 
     config["mac"] = (int(uuid.getnode()))
+    config["localIP"] = myIP
 
     next_update = 0
 
@@ -244,7 +262,7 @@ if __name__ == '__main__':
 
     lastReap = 0
 
-    logger.debug("Config post: %r" % (config))
+    logger.info("Config: %r" % (config))
     postUpdate(config)
             
     while True:
