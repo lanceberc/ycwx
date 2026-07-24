@@ -380,7 +380,7 @@ class AIS {
 
 	// Save updated fields in the vessel
 	v.latlon = latlon;
-	v.last = Date.now();
+	v.last = ("last" in j) ? (j["last"] * 1000): Date.now();
 	if (relabel) {
 	    if (debugLabel) console.debug(`ais: ${time} relabel ${v.mmsi} name '${v.shipname}' -> '${shipname}' ${v.debugID}`);
 	    v.shipname = shipname;
@@ -424,8 +424,6 @@ class AIS {
 
     reap() {
 	const ts = Date.now();
-	const now = new Date();
-	const time = now.format("HH:MM");
 
 	if (ts - this.lastReap < reapFreq) return;
 	this.lastReap = ts;
@@ -435,7 +433,7 @@ class AIS {
 	    let timeout = vesselSlowTimeout;
 	    if (v.speed > vesselFastSpeed) timeout = vesselFastTimeout;
 	    if (mmsi > 990000000) timeout = AtoNTimeout;
-	    if (now - v.last > timeout) {
+	    if (ts - v.last > timeout) {
 		v.reap();
 		v = null;
 		delete this.vessels[mmsi];
