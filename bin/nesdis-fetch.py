@@ -71,10 +71,10 @@ if os.path.exists("/wx/data"):
 destroot = "%s/GOES" % (dataroot)
 source = "NESDIS"
 regions = {}
-regions["GOES-East"] = {"img": "ABI", "goes": "16", "dir": "FD", "sector": "FD", "res": "5424x5424"}
+regions["GOES-East"] = {"img": "ABI", "goes": "19", "dir": "FD", "sector": "FD", "res": "5424x5424"}
 #regions["GOES-West"] = {"img": "ABI", "goes": "17", "dir": "FD", "sector": "FD", "res": "5424x5424"}
 regions["GOES-West"] = {"img": "ABI", "goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
-regions["CONUS-East"] = {"img": "ABI", "goes": "16", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+regions["CONUS-East"] = {"img": "ABI", "goes": "19", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 #regions["CONUS-West"] = {"img": "ABI", "goes": "17", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 regions["CONUS-West-500m"] = {"img": "ABI", "goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "10000x6000"}
 regions["CONUS-West"] = {"img": "ABI", "goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
@@ -85,8 +85,8 @@ regions["West_Coast"] = {"img": "ABI", "goes": "18", "dir": "SECTOR/wus", "secto
 regions["CONUS-West_GLM_1k"] = {"img": "GLM", "goes": "18", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
 regions["GOES-West_GLM_2k"] = {"img": "GLM", "goes": "18", "dir": "FD", "sector": "FD", "res": "5424x5424"}
 regions["GOES-West_GLM_1k"] = {"img": "GLM", "goes": "18", "dir": "FD", "sector": "FD", "res": "10848x10848"}
-regions["CONUS-East_GLM_1k"] = {"img": "GLM", "goes": "16", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
-regions["GOES-East_GLM_2k"] = {"img": "GLM", "goes": "16", "dir": "FD", "sector": "FD", "res": "5424x5424"}
+regions["CONUS-East_GLM_1k"] = {"img": "GLM", "goes": "19", "dir": "CONUS", "sector": "CONUS", "res": "5000x3000"}
+regions["GOES-East_GLM_2k"] = {"img": "GLM", "goes": "19", "dir": "FD", "sector": "FD", "res": "5424x5424"}
 
 imageProcess = {}
 imageProcess["CONUS-West"] = [

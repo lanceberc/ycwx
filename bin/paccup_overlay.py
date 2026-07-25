@@ -30,6 +30,8 @@ import pygrib
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import shutil
 
+osr.UseExceptions() # Cause OSR errors to throw and exception causing logged failure
+
 tau = math.pi * 2
 
 datastore_prefix = "/home/stfyc/www/html/data/NOAA"
@@ -954,13 +956,13 @@ regions["EastSmoke"] = {
 models = {}
 models["GFS"] = {
     "frequency": 360,
-    "file_pattern": "gfs.t(\d{2})z.pgrb2.0p25.grib2$",
+    "file_pattern": r"gfs.t(\d{2})z.pgrb2.0p25.grib2$",
     "crs": "mercator", # GFS GRIB files have invalid proj params!
 }
 
 models["HRRR"] = {
     "frequency": 60,
-    "file_pattern": "hrrr.t(\d{2})z.wrfsfcf00.grib2$",
+    "file_pattern": r"hrrr.t(\d{2})z.wrfsfcf00.grib2$",
     "crs": "usa_lambert_conformal_conic", # not used - use params from HRRR GRIB file
 }
 
@@ -1020,7 +1022,7 @@ def find_sat_images(region):
     endts = datetime.datetime.strptime(r["end"], "%Y-%m-%dT%H:%M:%S %z")
     day_ts = startts
     sat_images = []
-    pat = re.compile("(\d{12}).jpg$")
+    pat = re.compile(r"(\d{12}).jpg$")
     if "night_exclude" in r:
         exclude_start = datetime.datetime.strptime(r["night_exclude"][0], "%H%M")
         exclude_end = datetime.datetime.strptime(r["night_exclude"][1], "%H%M")
@@ -1115,7 +1117,7 @@ def find_surface_analyses(region):
     # Currently all in one directory
     l = os.listdir(path)
     l.sort()
-    pat = re.compile("(\d{4})(\d{2})(\d{2})(\d{2})(\d{2}).png$")
+    pat = re.compile(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2}).png$")
     for f in l:
         m = pat.search(f)
         if m:
@@ -2022,7 +2024,7 @@ def prep_fonts(region):
         fonts["llyoffset"] = 4
         fonts["label"] = ImageFont.truetype(fontfamily, 28)
 
-    (bbleft, bbtop, bbright, bbbottom) = fonts["label"].getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
+    (bbleft, bbtop, bbright, bbbottom) = fonts["label"].getbbox(r"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
     fonts["label_size"] = (bbright - bbleft, bbbottom - bbtop)
     #fonts["label_size"] = (bbright, bbbottom)
 
@@ -2040,7 +2042,7 @@ def draw_lonlats(region, canvas, draw):
     pad = 1
     size = 3
     font = fonts["POI"]
-    #fw, fh = font.getsize("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
+    #fw, fh = font.getsize(r"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
     
     bg = 0x00
     bgalpha = 0x80
@@ -2095,7 +2097,7 @@ def draw_POIs(region, canvas, draw):
             (pad, size) = (3, 5)
             
         font = fonts["POI"]
-        #fw, fh = font.getsize("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
+        #fw, fh = font.getsize(r"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}\|;:',<.>/?")
 
         bg = 0x00
         bgalpha = 0x80
@@ -2190,7 +2192,7 @@ def process_region(region, quittingtime):
 
     if args.size != None:
         (width, height) = (None, None)
-        m = re.match("(\d+)x(\d+)", args.size)
+        m = re.match(r"(\d+)x(\d+)", args.size)
         if m:
             (width, height) = m.groups()
         if (width == None) or (height == None):

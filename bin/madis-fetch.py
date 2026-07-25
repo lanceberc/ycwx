@@ -148,7 +148,7 @@ if __name__ == '__main__':
     #lines = data.split('\\r\\n')
     lines = data.split('\\n')
 
-    pat = re.compile("\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)");
+    pat = re.compile(r"\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)");
 
     interestingVars = ["V-TD", "V-RH", "V-T", "V-DD", "V-FF", "V-FFGUST", "V-ALTSE"]
 
