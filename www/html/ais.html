@@ -19,8 +19,8 @@
       
     </style>
 
-    <link rel="stylesheet" href="leaflet.css" crossorigin=""/>
-    <script src="leaflet.js" crossorigin=""></script>
+    <link rel="stylesheet" href="leaflet.css"/>
+    <script src="leaflet-src.js"></script>
 
     <!-- https://github.com/BenPortner/leaflet-burgermenu -->
     <link rel="stylesheet" href="./leaflet-burgermenu.css"/>
@@ -35,9 +35,10 @@
     const aissources = { "all": [ "wss://wx.stfyc-wx.com/ais/", "wss://sdr.stfyc-wx.com/ais/", "wss://pcup.stfyc-wx.com/ais/"],
 			 "stfyc": [ "wss://wx.stfyc-wx.com/ais/" ],
 			 "sdr": [ "wss://sdr.stfyc-wx.com/ais/" ],
+			 "sdr-local": [ "ws://sdr1.lan/ais/" ],
 			 "pcup": [ "wss://pcup.stfyc-wx.com/ais/" ],
 			 "test": ["wss://sdr.stfyc-wx.com/ais/", "wss://pcup.stfyc-wx.com/ais/" ],
-			 "test-local": [ "ws://sdr1.lan/ais/", "ws://192.168.3.153/ais/" ],
+			 "test-local": [ "wss://wx.stfyc-wx.com/ais/", "ws://sdr1.lan/ais/" ],
 		       }
     const aisObjects = [];
 
@@ -45,7 +46,7 @@
 	let queryString = window.location.search;
 	const urlParams = new URLSearchParams(queryString);
 	let wsurls = ["/ais/"];
-	let source = urlParams.get('aissources'); // Kludge for testing
+	let source = urlParams.get('aissources');
 	let compare = (urlParams.get('aiscompare') == 'true');
 
 	if (source in aissources) {

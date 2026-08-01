@@ -790,11 +790,11 @@ export function initialize() {
     const aissources = urlParams.get('aissources'); // Kludge for testing
     
     if (aissources == 'all') {
-	aisurls = ['wss://wx.stfyc-wx.com/ais/', 'wss://sdr.stfyc-wx.com/ais/'];
+	aisurls = ['wss://wx.stfyc-wx.com/ais/', 'wss://sdr.stfyc-wx.com/ais/', 'pcup.stfyc-wx.com/ais/'];
     }
 
     console.debug(`Initialize: AIS sources ${aisurls}`);
-    const ais = new AIS(aisurls, 'aischart', [37.832, -122.435], 14.3);
+    const ais = new AIS(aissources == 'all' ? 'all' : aisurls[0], aisurls, 'aischart', [37.832, -122.435], 14.3);
 
     for (const el of document.querySelectorAll('.text-scene')) {
 	const fn = el.getAttribute('w3-include-html');

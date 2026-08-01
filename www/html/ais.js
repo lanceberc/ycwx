@@ -217,7 +217,7 @@ function SetBasemap(element, ais, nickname) {
 }
 
 class AIS {
-    constructor(source, urls, div, latlon, zoom) {
+    constructor(label, urls, div, latlon, zoom) {
 	const now = new Date();
 	const time = now.format("HH:MM");
 
@@ -225,7 +225,7 @@ class AIS {
 	
 	this.receiveRateTimeStamps = [];
 
-	this.source = source;
+	this.label = label;
 	this.vessels = {};
 	this.started = false;
 	this.lastReap = Date.now();
@@ -239,7 +239,7 @@ class AIS {
 	const fontSize = urlParams.get('aisfont');
 	if (fontSize) changeLabelFontSize(fontSize);
 
-	let bm  = urlParams.get('aischart');
+	let bm  = urlParams.get('aisbase');
 	if (!(bm in basemaps)) bm = "chart";
 	SetBasemap(null, ais, bm);
 
@@ -367,7 +367,7 @@ class AIS {
 	    //console.log("Recent reap " + reapCount + " length " + this.receiveRateTimeStamps.length);
 	    
 	    const tsString = d.format("HH:MM:ss.L");
-	    e.innerText = this.source + " AIS Targets " + Object.keys(this.vessels).length + " Rate " + (this.receiveRateTimeStamps.length / receiveRatePeriod).toFixed(2)  + " Last AIS " + tsString;
+	    e.innerText = this.label + " AIS Targets " + Object.keys(this.vessels).length + " Rate " + (this.receiveRateTimeStamps.length / receiveRatePeriod).toFixed(2)  + " Last AIS " + tsString;
 	}
 
 	const v = this.vessels[mmsi];
